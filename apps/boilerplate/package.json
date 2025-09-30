@@ -1,0 +1,11 @@
+{
+  "name": "p5-boilerplate",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Barebones p5.js project used as AI starting point",
+  "scripts": {
+    "dev": "serve . -l 4000"
+  },
+  "dependencies": {}
+}
+

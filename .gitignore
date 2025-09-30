@@ -1,0 +1,89 @@
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+.eslintcache
+
+# OS
+.DS_Store
+.AppleDouble
+.LSOverride
+Icon?
+._*
+.Spotlight-V100
+.Trashes
+
+# Dependencies
+node_modules/
+.pnp/
+.pnp.js
+
+# Bun
+.bun/
+
+# TypeScript
+*.tsbuildinfo
+
+# Build output / caches
+dist/
+build/
+out/
+.next/
+.turbo/
+.cache/
+coverage/
+.nyc_output/
+tmp/
+temp/
+
+# Env files (keep examples)
+.env
+.env.*
+!.env.example
+
+# Vercel / Deploy
+.vercel/
+
+# IDE / Editors
+.vscode/
+.idea/
+*.iml
+
+# Misc
+*.swp
+*.swo
+*.orig
+*.rej
+*.tgz
+# Dependencies
+node_modules
+
+# Next.js
+.next
+out
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Editor
+.idea
+.vscode
+
+# OS
+.DS_Store
+
+# Coverage
+coverage
+
+# Misc
+.turbo
+dist
+*.zip
+

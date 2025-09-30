@@ -1,0 +1,20 @@
+{
+  "name": "fresh-breeze",
+  "private": true,
+  "version": "0.1.0",
+  "packageManager": "bun@1.1.17",
+  "workspaces": [
+    "apps/*"
+  ],
+  "engines": {
+    "bun": ">=1.1.0"
+  },
+  "scripts": {
+    "dev": "cd apps/studio && bun run dev",
+    "build": "cd apps/studio && bun run build",
+    "start": "cd apps/studio && bun run start",
+    "typecheck": "cd apps/studio && bun run typecheck",
+    "lint": "cd apps/studio && bun run lint"
+  }
+}
+
