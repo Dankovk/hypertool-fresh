@@ -7,7 +7,7 @@ import { loadBoilerplateFiles } from "@/lib/boilerplate";
 import { AiRequestSchema } from "@/types/ai";
 
 const MODEL_MAP: Record<string, { provider: "openai" | "anthropic" | "google"; model: string }> = {
-  "gpt-codex": { provider: "openai", model: "gpt-4.1-mini" },
+  "gpt-codex": { provider: "openai", model: "gpt-5" },
   "claude-sonnet-4.1": { provider: "anthropic", model: "claude-3-5-sonnet-latest" },
   "gemini-1.5-pro": { provider: "google", model: "gemini-1.5-pro-latest" },
 };
