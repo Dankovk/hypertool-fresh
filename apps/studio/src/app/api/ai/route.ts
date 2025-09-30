@@ -1,71 +1,146 @@
 import { NextResponse } from "next/server";
-import { z } from "zod";
-import { join } from "node:path";
-import { readdirSync, readFileSync } from "node:fs";
+import { generateObject } from "ai";
+import { openai } from "@ai-sdk/openai";
+import { anthropic } from "@ai-sdk/anthropic";
+import { google } from "@ai-sdk/google";
+import { loadBoilerplateFiles } from "@/lib/boilerplate";
+import { AiRequestSchema } from "@/types/ai";
 
-const ChatMessageSchema = z.object({
-  role: z.enum(["user", "assistant", "system"]),
-  content: z.string(),
-});
+const MODEL_MAP: Record<string, { provider: "openai" | "anthropic" | "google"; model: string }> = {
+  "gpt-codex": { provider: "openai", model: "gpt-4o-mini" },
+  "claude-sonnet-4.1": { provider: "anthropic", model: "claude-3-5-sonnet-20240620" },
+  "gemini-1.5-pro": { provider: "google", model: "gemini-1.5-pro" },
+};
 
-const FileMapSchema = z.record(z.string());
-
-const BodySchema = z.object({
-  messages: z.array(ChatMessageSchema.pick({ role: true, content: true })),
-  boilerplate: FileMapSchema,
-});
+const DEFAULT_SYSTEM_PROMPT =
+  "You are an AI assistant that produces a complete file map for a p5.js canvas project. Always respond with valid JSON: { files: { path: code }, explanation?: string } covering every file.";
 
 function stubTransform(files: Record<string, string>, prompt: string) {
-  // Minimal demo: if prompt mentions "circle", inject a p5 circle; else echo.
-  const newFiles = { ...files };
-  const indexHtml = newFiles["/index.html"] ?? `<!doctype html><html><head><meta charset=\"utf-8\" /><title>p5 Sketch</title></head><body><script src=\"https://unpkg.com/p5@1.9.2/lib/p5.min.js\"></script><script src=\"/sketch.js\"></script></body></html>`;
-  let sketch = newFiles["/sketch.js"] ?? "function setup(){createCanvas(600,400);}function draw(){background('#0b0c10');}";
+  const nextFiles = { ...files };
+  const indexHtml =
+    nextFiles["/index.html"] ??
+    `<!doctype html><html><head><meta charset="utf-8" /><title>p5 Sketch</title></head><body><script src="https://unpkg.com/p5@1.9.2/lib/p5.min.js"></script><script src="/sketch.js"></script></body></html>`;
+  let sketch =
+    nextFiles["/sketch.js"] ?? "function setup(){createCanvas(600,400);}function draw(){background('#0b0c10');}";
+
   if (/circle|orbit|ring/i.test(prompt)) {
-    sketch = "function setup(){createCanvas(600,400);}function draw(){background('#0b0c10'); fill('#66fcf1'); noStroke(); circle(width/2,height/2,200);}";
+    sketch =
+      "function setup(){createCanvas(600,400);}function draw(){background('#0b0c10'); fill('#66fcf1'); noStroke(); circle(width/2,height/2,200);}";
   } else if (/noise|perlin|flow/i.test(prompt)) {
-    sketch = "let t=0;function setup(){createCanvas(600,400);}function draw(){background('#0b0c10'); stroke('#66fcf1'); noFill(); beginShape(); for(let x=0;x<width;x+=4){const y=noise(x*0.01,t)*height; vertex(x,y);} endShape(); t+=0.01;}";
+    sketch =
+      "let t=0;function setup(){createCanvas(600,400);}function draw(){background('#0b0c10'); stroke('#66fcf1'); noFill(); beginShape(); for(let x=0;x<width;x+=4){const y=noise(x*0.01,t)*height; vertex(x,y);} endShape(); t+=0.01;}";
   }
-  newFiles["/index.html"] = indexHtml;
-  newFiles["/sketch.js"] = sketch;
-  return newFiles;
+
+  nextFiles["/index.html"] = indexHtml;
+  nextFiles["/sketch.js"] = sketch;
+  return nextFiles;
 }
 
 export async function POST(req: Request) {
   const json = await req.json();
-  const parsed = BodySchema.safeParse(json);
+  const parsed = AiRequestSchema.safeParse(json);
+
   if (!parsed.success) {
     return NextResponse.json({ error: "Invalid body" }, { status: 400 });
   }
-  const { messages } = parsed.data;
-  // Always start from on-disk boilerplate to avoid drift
-  function readAllFiles(dir: string, base: string = dir, out: Record<string, string> = {}) {
-    const entries = readdirSync(dir, { withFileTypes: true });
-    for (const entry of entries) {
-      const full = join(dir, entry.name);
-      if (entry.isDirectory()) {
-        readAllFiles(full, base, out);
-      } else {
-        const rel = full.replace(base + "/", "");
-        out["/" + rel] = readFileSync(full, "utf8");
-      }
+
+  const { messages, model, systemPrompt, apiKey } = parsed.data;
+  const boilerplate = loadBoilerplateFiles();
+  const selected = MODEL_MAP[model];
+
+  if (!selected) {
+    const fallback = stubTransform(boilerplate, messages.map((m) => m.content).join("\n"));
+    return NextResponse.json({ files: fallback, explanation: "Unknown model; stubbed output." });
+  }
+
+  const providerKey = apiKey?.trim();
+
+  try {
+    const result = await generateFileMap({
+      provider: selected.provider,
+      model: selected.model,
+      apiKey: providerKey,
+      messages,
+      systemPrompt: systemPrompt?.trim() || DEFAULT_SYSTEM_PROMPT,
+    });
+
+    if (!result) {
+      const fallback = stubTransform(boilerplate, messages.map((m) => m.content).join("\n"));
+      return NextResponse.json({ files: fallback, explanation: "AI result invalid; stub applied." });
     }
-    return out;
-  }
-  const boilerplate = readAllFiles(join(process.cwd(), "apps/boilerplate"));
-  const userText = messages.filter((m) => m.role === "user").map((m) => m.content).join("\n\n");
 
-  // Optional: integrate OpenAI if key exists; else stub
-  const apiKey = process.env.OPENAI_API_KEY;
-  let files = boilerplate;
-  if (!apiKey) {
-    files = stubTransform(boilerplate, userText);
-    return NextResponse.json({ files, explanation: "Stubbed transformation applied." });
+    return NextResponse.json(result);
+  } catch (error) {
+    console.error("AI SDK request failed", error);
+    const fallback = stubTransform(boilerplate, messages.map((m) => m.content).join("\n"));
+    return NextResponse.json({ files: fallback, explanation: "AI request failed; stub applied." });
+  }
+}
+
+async function generateFileMap({
+  provider,
+  model,
+  apiKey,
+  messages,
+  systemPrompt,
+}: {
+  provider: "openai" | "anthropic" | "google";
+  model: string;
+  apiKey?: string;
+  messages: { role: "user" | "assistant" | "system"; content: string }[];
+  systemPrompt: string;
+}) {
+  const providerOptions =
+    provider === "openai"
+      ? openai({ apiKey: apiKey || process.env.OPENAI_API_KEY })
+      : provider === "anthropic"
+      ? anthropic({ apiKey: apiKey || process.env.ANTHROPIC_API_KEY })
+      : google({ apiKey: apiKey || process.env.GOOGLE_API_KEY });
+
+  const result = await generateObject({
+    model: providerOptions(model),
+    schema: {
+      type: "object",
+      properties: {
+        files: {
+          type: "object",
+          additionalProperties: { type: "string" },
+        },
+        explanation: { type: "string" },
+      },
+      required: ["files"],
+      additionalProperties: false,
+    } as const,
+    prompt: [
+      {
+        role: "system",
+        content: systemPrompt,
+      },
+      ...messages.map((message) => ({
+        role: message.role,
+        content: message.content,
+      })),
+    ],
+  });
+
+  const value = result.object;
+  if (!value || typeof value !== "object" || !value.files || typeof value.files !== "object") {
+    return null;
   }
 
-  // If key exists, you can integrate with the model to produce full file map
-  // For now, we still apply the stub to keep the flow working; replace with real call if desired.
-  files = stubTransform(boilerplate, userText);
-  return NextResponse.json({ files, explanation: "AI transformation applied." });
+  return {
+    files: normalizeFileMap(value.files as Record<string, string>),
+    explanation: typeof value.explanation === "string" ? value.explanation : undefined,
+  };
+}
+
+function normalizeFileMap(files: Record<string, string>) {
+  const out: Record<string, string> = {};
+  for (const [path, value] of Object.entries(files)) {
+    const key = path.startsWith("/") ? path : `/${path}`;
+    out[key] = value;
+  }
+  return out;
 }
 
 export const runtime = "nodejs";

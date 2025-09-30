@@ -13,7 +13,9 @@ export type ChatMessage = z.infer<typeof ChatMessageSchema>;
 
 export const AiRequestSchema = z.object({
   messages: z.array(ChatMessageSchema.pick({ role: true, content: true })),
-  boilerplate: FileMapSchema,
+  model: z.string(),
+  apiKey: z.string().optional(),
+  systemPrompt: z.string().optional(),
 });
 
 export type AiRequest = z.infer<typeof AiRequestSchema>;

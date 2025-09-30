@@ -17,7 +17,7 @@ textarea{resize:vertical}
 .vh100{height:100vh}
 .w100{width:100%}
 .grow{flex:1}
-.grid-2{display:grid;grid-template-columns:420px 1fr;height:100vh;gap:12px;padding:12px}
+.grid-2{display:grid;grid-template-columns:460px 1fr;height:100vh;gap:12px;padding:12px}
 .chat{display:flex;flex-direction:column}
 .messages{flex:1;overflow:auto;display:flex;flex-direction:column;gap:12px;padding:12px}
 .message{padding:10px 12px;border-radius:10px;max-width:85%}
@@ -30,4 +30,12 @@ textarea{resize:vertical}
 .btn-ghost{background:transparent;border-color:#223140}
 .btn-primary{background:var(--accent);border-color:var(--accent-2);color:#032b28}
 .preview-toolbar{display:flex;gap:8px;align-items:center}
+.settings{padding:12px;border-bottom:1px solid #223140;display:flex;flex-direction:column;gap:12px;background:#0d1118}
+.settings-grid{display:flex;flex-direction:column;gap:12px}
+.settings-grid label{display:flex;flex-direction:column;gap:6px}
+.textarea-field{display:flex;flex-direction:column;gap:6px}
+.field-label{font-size:12px;text-transform:uppercase;letter-spacing:.08em;color:#6e7a8a}
+.field-helper{font-size:12px}
+.settings select,.settings input,.settings textarea{width:100%;padding:8px 10px;font-size:14px}
+.settings textarea{min-height:100px}
 
