@@ -7,9 +7,9 @@ import { loadBoilerplateFiles } from "@/lib/boilerplate";
 import { AiRequestSchema } from "@/types/ai";
 
 const MODEL_MAP: Record<string, { provider: "openai" | "anthropic" | "google"; model: string }> = {
-  "gpt-codex": { provider: "openai", model: "gpt-4o-mini" },
-  "claude-sonnet-4.1": { provider: "anthropic", model: "claude-3-5-sonnet-20240620" },
-  "gemini-1.5-pro": { provider: "google", model: "gemini-1.5-pro" },
+  "gpt-codex": { provider: "openai", model: "gpt-4.1-mini" },
+  "claude-sonnet-4.1": { provider: "anthropic", model: "claude-3-5-sonnet-latest" },
+  "gemini-1.5-pro": { provider: "google", model: "gemini-1.5-pro-latest" },
 };
 
 const DEFAULT_SYSTEM_PROMPT =
@@ -90,15 +90,21 @@ async function generateFileMap({
   messages: { role: "user" | "assistant" | "system"; content: string }[];
   systemPrompt: string;
 }) {
-  const providerOptions =
+  const resolvedApiKey = apiKey?.trim();
+  const modelInstance =
     provider === "openai"
-      ? openai({ apiKey: apiKey || process.env.OPENAI_API_KEY })
+      ? openai(model, { apiKey: resolvedApiKey || process.env.OPENAI_API_KEY })
       : provider === "anthropic"
-      ? anthropic({ apiKey: apiKey || process.env.ANTHROPIC_API_KEY })
-      : google({ apiKey: apiKey || process.env.GOOGLE_API_KEY });
+      ? anthropic(model, { apiKey: resolvedApiKey || process.env.ANTHROPIC_API_KEY })
+      : google(model, { apiKey: resolvedApiKey || process.env.GOOGLE_API_KEY });
+
+  const conversation = [
+    `System: ${systemPrompt}`,
+    ...messages.map((message) => `${message.role}: ${message.content}`),
+  ].join("\n\n");
 
   const result = await generateObject({
-    model: providerOptions(model),
+    model: modelInstance,
     schema: {
       type: "object",
       properties: {
@@ -111,16 +117,7 @@ async function generateFileMap({
       required: ["files"],
       additionalProperties: false,
     } as const,
-    prompt: [
-      {
-        role: "system",
-        content: systemPrompt,
-      },
-      ...messages.map((message) => ({
-        role: message.role,
-        content: message.content,
-      })),
-    ],
+    prompt: conversation,
   });
 
   const value = result.object;

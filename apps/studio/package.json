@@ -10,19 +10,19 @@
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },
   "dependencies": {
+    "@ai-sdk/anthropic": "^1.0.5",
+    "@ai-sdk/google": "^1.0.5",
+    "@ai-sdk/openai": "^1.0.5",
+    "@codesandbox/sandpack-react": "2.16.0",
+    "@tabler/icons-react": "2.47.0",
+    "ai": "^5.0.59",
+    "jszip": "3.10.1",
     "next": "14.2.15",
+    "p5": "1.9.2",
     "react": "18.3.1",
     "react-dom": "18.3.1",
-    "@codesandbox/sandpack-react": "2.16.0",
-    "zod": "3.23.8",
-    "p5": "1.9.2",
-    "@tabler/icons-react": "2.47.0",
     "sonner": "1.5.0",
-    "jszip": "3.10.1",
-    "ai": "^5.0.59",
-    "@ai-sdk/openai": "^1.0.5",
-    "@ai-sdk/anthropic": "^1.0.5",
-    "@ai-sdk/google": "^1.0.5"
+    "zod": "^4.1.11"
   },
   "devDependencies": {
     "@types/node": "20.14.12",
@@ -33,4 +33,3 @@
     "typescript": "5.6.2"
   }
 }
-
