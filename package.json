@@ -1,19 +1,38 @@
 {
-  "name": "fresh-breeze",
-  "private": true,
+  "name": "studio",
   "version": "0.1.0",
-  "packageManager": "bun@1.1.17",
-  "workspaces": [
-    "apps/*"
-  ],
-  "engines": {
-    "bun": ">=1.1.0"
-  },
+  "private": true,
   "scripts": {
-    "dev": "cd apps/studio && bun run dev",
-    "build": "cd apps/studio && bun run build",
-    "start": "cd apps/studio && bun run start",
-    "typecheck": "cd apps/studio && bun run typecheck",
-    "lint": "cd apps/studio && bun run lint"
+    "dev": "next dev  -p 3030",
+    "build": "next build",
+    "start": "next start -p 3030",
+    "lint": "next lint",
+    "typecheck": "tsc -p tsconfig.json --noEmit"
+  },
+  "dependencies": {
+    "@ai-sdk/anthropic": "^1.0.5",
+    "@ai-sdk/google": "^1.0.5",
+    "@ai-sdk/openai": "^2.0.42",
+    "@codesandbox/sandpack-react": "2.16.0",
+    "@tabler/icons-react": "2.47.0",
+    "ai": "^5.0.60",
+    "jszip": "3.10.1",
+    "next": "14.2.15",
+    "p5": "1.9.2",
+    "react": "18.3.1",
+    "react-dom": "18.3.1",
+    "sonner": "1.5.0",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@types/node": "20.14.12",
+    "@types/react": "18.3.3",
+    "@types/react-dom": "18.3.0",
+    "autoprefixer": "^10.4.21",
+    "eslint": "8.57.0",
+    "eslint-config-next": "14.2.15",
+    "postcss": "^8.5.6",
+    "tailwindcss": "3.4.14",
+    "typescript": "5.6.2"
   }
 }

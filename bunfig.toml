@@ -1,6 +1,0 @@
-ignored = ["**/node_modules/**", "**/.next/**", "**/dist/**", "**/.turbo/**"]
-
-[install]
-peer = true
-production = false
-

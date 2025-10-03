@@ -1,21 +1,21 @@
-## Fresh Breeze Monorepo
+### Studio (Next.js)
 
-- apps/studio: Next.js AI chat + live p5 preview
-- apps/boilerplate: Barebones p5 project used as the AI starting point
+- Chat on the left, live p5 preview on the right (Sandpack)
+- AI always returns a full file map; preview instantly updates
+- Reset to boilerplate and download as ZIP supported
 
-Install deps (Bun only):
-
-```bash
-bun install
-```
-
-Run Studio (UI):
+Env:
 
 ```bash
-bun run dev:studio
+cp .env.example .env.local
 ```
 
-Notes:
-- The AI endpoint is stubbed by default. Set `OPENAI_API_KEY` in `apps/studio/.env.local` to enable OpenAI.
-- The preview always reflects the latest full file map returned by the AI.
+Optional:
+- `OPENAI_API_KEY` to swap stubbed transform with AI-backed logic later.
+
+Run with Bun:
+
+```bash
+bun run dev
+```
 
