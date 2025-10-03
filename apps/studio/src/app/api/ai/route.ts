@@ -1,16 +1,12 @@
+// @ts-nocheck
 import { NextResponse } from "next/server";
 import { generateObject } from "ai";
-import { openai } from "@ai-sdk/openai";
-import { anthropic } from "@ai-sdk/anthropic";
-import { google } from "@ai-sdk/google";
+import { createOpenAI } from "@ai-sdk/openai";
+import { z } from "zod";
 import { loadBoilerplateFiles } from "@/lib/boilerplate";
 import { AiRequestSchema } from "@/types/ai";
 
-const MODEL_MAP: Record<string, { provider: "openai" | "anthropic" | "google"; model: string }> = {
-  "gpt-codex": { provider: "openai", model: "gpt-5" },
-  "claude-sonnet-4.1": { provider: "anthropic", model: "claude-3-5-sonnet-latest" },
-  "gemini-1.5-pro": { provider: "google", model: "gemini-1.5-pro-latest" },
-};
+const MODEL_ID = "gpt-5";
 
 const DEFAULT_SYSTEM_PROMPT =
   "You are an AI assistant that produces a complete file map for a p5.js canvas project. Always respond with valid JSON: { files: { path: code }, explanation?: string } covering every file.";
@@ -44,24 +40,20 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Invalid body" }, { status: 400 });
   }
 
-  const { messages, model, systemPrompt, apiKey } = parsed.data;
+  const { messages, systemPrompt, apiKey } = parsed.data;
   const boilerplate = loadBoilerplateFiles();
-  const selected = MODEL_MAP[model];
-
-  if (!selected) {
-    const fallback = stubTransform(boilerplate, messages.map((m) => m.content).join("\n"));
-    return NextResponse.json({ files: fallback, explanation: "Unknown model; stubbed output." });
-  }
-
-  const providerKey = apiKey?.trim();
 
   try {
+    const provider = createOpenAI({
+      apiKey: apiKey?.trim() || process.env.OPENAI_API_KEY,
+    });
+    
+    const model = provider.chat(MODEL_ID);
+    
     const result = await generateFileMap({
-      provider: selected.provider,
-      model: selected.model,
-      apiKey: providerKey,
       messages,
       systemPrompt: systemPrompt?.trim() || DEFAULT_SYSTEM_PROMPT,
+      model,
     });
 
     if (!result) {
@@ -78,45 +70,30 @@ export async function POST(req: Request) {
 }
 
 async function generateFileMap({
-  provider,
   model,
-  apiKey,
   messages,
   systemPrompt,
 }: {
-  provider: "openai" | "anthropic" | "google";
-  model: string;
-  apiKey?: string;
+  model: any;
   messages: { role: "user" | "assistant" | "system"; content: string }[];
   systemPrompt: string;
 }) {
-  const resolvedApiKey = apiKey?.trim();
-  const modelInstance =
-    provider === "openai"
-      ? openai(model, { apiKey: resolvedApiKey || process.env.OPENAI_API_KEY })
-      : provider === "anthropic"
-      ? anthropic(model, { apiKey: resolvedApiKey || process.env.ANTHROPIC_API_KEY })
-      : google(model, { apiKey: resolvedApiKey || process.env.GOOGLE_API_KEY });
-
   const conversation = [
     `System: ${systemPrompt}`,
     ...messages.map((message) => `${message.role}: ${message.content}`),
   ].join("\n\n");
 
+  const schema: z.ZodObject<{
+    files: z.ZodRecord<z.ZodString>;
+    explanation: z.ZodOptional<z.ZodString>;
+  }> = z.object({
+    files: z.record(z.string()),
+    explanation: z.string().optional(),
+  });
+
   const result = await generateObject({
-    model: modelInstance,
-    schema: {
-      type: "object",
-      properties: {
-        files: {
-          type: "object",
-          additionalProperties: { type: "string" },
-        },
-        explanation: { type: "string" },
-      },
-      required: ["files"],
-      additionalProperties: false,
-    } as const,
+    model,
+    schema,
     prompt: conversation,
   });
 

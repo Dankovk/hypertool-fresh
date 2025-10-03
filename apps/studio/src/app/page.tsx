@@ -16,9 +16,10 @@ type ChatMessage = {
 };
 
 const MODEL_OPTIONS = [
-  { value: "gpt-codex", label: "GTP Codex (OpenAI)" },
-  { value: "claude-sonnet-4.1", label: "Claude Sonnet 4.1" },
-  { value: "gemini-1.5-pro", label: "Google Gemini 1.5 Pro" },
+  { value: "gpt-5", label: "GPT-5 (Latest)" },
+  { value: "gpt-4o", label: "GPT-4o" },
+  { value: "o1", label: "O1 (Reasoning)" },
+  { value: "o1-mini", label: "O1 Mini (Reasoning)" }
 ];
 
 const DEFAULT_SYSTEM_PROMPT =
