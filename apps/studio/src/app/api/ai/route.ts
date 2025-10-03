@@ -8,8 +8,10 @@ import { AiRequestSchema } from "@/types/ai";
 
 const MODEL_ID = "gpt-5";
 
+const deafaultAPIKey = process.env.OPENAI_API_KEY;
+
 const DEFAULT_SYSTEM_PROMPT =
-  "You are an AI assistant that produces a complete file map for a p5.js canvas project. Always respond with valid JSON: { files: { path: code }, explanation?: string } covering every file.";
+  "You are an AI assistant that modifies p5.js canvas projects. You will receive the current project files and user instructions. Make the requested changes while preserving any existing code that should remain. Always respond with a complete file map including ALL files (modified and unmodified): { files: { path: code }, explanation?: string }.";
 
 function stubTransform(files: Record<string, string>, prompt: string) {
   const nextFiles = { ...files };
@@ -40,8 +42,9 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Invalid body" }, { status: 400 });
   }
 
-  const { messages, systemPrompt, apiKey } = parsed.data;
+  const { messages, systemPrompt, apiKey, currentFiles } = parsed.data;
   const boilerplate = loadBoilerplateFiles();
+  const workingFiles = currentFiles && Object.keys(currentFiles).length > 0 ? currentFiles : boilerplate;
 
   try {
     const provider = createOpenAI({
@@ -50,62 +53,42 @@ export async function POST(req: Request) {
     
     const model = provider.chat(MODEL_ID);
     
-    const result = await generateFileMap({
-      messages,
-      systemPrompt: systemPrompt?.trim() || DEFAULT_SYSTEM_PROMPT,
-      model,
+    const filesContext = Object.entries(workingFiles)
+      .map(([path, code]) => `File: ${path}\n\`\`\`\n${code}\n\`\`\``)
+      .join("\n\n");
+
+    const conversation = [
+      `System: ${systemPrompt?.trim() || DEFAULT_SYSTEM_PROMPT}`,
+      `\nCurrent project files:\n${filesContext}\n`,
+      ...messages.map((message) => `${message.role}: ${message.content}`),
+    ].join("\n\n");
+
+    const schema = z.object({
+      files: z.record(z.string()),
+      explanation: z.string().optional(),
     });
 
-    if (!result) {
-      const fallback = stubTransform(boilerplate, messages.map((m) => m.content).join("\n"));
+    const result = await generateObject({
+      model,
+      schema,
+      prompt: conversation,
+    });
+
+    const value = result.object;
+    if (!value || typeof value !== "object" || !value.files || typeof value.files !== "object") {
+      const fallback = stubTransform(workingFiles, messages.map((m) => m.content).join("\n"));
       return NextResponse.json({ files: fallback, explanation: "AI result invalid; stub applied." });
     }
 
-    return NextResponse.json(result);
+    return NextResponse.json({
+      files: normalizeFileMap(value.files as Record<string, string>),
+      explanation: typeof value.explanation === "string" ? value.explanation : undefined,
+    });
   } catch (error) {
     console.error("AI SDK request failed", error);
-    const fallback = stubTransform(boilerplate, messages.map((m) => m.content).join("\n"));
+    const fallback = stubTransform(workingFiles, messages.map((m) => m.content).join("\n"));
     return NextResponse.json({ files: fallback, explanation: "AI request failed; stub applied." });
   }
-}
-
-async function generateFileMap({
-  model,
-  messages,
-  systemPrompt,
-}: {
-  model: any;
-  messages: { role: "user" | "assistant" | "system"; content: string }[];
-  systemPrompt: string;
-}) {
-  const conversation = [
-    `System: ${systemPrompt}`,
-    ...messages.map((message) => `${message.role}: ${message.content}`),
-  ].join("\n\n");
-
-  const schema: z.ZodObject<{
-    files: z.ZodRecord<z.ZodString>;
-    explanation: z.ZodOptional<z.ZodString>;
-  }> = z.object({
-    files: z.record(z.string()),
-    explanation: z.string().optional(),
-  });
-
-  const result = await generateObject({
-    model,
-    schema,
-    prompt: conversation,
-  });
-
-  const value = result.object;
-  if (!value || typeof value !== "object" || !value.files || typeof value.files !== "object") {
-    return null;
-  }
-
-  return {
-    files: normalizeFileMap(value.files as Record<string, string>),
-    explanation: typeof value.explanation === "string" ? value.explanation : undefined,
-  };
 }
 
 function normalizeFileMap(files: Record<string, string>) {

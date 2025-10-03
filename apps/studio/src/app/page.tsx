@@ -1,9 +1,14 @@
 "use client";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Sandpack } from "@codesandbox/sandpack-react";
+import {
+  SandpackProvider,
+  SandpackLayout,
+  SandpackPreview,
+  SandpackCodeEditor,
+} from "@codesandbox/sandpack-react";
 import { z } from "zod";
 import { toast } from "sonner";
-import { IconBell, IconDownload, IconRefresh, IconRocket } from "@tabler/icons-react";
+import { IconDownload, IconRefresh, IconRocket } from "@tabler/icons-react";
 
 const FileMapSchema = z.record(z.string());
 
@@ -23,7 +28,7 @@ const MODEL_OPTIONS = [
 ];
 
 const DEFAULT_SYSTEM_PROMPT =
-  "You are an AI assistant that produces a complete file map for a p5.js sketch. Always return JSON in the shape { files: { \\\"path\\\": \\\"code\\\" }, explanation?: string } including every file.";
+  "You are an AI assistant that modifies p5.js canvas projects. You will receive the current project files and user instructions. Make the requested changes while preserving any existing code that should remain. Always respond with a complete file map including ALL files (modified and unmodified): { files: { \\\"path\\\": \\\"code\\\" }, explanation?: string }.";
 
 const SETTINGS_STORAGE_KEY = "studio-settings";
 
@@ -38,12 +43,11 @@ export default function HomePage() {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
-  const [notificationsEnabled, setNotificationsEnabled] = useState(true);
   const [model, setModel] = useState<string>(MODEL_OPTIONS[0].value);
   const [apiKey, setApiKey] = useState("");
   const [systemPrompt, setSystemPrompt] = useState(DEFAULT_SYSTEM_PROMPT);
   const settingsLoadedRef = useRef(false);
-  const sandpackRef = useRef<any>(null);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const toClientFiles = useCallback((incoming: FileMap) => {
     const normalized: FileMap = {};
@@ -113,6 +117,10 @@ export default function HomePage() {
     loadBoilerplate();
   }, [loadBoilerplate]);
 
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages, loading]);
+
   const sandpackFiles = useMemo(() => {
     const result: Record<string, string> = {};
     Object.entries(files).forEach(([path, code]) => {
@@ -123,12 +131,13 @@ export default function HomePage() {
   }, [files]);
 
   const onSubmit = useCallback(async () => {
-    if (!input.trim()) return;
+    if (!input.trim() || loading) return;
     const userMsg: ChatMessage = { id: crypto.randomUUID(), role: "user", content: input };
     const nextMessages = [...messages, userMsg];
     setMessages(nextMessages);
     setInput("");
     setLoading(true);
+    
     try {
       const res = await fetch("/api/ai", {
         method: "POST",
@@ -138,28 +147,32 @@ export default function HomePage() {
           model,
           apiKey: apiKey.trim() || undefined,
           systemPrompt: systemPrompt.trim() || undefined,
+          currentFiles: sandpackFiles,
         }),
       });
+      
       if (!res.ok) throw new Error("AI request failed");
+      
       const json = await res.json();
       const parsed = FileMapSchema.safeParse(json.files);
       if (!parsed.success) throw new Error("Invalid AI result");
 
       const normalized = toClientFiles(parsed.data);
       setFiles(normalized);
+      
       const assistantMsg: ChatMessage = {
         id: crypto.randomUUID(),
         role: "assistant",
         content: json.explanation ?? "Updated project files.",
       };
       setMessages((prev) => [...prev, assistantMsg]);
-      if (notificationsEnabled) toast.success("Project updated");
+      toast.success("Project updated");
     } catch (err: any) {
       toast.error(err?.message || "AI error");
     } finally {
       setLoading(false);
     }
-  }, [apiKey, input, messages, model, notificationsEnabled, systemPrompt, toClientFiles]);
+  }, [apiKey, input, loading, messages, model, sandpackFiles, systemPrompt, toClientFiles]);
 
   const onReset = useCallback(async () => {
     await loadBoilerplate();
@@ -183,22 +196,29 @@ export default function HomePage() {
   }, [files]);
 
   return (
-    <div className="grid-2">
-      <div className="panel chat">
-        <div className="header">
-          <div className="title">AI Studio</div>
-          <div className="toolbar">
-            <button className="btn-ghost" onClick={onReset}>
+    <div className="grid h-screen grid-cols-studio gap-4 p-4">
+      <div className="flex flex-col overflow-hidden rounded-2xl border border-border bg-surface shadow-brand">
+        <div className="flex items-center justify-between border-b border-border bg-accent/5 px-5 py-4">
+          <div className="text-lg font-semibold tracking-tight text-accent">AI Studio</div>
+          <div className="flex items-center gap-3">
+            <button
+              className="inline-flex items-center gap-2 rounded-lg border border-border px-3 py-2 text-sm text-text-secondary transition hover:bg-muted"
+              onClick={onReset}
+            >
               <IconRefresh size={18} /> Reset
             </button>
           </div>
         </div>
 
-        <div className="settings">
-          <div className="settings-grid">
-            <label>
-              <div className="field-label">Model</div>
-              <select value={model} onChange={(e) => setModel(e.target.value)}>
+        <div className="flex flex-col gap-4 border-b border-border bg-black/20 px-5 py-4">
+          <div className="grid grid-cols-2 gap-4">
+            <label className="flex flex-col gap-2">
+              <span className="text-xs font-semibold uppercase tracking-[0.12em] text-text-secondary">Model</span>
+              <select
+                className="rounded-lg border border-border bg-background px-3 py-2 text-sm text-text shadow-sm focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/30"
+                value={model}
+                onChange={(e) => setModel(e.target.value)}
+              >
                 {MODEL_OPTIONS.map((option) => (
                   <option key={option.value} value={option.value}>
                     {option.label}
@@ -206,21 +226,23 @@ export default function HomePage() {
                 ))}
               </select>
             </label>
-            <label>
-              <div className="field-label">API Key</div>
+            <label className="flex flex-col gap-2">
+              <span className="text-xs font-semibold uppercase tracking-[0.12em] text-text-secondary">API Key</span>
               <input
+                className="rounded-lg border border-border bg-background px-3 py-2 text-sm text-text shadow-sm focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/30"
                 type="password"
                 placeholder="Optional: overrides env key"
                 value={apiKey}
                 onChange={(e) => setApiKey(e.target.value)}
                 autoComplete="off"
               />
-              <div className="field-helper subtle">Stored locally in your browser only.</div>
+              <span className="text-xs text-text-secondary">Stored locally in your browser only.</span>
             </label>
           </div>
-          <label className="textarea-field">
-            <div className="field-label">System Prompt</div>
+          <label className="flex flex-col gap-2">
+            <span className="text-xs font-semibold uppercase tracking-[0.12em] text-text-secondary">System Prompt</span>
             <textarea
+              className="min-h-[120px] rounded-lg border border-border bg-background px-3 py-2 text-sm text-text shadow-sm focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/30"
               value={systemPrompt}
               onChange={(e) => setSystemPrompt(e.target.value)}
               rows={4}
@@ -229,23 +251,47 @@ export default function HomePage() {
           </label>
         </div>
 
-        <div className="messages">
+        <div className="scrollbar-thin flex-1 space-y-4 overflow-y-auto px-5 py-5">
           {messages.map((m) => (
-            <div key={m.id} className={`message ${m.role === "assistant" ? "ai" : "user"}`}>
-              <div className="subtle" style={{ marginBottom: 4 }}>{m.role}</div>
-              <div>{m.content}</div>
+            <div
+              key={m.id}
+              className={`max-w-[85%] rounded-2xl border px-4 py-3 text-sm shadow-brand-sm animate-slide-in ${
+                m.role === "assistant"
+                  ? "border-[#1e3a4d] bg-gradient-to-br from-[#0f1922] to-[#162028]"
+                  : "ml-auto border-[#333] bg-gradient-to-br from-[#1a1a1a] to-[#242424]"
+              }`}
+            >
+              <div className="mb-1 text-[11px] font-semibold uppercase tracking-[0.12em] text-text-secondary">
+                {m.role}
+              </div>
+              <div className="leading-relaxed text-text">{m.content}</div>
             </div>
           ))}
           {messages.length === 0 && (
-            <div className="message ai">
-              <div className="subtle" style={{ marginBottom: 4 }}>assistant</div>
-              <div>Describe the visual you want and I&apos;ll update the sketch.</div>
+            <div className="max-w-[85%] rounded-2xl border border-[#1e3a4d] bg-gradient-to-br from-[#0f1922] to-[#162028] px-4 py-3 text-sm shadow-brand-sm">
+              <div className="mb-1 text-[11px] font-semibold uppercase tracking-[0.12em] text-text-secondary">
+                assistant
+              </div>
+              <div className="leading-relaxed text-text">Describe the visual you want and I&apos;ll update the sketch.</div>
             </div>
           )}
+          {loading && (
+            <div className="max-w-[85%] rounded-2xl border border-[#1e3a4d] bg-gradient-to-br from-[#0f1922] to-[#162028] px-4 py-3 text-sm shadow-brand-sm">
+              <div className="flex items-center gap-2">
+                <span className="flex items-center gap-1">
+                  <span className="inline-block h-2 w-2 rounded-full bg-accent animate-typing-1" />
+                  <span className="inline-block h-2 w-2 rounded-full bg-accent animate-typing-2" />
+                  <span className="inline-block h-2 w-2 rounded-full bg-accent animate-typing-3" />
+                </span>
+                <span className="text-sm text-text-secondary">Generating...</span>
+              </div>
+            </div>
+          )}
+          <div ref={messagesEndRef} />
         </div>
-        <div className="inputbar">
+        <div className="flex items-center gap-3 border-t border-border bg-black/20 px-5 py-4">
           <input
-            className="grow"
+            className="flex-1 rounded-lg border border-border bg-background px-3 py-2 text-sm text-text shadow-sm transition focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/30"
             placeholder="Describe the visual you want (p5.js)"
             value={input}
             onChange={(e) => setInput(e.target.value)}
@@ -253,38 +299,50 @@ export default function HomePage() {
               if (e.key === "Enter" && !e.shiftKey) onSubmit();
             }}
           />
-          <button className="btn-primary" onClick={onSubmit} disabled={loading}>
+          <button
+            className="inline-flex h-10 w-10 items-center justify-center rounded-lg bg-gradient-to-br from-accent to-accent-2 text-background shadow-lg transition hover:shadow-xl disabled:opacity-50"
+            onClick={onSubmit}
+            disabled={loading}
+          >
             <IconRocket size={18} />
           </button>
         </div>
       </div>
 
-      <div className="panel">
-        <div className="header">
-          <div className="title">Live Preview</div>
-          <div className="preview-toolbar">
-            <button className="btn-ghost" onClick={onDownload}>
+      <div className="flex flex-col overflow-hidden rounded-2xl border border-border bg-surface shadow-brand">
+        <div className="flex items-center justify-between border-b border-border bg-accent/5 px-5 py-4">
+          <div className="text-lg font-semibold tracking-tight text-accent">Live Preview</div>
+          <div className="flex items-center gap-3">
+            <button
+              className="inline-flex items-center gap-2 rounded-lg border border-border px-3 py-2 text-sm text-text-secondary transition hover:bg-muted"
+              onClick={onDownload}
+            >
               <IconDownload size={18} /> Download
             </button>
           </div>
         </div>
-        <div className="content" style={{ height: "calc(100vh - 100px)" }}>
-          <Sandpack
-            ref={sandpackRef}
+        <div className="flex-1">
+          <SandpackProvider
             template="static"
             theme="dark"
-            options={{
-              externalResources: ["https://unpkg.com/p5@1.9.2/lib/p5.min.js"],
-              recompileMode: "delayed",
-              recompileDelay: 400,
-              showNavigator: true,
-              showTabs: true,
-              showConsole: true,
-              editorHeight: 520,
-            }}
-            customSetup={{ entry: "/index.html" }}
             files={sandpackFiles}
-          />
+            options={{
+              recompileMode: "delayed",
+              recompileDelay: 500,
+              
+            }}
+            customSetup={{
+              entry: "/index.html",
+              environment: "static",
+            }}
+          >
+            <SandpackLayout className="sandpack-layout h-full w-full">
+              <div className="sandpack-preview h-full w-full">
+                <SandpackPreview showNavigator showOpenInCodeSandbox={false} />
+              </div>
+              
+            </SandpackLayout>
+          </SandpackProvider>
         </div>
       </div>
     </div>

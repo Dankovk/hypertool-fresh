@@ -16,6 +16,7 @@ export const AiRequestSchema = z.object({
   model: z.string(),
   apiKey: z.string().optional(),
   systemPrompt: z.string().optional(),
+  currentFiles: FileMapSchema.optional(),
 });
 
 export type AiRequest = z.infer<typeof AiRequestSchema>;
