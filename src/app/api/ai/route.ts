@@ -6,7 +6,17 @@ import { createAnthropic } from "@ai-sdk/anthropic";
 import { google } from "@ai-sdk/google";
 import { z } from "zod";
 import { loadBoilerplateFiles } from "@/lib/boilerplate";
-import { AiRequestSchema } from "@/types/ai";
+import {
+  AiRequestSchema,
+  CodeEditSchema,
+  type CodeEdit,
+} from "@/types/ai";
+import {
+  applyEditsToFiles,
+  parseSearchReplaceBlocks,
+  createHistoryEntry,
+} from "@/lib/patches";
+import { getHistoryManager } from "@/lib/history";
 
 interface ProviderConfig {
   apiKey?: string;
@@ -50,8 +60,28 @@ function getProviderForModel(model: string, userApiKey?: string): any {
   throw new Error(`Unsupported model: ${model}`);
 }
 
-const DEFAULT_SYSTEM_PROMPT =
+const DEFAULT_SYSTEM_PROMPT_FULL =
   "You are an AI assistant that modifies p5.js canvas projects. You will receive the current project files and user instructions. Make the requested changes while preserving any existing code that should remain. Always respond with a complete file map including ALL files (modified and unmodified): { files: { path: code }, explanation?: string }.";
+
+const DEFAULT_SYSTEM_PROMPT_PATCH =
+  `You are an AI assistant that modifies p5.js canvas projects using precise code patches. You will receive the current project files and user instructions.
+
+For each change, generate a search/replace block in this format:
+
+<<<<<<< SEARCH
+[exact code to find - include enough context to uniquely identify the location]
+=======
+[replacement code]
+>>>>>>> REPLACE
+
+IMPORTANT RULES:
+1. Include sufficient context (2-3 lines before/after) to uniquely identify the edit location
+2. Match indentation and whitespace exactly in the SEARCH block
+3. Only include the specific code section being changed, not entire files
+4. You can make multiple edits across different files
+5. Specify the file path for each edit
+
+Respond with: { edits: [{ type: "search-replace", filePath: "/path/to/file", search: "...", replace: "..." }], explanation?: "..." }`;
 
 function stubTransform(files: Record<string, string>, prompt: string) {
   const nextFiles = { ...files };
@@ -82,49 +112,143 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Invalid body" }, { status: 400 });
   }
 
-  const { messages, model, systemPrompt, apiKey, currentFiles } = parsed.data;
+  const { messages, model, systemPrompt, apiKey, currentFiles, editMode } =
+    parsed.data;
   const boilerplate = loadBoilerplateFiles();
-  const workingFiles = currentFiles && Object.keys(currentFiles).length > 0 ? currentFiles : boilerplate;
+  const workingFiles =
+    currentFiles && Object.keys(currentFiles).length > 0
+      ? currentFiles
+      : boilerplate;
+
+  const usePatchMode = editMode === "patch";
 
   try {
     const provider = getProviderForModel(model, apiKey);
     const aiModel = provider.chat(model);
-    
+
     const filesContext = Object.entries(workingFiles)
       .map(([path, code]) => `File: ${path}\n\`\`\`\n${code}\n\`\`\``)
       .join("\n\n");
 
+    const defaultPrompt = usePatchMode
+      ? DEFAULT_SYSTEM_PROMPT_PATCH
+      : DEFAULT_SYSTEM_PROMPT_FULL;
+
     const conversation = [
-      `System: ${systemPrompt?.trim() || DEFAULT_SYSTEM_PROMPT}`,
+      `System: ${systemPrompt?.trim() || defaultPrompt}`,
       `\nCurrent project files:\n${filesContext}\n`,
       ...messages.map((message) => `${message.role}: ${message.content}`),
     ].join("\n\n");
 
-    const schema = z.object({
-      files: z.record(z.string()),
-      explanation: z.string().optional(),
-    });
+    if (usePatchMode) {
+      // Patch mode: Generate edits instead of full files
+      const schema = z.object({
+        edits: z.array(CodeEditSchema),
+        explanation: z.string().optional(),
+      });
 
-    const result = await generateObject({
-      model: aiModel,
-      schema,
-      prompt: conversation,
-    });
+      const result = await generateObject({
+        model: aiModel,
+        schema,
+        prompt: conversation,
+      });
 
-    const value = result.object;
-    if (!value || typeof value !== "object" || !value.files || typeof value.files !== "object") {
-      const fallback = stubTransform(workingFiles, messages.map((m) => m.content).join("\n"));
-      return NextResponse.json({ files: fallback, explanation: "AI result invalid; stub applied." });
+      const value = result.object;
+      if (
+        !value ||
+        typeof value !== "object" ||
+        !value.edits ||
+        !Array.isArray(value.edits)
+      ) {
+        return NextResponse.json(
+          { error: "AI failed to generate valid edits" },
+          { status: 500 }
+        );
+      }
+
+      // Apply patches
+      const patchResult = applyEditsToFiles(
+        workingFiles,
+        value.edits as CodeEdit[]
+      );
+
+      if (!patchResult.success) {
+        return NextResponse.json(
+          {
+            error: "Failed to apply patches",
+            details: patchResult.errors,
+            partialFiles: patchResult.files,
+          },
+          { status: 500 }
+        );
+      }
+
+      // Store in history
+      const historyManager = getHistoryManager();
+      const historyEntry = createHistoryEntry(
+        value.edits as CodeEdit[],
+        workingFiles,
+        patchResult.files,
+        value.explanation
+      );
+      historyManager.push(historyEntry);
+
+      return NextResponse.json({
+        files: normalizeFileMap(patchResult.files),
+        explanation: value.explanation,
+        edits: value.edits,
+        historyId: historyEntry.id,
+        mode: "patch",
+      });
+    } else {
+      // Full mode: Generate complete files (original behavior)
+      const schema = z.object({
+        files: z.record(z.string()),
+        explanation: z.string().optional(),
+      });
+
+      const result = await generateObject({
+        model: aiModel,
+        schema,
+        prompt: conversation,
+      });
+
+      const value = result.object;
+      if (
+        !value ||
+        typeof value !== "object" ||
+        !value.files ||
+        typeof value.files !== "object"
+      ) {
+        const fallback = stubTransform(
+          workingFiles,
+          messages.map((m) => m.content).join("\n")
+        );
+        return NextResponse.json({
+          files: fallback,
+          explanation: "AI result invalid; stub applied.",
+        });
+      }
+
+      return NextResponse.json({
+        files: normalizeFileMap(value.files as Record<string, string>),
+        explanation:
+          typeof value.explanation === "string"
+            ? value.explanation
+            : undefined,
+        mode: "full",
+      });
     }
-
-    return NextResponse.json({
-      files: normalizeFileMap(value.files as Record<string, string>),
-      explanation: typeof value.explanation === "string" ? value.explanation : undefined,
-    });
   } catch (error) {
     console.error("AI SDK request failed", error);
-    const fallback = stubTransform(workingFiles, messages.map((m) => m.content).join("\n"));
-    return NextResponse.json({ files: fallback, explanation: "AI request failed; stub applied." });
+    const fallback = stubTransform(
+      workingFiles,
+      messages.map((m) => m.content).join("\n")
+    );
+    return NextResponse.json({
+      files: fallback,
+      explanation: "AI request failed; stub applied.",
+    });
   }
 }
 

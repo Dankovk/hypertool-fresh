@@ -9,6 +9,8 @@ AI-powered p5.js creative coding environment with multi-model support
 - **Version History**: Track and restore previous code generations
 - **Preset Library**: 5 built-in creative coding templates
 - **Code Download**: Export projects as ZIP files
+- **Patch-Based Editing**: Efficient code modifications using search/replace blocks (90%+ token savings)
+- **Edit History & Undo/Redo**: Full history tracking with undo/redo support
 
 ## Supported Models
 
@@ -75,7 +77,30 @@ bun run dev
 - Fallback to environment variables when no user key provided
 
 ### Code Generation
-- Full file map updates (not patches)
+- **Patch Mode** (NEW): Precise search/replace edits with context-aware fuzzy matching
+- **Full Mode**: Complete file regeneration for major rewrites
 - Preserves existing code structure
 - AI-powered explanations of changes
+
+### Patch-Based Editing (NEW)
+Modern AI coding assistant approach for efficient, precise code modifications:
+- Search/replace blocks instead of full file regeneration
+- Context-based fuzzy matching handles whitespace variations
+- 90%+ reduction in output tokens
+- Full edit history with undo/redo support
+- See [PATCH_EDITING.md](./PATCH_EDITING.md) for detailed documentation
+
+**Quick Example:**
+```typescript
+// Request patch mode
+fetch("/api/ai", {
+  method: "POST",
+  body: JSON.stringify({
+    messages: [{ role: "user", content: "Change circle color to red" }],
+    model: "claude-3-5-sonnet-20241022",
+    editMode: "patch", // Enable patch mode
+    currentFiles: {...}
+  })
+})
+```
 

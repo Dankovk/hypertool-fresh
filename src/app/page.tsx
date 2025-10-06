@@ -61,8 +61,31 @@ const MODEL_OPTIONS: ModelOption[] = [
   { value: "gemini-1.5-flash-latest", label: "Gemini 1.5 Flash", provider: "Google", tags: ["fast", "cost-effective"] },
 ];
 
-const DEFAULT_SYSTEM_PROMPT =
-  "You are an AI assistant that modifies p5.js canvas projects. You will receive the current project files and user instructions. Make the requested changes while preserving any existing code that should remain. Always respond with a complete file map including ALL files (modified and unmodified): { files: { \\\"path\\\": \\\"code\\\" }, explanation?: string }.";
+// Keep in sync with backend default prompts
+const DEFAULT_SYSTEM_PROMPT_FULL =
+  "You are an AI assistant that modifies p5.js canvas projects. You will receive the current project files and user instructions. Make the requested changes while preserving any existing code that should remain. Always respond with a complete file map including ALL files (modified and unmodified): { files: { path: code }, explanation?: string }.";
+
+const DEFAULT_SYSTEM_PROMPT_PATCH =
+  `You are an AI assistant that modifies p5.js canvas projects using precise code patches. You will receive the current project files and user instructions.
+
+For each change, generate a search/replace block in this format:
+
+<<<<<<< SEARCH
+[exact code to find - include enough context to uniquely identify the location]
+=======
+[replacement code]
+>>>>>>> REPLACE
+
+IMPORTANT RULES:
+1. Include sufficient context (2-3 lines before/after) to uniquely identify the edit location
+2. Match indentation and whitespace exactly in the SEARCH block
+3. Only include the specific code section being changed, not entire files
+4. You can make multiple edits across different files
+5. Specify the file path for each edit
+
+Respond with: { edits: [{ type: "search-replace", filePath: "/path/to/file", search: "...", replace: "..." }], explanation?: "..." }`;
+
+const DEFAULT_SYSTEM_PROMPT = DEFAULT_SYSTEM_PROMPT_PATCH;
 
 const SETTINGS_STORAGE_KEY = "studio-settings";
 
@@ -70,6 +93,7 @@ type StudioSettings = {
   model: string;
   apiKey: string;
   systemPrompt: string;
+  editMode?: "full" | "patch";
 };
 
 export default function HomePage() {
@@ -80,6 +104,7 @@ export default function HomePage() {
   const [model, setModel] = useState<string>(MODEL_OPTIONS[0].value);
   const [apiKey, setApiKey] = useState("");
   const [systemPrompt, setSystemPrompt] = useState(DEFAULT_SYSTEM_PROMPT);
+  const [editMode, setEditMode] = useState<"full" | "patch">("patch");
   const [codeVersions, setCodeVersions] = useState<CodeVersion[]>([]);
   const [presets, setPresets] = useState<PresetInfo[]>([]);
   const [showVersionHistory, setShowVersionHistory] = useState(false);
@@ -113,6 +138,9 @@ export default function HomePage() {
         if (typeof parsed.systemPrompt === "string" && parsed.systemPrompt.trim().length > 0) {
           setSystemPrompt(parsed.systemPrompt);
         }
+        if (parsed.editMode === "patch" || parsed.editMode === "full") {
+          setEditMode(parsed.editMode);
+        }
       }
     } catch (error) {
       console.warn("Failed to load stored settings", error);
@@ -127,13 +155,14 @@ export default function HomePage() {
       model,
       apiKey,
       systemPrompt,
+      editMode,
     };
     try {
       localStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify(payload));
     } catch (error) {
       console.warn("Failed to persist settings", error);
     }
-  }, [model, apiKey, systemPrompt]);
+  }, [model, apiKey, systemPrompt, editMode]);
 
   const loadBoilerplate = useCallback(async (presetId?: string) => {
     const url = presetId ? `/api/boilerplate?preset=${presetId}` : "/api/boilerplate";
@@ -197,6 +226,7 @@ export default function HomePage() {
           apiKey: apiKey.trim() || undefined,
           systemPrompt: systemPrompt.trim() || undefined,
           currentFiles: sandpackFiles,
+          editMode,
         }),
       });
 
@@ -232,7 +262,7 @@ export default function HomePage() {
     } finally {
       setLoading(false);
     }
-  }, [apiKey, input, loading, messages, model, sandpackFiles, systemPrompt, toClientFiles]);
+  }, [apiKey, editMode, input, loading, messages, model, sandpackFiles, systemPrompt, toClientFiles]);
 
   const onReset = useCallback(async () => {
     await loadBoilerplate();
@@ -300,7 +330,7 @@ export default function HomePage() {
         </div>
 
         <div className="flex flex-col gap-4 border-b border-border bg-black/20 px-5 py-4">
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-3 gap-4">
             <label className="flex flex-col gap-2">
               <span className="text-xs font-semibold uppercase tracking-[0.12em] text-text-secondary">Model</span>
               <select
@@ -332,6 +362,25 @@ export default function HomePage() {
               </select>
             </label>
             <label className="flex flex-col gap-2">
+              <span className="text-xs font-semibold uppercase tracking-[0.12em] text-text-secondary">
+                Edit Mode
+              
+              </span>
+              <select
+                className="rounded-lg border border-border bg-background px-3 py-2 text-sm text-text shadow-sm focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/30"
+                value={editMode}
+                onChange={(e) => {
+                  const mode = e.target.value as "full" | "patch";
+                  setEditMode(mode);
+                  // Update system prompt when mode changes
+                  setSystemPrompt(mode === "patch" ? DEFAULT_SYSTEM_PROMPT_PATCH : DEFAULT_SYSTEM_PROMPT_FULL);
+                }}
+              >
+                <option value="full">Full (Regenerate files)</option>
+                <option value="patch">Patch (Smart edits) ⚡</option>
+              </select>
+            </label>
+            <label className="flex flex-col gap-2">
               <span className="text-xs font-semibold uppercase tracking-[0.12em] text-text-secondary">API Key</span>
               <input
                 className="rounded-lg border border-border bg-background px-3 py-2 text-sm text-text shadow-sm focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/30"
@@ -341,7 +390,7 @@ export default function HomePage() {
                 onChange={(e) => setApiKey(e.target.value)}
                 autoComplete="off"
               />
-              <span className="text-xs text-text-secondary">Stored locally in your browser only.</span>
+              
             </label>
           </div>
           <label className="flex flex-col gap-2">
