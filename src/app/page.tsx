@@ -8,7 +8,7 @@ import {
 } from "@codesandbox/sandpack-react";
 import { z } from "zod";
 import { toast } from "sonner";
-import { IconDownload, IconRefresh, IconRocket } from "@tabler/icons-react";
+import { IconDownload, IconRefresh, IconRocket, IconHistory, IconTemplate } from "@tabler/icons-react";
 
 const FileMapSchema = z.record(z.string());
 
@@ -20,11 +20,45 @@ type ChatMessage = {
   content: string;
 };
 
-const MODEL_OPTIONS = [
-  { value: "gpt-5", label: "GPT-5 (Latest)" },
-  { value: "gpt-4o", label: "GPT-4o" },
-  { value: "o1", label: "O1 (Reasoning)" },
-  { value: "o1-mini", label: "O1 Mini (Reasoning)" }
+type CodeVersion = {
+  id: string;
+  timestamp: number;
+  files: FileMap;
+  prompt: string;
+  model: string;
+};
+
+type PresetInfo = {
+  id: string;
+  name: string;
+  description: string;
+};
+
+interface ModelOption {
+  value: string;
+  label: string;
+  provider: string;
+  tags: string[];
+}
+
+const MODEL_OPTIONS: ModelOption[] = [
+  // OpenAI
+  { value: "gpt-5", label: "GPT-5", provider: "OpenAI", tags: ["latest", "fast"] },
+  { value: "gpt-4o", label: "GPT-4o", provider: "OpenAI", tags: ["fast", "creative"] },
+  { value: "o1", label: "O1", provider: "OpenAI", tags: ["reasoning"] },
+  { value: "o1-mini", label: "O1 Mini", provider: "OpenAI", tags: ["reasoning", "fast"] },
+  { value: "o3-mini", label: "O3 Mini", provider: "OpenAI", tags: ["reasoning", "latest"] },
+
+  // Anthropic Claude
+  { value: "claude-sonnet-4-5-20250929", label: "Claude Sonnet 4.5", provider: "Anthropic", tags: ["latest", "creative", "fast"] },
+  { value: "claude-opus-4-20250514", label: "Claude Opus 4", provider: "Anthropic", tags: ["creative", "best"] },
+  { value: "claude-3-7-sonnet-20250219", label: "Claude Sonnet 3.7", provider: "Anthropic", tags: ["fast"] },
+  { value: "claude-3-5-haiku-20241022", label: "Claude Haiku 3.5", provider: "Anthropic", tags: ["fast", "cost-effective"] },
+
+  // Google Gemini
+  { value: "gemini-2.0-flash-exp", label: "Gemini 2.0 Flash", provider: "Google", tags: ["latest", "fast", "creative"] },
+  { value: "gemini-1.5-pro-latest", label: "Gemini 1.5 Pro", provider: "Google", tags: ["creative", "large-context"] },
+  { value: "gemini-1.5-flash-latest", label: "Gemini 1.5 Flash", provider: "Google", tags: ["fast", "cost-effective"] },
 ];
 
 const DEFAULT_SYSTEM_PROMPT =
@@ -46,6 +80,10 @@ export default function HomePage() {
   const [model, setModel] = useState<string>(MODEL_OPTIONS[0].value);
   const [apiKey, setApiKey] = useState("");
   const [systemPrompt, setSystemPrompt] = useState(DEFAULT_SYSTEM_PROMPT);
+  const [codeVersions, setCodeVersions] = useState<CodeVersion[]>([]);
+  const [presets, setPresets] = useState<PresetInfo[]>([]);
+  const [showVersionHistory, setShowVersionHistory] = useState(false);
+  const [showPresets, setShowPresets] = useState(false);
   const settingsLoadedRef = useRef(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -97,8 +135,9 @@ export default function HomePage() {
     }
   }, [model, apiKey, systemPrompt]);
 
-  const loadBoilerplate = useCallback(async () => {
-    const res = await fetch("/api/boilerplate");
+  const loadBoilerplate = useCallback(async (presetId?: string) => {
+    const url = presetId ? `/api/boilerplate?preset=${presetId}` : "/api/boilerplate";
+    const res = await fetch(url);
     if (!res.ok) {
       toast.error("Failed to load boilerplate");
       return;
@@ -113,9 +152,19 @@ export default function HomePage() {
     setFiles(normalized);
   }, [toClientFiles]);
 
+  const loadPresets = useCallback(async () => {
+    const res = await fetch("/api/boilerplate?action=list");
+    if (!res.ok) return;
+    const json = await res.json();
+    if (json.presets) {
+      setPresets(json.presets);
+    }
+  }, []);
+
   useEffect(() => {
     loadBoilerplate();
-  }, [loadBoilerplate]);
+    loadPresets();
+  }, [loadBoilerplate, loadPresets]);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -137,7 +186,7 @@ export default function HomePage() {
     setMessages(nextMessages);
     setInput("");
     setLoading(true);
-    
+
     try {
       const res = await fetch("/api/ai", {
         method: "POST",
@@ -150,16 +199,27 @@ export default function HomePage() {
           currentFiles: sandpackFiles,
         }),
       });
-      
+
       if (!res.ok) throw new Error("AI request failed");
-      
+
       const json = await res.json();
       const parsed = FileMapSchema.safeParse(json.files);
       if (!parsed.success) throw new Error("Invalid AI result");
 
       const normalized = toClientFiles(parsed.data);
+
+      // Save current version before updating
+      const version: CodeVersion = {
+        id: crypto.randomUUID(),
+        timestamp: Date.now(),
+        files: normalized,
+        prompt: input,
+        model,
+      };
+      setCodeVersions(prev => [version, ...prev].slice(0, 10)); // Keep last 10 versions
+
       setFiles(normalized);
-      
+
       const assistantMsg: ChatMessage = {
         id: crypto.randomUUID(),
         role: "assistant",
@@ -177,8 +237,23 @@ export default function HomePage() {
   const onReset = useCallback(async () => {
     await loadBoilerplate();
     setMessages([]);
+    setCodeVersions([]);
     toast.success("Reset to boilerplate");
   }, [loadBoilerplate]);
+
+  const onLoadPreset = useCallback(async (presetId: string) => {
+    await loadBoilerplate(presetId);
+    setMessages([]);
+    setCodeVersions([]);
+    setShowPresets(false);
+    toast.success("Preset loaded");
+  }, [loadBoilerplate]);
+
+  const onRestoreVersion = useCallback((version: CodeVersion) => {
+    setFiles(version.files);
+    setShowVersionHistory(false);
+    toast.success("Version restored");
+  }, []);
 
   const onDownload = useCallback(async () => {
     const res = await fetch("/api/download", { method: "POST", body: JSON.stringify({ files }) });
@@ -203,6 +278,20 @@ export default function HomePage() {
           <div className="flex items-center gap-3">
             <button
               className="inline-flex items-center gap-2 rounded-lg border border-border px-3 py-2 text-sm text-text-secondary transition hover:bg-muted"
+              onClick={() => setShowPresets(!showPresets)}
+            >
+              <IconTemplate size={18} /> Presets
+            </button>
+            {codeVersions.length > 0 && (
+              <button
+                className="inline-flex items-center gap-2 rounded-lg border border-border px-3 py-2 text-sm text-text-secondary transition hover:bg-muted"
+                onClick={() => setShowVersionHistory(!showVersionHistory)}
+              >
+                <IconHistory size={18} /> History
+              </button>
+            )}
+            <button
+              className="inline-flex items-center gap-2 rounded-lg border border-border px-3 py-2 text-sm text-text-secondary transition hover:bg-muted"
               onClick={onReset}
             >
               <IconRefresh size={18} /> Reset
@@ -219,11 +308,27 @@ export default function HomePage() {
                 value={model}
                 onChange={(e) => setModel(e.target.value)}
               >
-                {MODEL_OPTIONS.map((option) => (
-                  <option key={option.value} value={option.value}>
-                    {option.label}
-                  </option>
-                ))}
+                <optgroup label="OpenAI">
+                  {MODEL_OPTIONS.filter(m => m.provider === "OpenAI").map((option) => (
+                    <option key={option.value} value={option.value}>
+                      {option.label} {option.tags.includes("latest") ? "⭐" : ""}
+                    </option>
+                  ))}
+                </optgroup>
+                <optgroup label="Anthropic Claude">
+                  {MODEL_OPTIONS.filter(m => m.provider === "Anthropic").map((option) => (
+                    <option key={option.value} value={option.value}>
+                      {option.label} {option.tags.includes("latest") ? "⭐" : ""}
+                    </option>
+                  ))}
+                </optgroup>
+                <optgroup label="Google Gemini">
+                  {MODEL_OPTIONS.filter(m => m.provider === "Google").map((option) => (
+                    <option key={option.value} value={option.value}>
+                      {option.label} {option.tags.includes("latest") ? "⭐" : ""}
+                    </option>
+                  ))}
+                </optgroup>
               </select>
             </label>
             <label className="flex flex-col gap-2">
@@ -345,6 +450,60 @@ export default function HomePage() {
           </SandpackProvider>
         </div>
       </div>
+
+      {showPresets && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50" onClick={() => setShowPresets(false)}>
+          <div className="max-h-[80vh] w-full max-w-2xl overflow-hidden rounded-2xl border border-border bg-surface shadow-brand" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center justify-between border-b border-border bg-accent/5 px-5 py-4">
+              <div className="text-lg font-semibold tracking-tight text-accent">Choose a Preset</div>
+              <button className="text-text-secondary hover:text-text" onClick={() => setShowPresets(false)}>✕</button>
+            </div>
+            <div className="max-h-[60vh] overflow-y-auto p-5">
+              <div className="grid gap-3">
+                {presets.map((preset) => (
+                  <button
+                    key={preset.id}
+                    className="flex flex-col items-start gap-1 rounded-lg border border-border bg-background p-4 text-left transition hover:border-accent hover:bg-muted"
+                    onClick={() => onLoadPreset(preset.id)}
+                  >
+                    <div className="font-semibold text-text">{preset.name}</div>
+                    <div className="text-sm text-text-secondary">{preset.description}</div>
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showVersionHistory && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50" onClick={() => setShowVersionHistory(false)}>
+          <div className="max-h-[80vh] w-full max-w-2xl overflow-hidden rounded-2xl border border-border bg-surface shadow-brand" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center justify-between border-b border-border bg-accent/5 px-5 py-4">
+              <div className="text-lg font-semibold tracking-tight text-accent">Version History</div>
+              <button className="text-text-secondary hover:text-text" onClick={() => setShowVersionHistory(false)}>✕</button>
+            </div>
+            <div className="max-h-[60vh] overflow-y-auto p-5">
+              <div className="grid gap-3">
+                {codeVersions.map((version) => (
+                  <button
+                    key={version.id}
+                    className="flex flex-col items-start gap-1 rounded-lg border border-border bg-background p-4 text-left transition hover:border-accent hover:bg-muted"
+                    onClick={() => onRestoreVersion(version)}
+                  >
+                    <div className="flex items-center gap-2 text-xs text-text-secondary">
+                      <span>{new Date(version.timestamp).toLocaleString()}</span>
+                      <span>•</span>
+                      <span className="font-mono">{MODEL_OPTIONS.find(m => m.value === version.model)?.label || version.model}</span>
+                    </div>
+                    <div className="text-sm text-text">{version.prompt}</div>
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

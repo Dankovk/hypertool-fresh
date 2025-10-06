@@ -2,13 +2,53 @@
 import { NextResponse } from "next/server";
 import { generateObject } from "ai";
 import { createOpenAI } from "@ai-sdk/openai";
+import { createAnthropic } from "@ai-sdk/anthropic";
+import { google } from "@ai-sdk/google";
 import { z } from "zod";
 import { loadBoilerplateFiles } from "@/lib/boilerplate";
 import { AiRequestSchema } from "@/types/ai";
 
-const MODEL_ID = "gpt-5";
+interface ProviderConfig {
+  apiKey?: string;
+  envKey?: string;
+}
 
-const deafaultAPIKey = process.env.OPENAI_API_KEY;
+function getProviderForModel(model: string, userApiKey?: string): any {
+  // User-provided API key always takes precedence
+  if (userApiKey?.trim()) {
+    // Determine provider from model prefix
+    if (model.startsWith('claude-')) {
+      return createAnthropic({ apiKey: userApiKey.trim() });
+    }
+    if (model.startsWith('gemini-') || model.startsWith('models/gemini')) {
+      return google(userApiKey.trim());
+    }
+    if (model.startsWith('gpt-') || model.startsWith('o1') || model.startsWith('o3')) {
+      return createOpenAI({ apiKey: userApiKey.trim() });
+    }
+  }
+
+  // Fall back to environment variables based on model prefix
+  if (model.startsWith('claude-')) {
+    const apiKey = process.env.ANTHROPIC_API_KEY;
+    if (!apiKey) throw new Error('ANTHROPIC_API_KEY not configured');
+    return createAnthropic({ apiKey });
+  }
+
+  if (model.startsWith('gemini-') || model.startsWith('models/gemini')) {
+    const apiKey = process.env.GOOGLE_API_KEY || process.env.GOOGLE_GENERATIVE_AI_API_KEY;
+    if (!apiKey) throw new Error('GOOGLE_API_KEY not configured');
+    return google(apiKey);
+  }
+
+  if (model.startsWith('gpt-') || model.startsWith('o1') || model.startsWith('o3')) {
+    const apiKey = process.env.OPENAI_API_KEY;
+    if (!apiKey) throw new Error('OPENAI_API_KEY not configured');
+    return createOpenAI({ apiKey });
+  }
+
+  throw new Error(`Unsupported model: ${model}`);
+}
 
 const DEFAULT_SYSTEM_PROMPT =
   "You are an AI assistant that modifies p5.js canvas projects. You will receive the current project files and user instructions. Make the requested changes while preserving any existing code that should remain. Always respond with a complete file map including ALL files (modified and unmodified): { files: { path: code }, explanation?: string }.";
@@ -42,16 +82,13 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Invalid body" }, { status: 400 });
   }
 
-  const { messages, systemPrompt, apiKey, currentFiles } = parsed.data;
+  const { messages, model, systemPrompt, apiKey, currentFiles } = parsed.data;
   const boilerplate = loadBoilerplateFiles();
   const workingFiles = currentFiles && Object.keys(currentFiles).length > 0 ? currentFiles : boilerplate;
 
   try {
-    const provider = createOpenAI({
-      apiKey: apiKey?.trim() || process.env.OPENAI_API_KEY,
-    });
-    
-    const model = provider.chat(MODEL_ID);
+    const provider = getProviderForModel(model, apiKey);
+    const aiModel = provider.chat(model);
     
     const filesContext = Object.entries(workingFiles)
       .map(([path, code]) => `File: ${path}\n\`\`\`\n${code}\n\`\`\``)
@@ -69,7 +106,7 @@ export async function POST(req: Request) {
     });
 
     const result = await generateObject({
-      model,
+      model: aiModel,
       schema,
       prompt: conversation,
     });
