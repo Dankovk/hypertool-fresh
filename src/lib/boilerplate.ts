@@ -1,20 +1,23 @@
 import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { join, resolve } from "node:path";
 
-export type FileMap = Record<string, string>;
+type FileMap = Record<string, string>;
 
-export interface PresetInfo {
+interface PresetInfo {
   id: string;
   name: string;
   description: string;
 }
 
-const DEFAULT_RELATIVE_PATH = "boilerplate";
+const DEFAULT_RELATIVE_PATH = "boilerplate-presets/circle";
 const PRESETS_RELATIVE_PATH = "boilerplate-presets";
 const FALLBACK_RELATIVE_PATHS = [
-  "./boilerplate",
-  "../boilerplate",
-  "../../boilerplate",
+  "./boilerplate-presets/circle",
+  "../boilerplate-presets/circle",
+  "../../boilerplate-presets/circle",
+  "./boilerplate-presets",
+  "../boilerplate-presets",
+  "../../boilerplate-presets",
 ];
 
 export function resolveBoilerplatePath(): string {

@@ -1,8 +1,8 @@
 {
-  "name": "p5-boilerplate",
+  "name": "pulsating-circle",
   "private": true,
   "version": "0.1.0",
-  "description": "Barebones p5.js project used as AI starting point",
+  "description": "Animated pulsating circle",
   "scripts": {
     "dev": "serve . -l 4000"
   },
