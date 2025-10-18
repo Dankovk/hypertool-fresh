@@ -10,8 +10,8 @@ yarn-error.log*
 bun.lockb
 coverage
 .DS_Store
-*.local
 
+*.local
 .env.local
 next
 .next/
