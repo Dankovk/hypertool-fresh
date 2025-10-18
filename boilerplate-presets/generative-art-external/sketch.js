@@ -1,13 +1,69 @@
 // Control parameters - these will be controlled by Tweakpane
 let params = {
-  background: '#0b0c10',
-  strokeColor: '#66fcf1',
-  radius: 120,
-  amplitude: 8,
-  animationSpeed: 0.05,
+  gridSize: 30,
   strokeWeight: 2,
+  diagonalProbability: 0.5,
+  color1: '#66fcf1',
+  color2: '#45a29e',
+  backgroundColor: '#0b0c10',
   autoRegenerate: false,
   regenerateSpeed: 1.0
+};
+
+// Control definitions for external control panel
+const controlDefinitions = {
+  gridSize: {
+    type: 'number',
+    label: 'Grid Size',
+    value: params.gridSize,
+    min: 10,
+    max: 100,
+    step: 5
+  },
+  strokeWeight: {
+    type: 'number',
+    label: 'Stroke Weight',
+    value: params.strokeWeight,
+    min: 0.5,
+    max: 10,
+    step: 0.5
+  },
+  diagonalProbability: {
+    type: 'number',
+    label: 'Diagonal Probability',
+    value: params.diagonalProbability,
+    min: 0,
+    max: 1,
+    step: 0.1
+  },
+  color1: {
+    type: 'color',
+    label: 'Primary Color',
+    value: params.color1
+  },
+  color2: {
+    type: 'color',
+    label: 'Secondary Color',
+    value: params.color2
+  },
+  backgroundColor: {
+    type: 'color',
+    label: 'Background Color',
+    value: params.backgroundColor
+  },
+  autoRegenerate: {
+    type: 'boolean',
+    label: 'Auto Regenerate',
+    value: params.autoRegenerate
+  },
+  regenerateSpeed: {
+    type: 'number',
+    label: 'Regenerate Speed',
+    value: params.regenerateSpeed,
+    min: 0.1,
+    max: 5.0,
+    step: 0.1
+  }
 };
 
 // Flag to prevent sending messages when updating from external controls
@@ -21,69 +77,9 @@ window.addEventListener('beforeunload', () => {
   hasSentReadyMessage = false;
 });
 
-// Control definitions for external control panel
-const controlDefinitions = {
-  background: {
-    type: 'color',
-    label: 'Background',
-    value: params.background
-  },
-  strokeColor: {
-    type: 'color',
-    label: 'Stroke',
-    value: params.strokeColor
-  },
-  radius: {
-    type: 'number',
-    label: 'Radius Base',
-    min: 10,
-    max: 300,
-    step: 1,
-    value: params.radius
-  },
-  amplitude: {
-    type: 'number',
-    label: 'Animation Amplitude',
-    min: 0,
-    max: 50,
-    step: 1,
-    value: params.amplitude
-  },
-  animationSpeed: {
-    type: 'number',
-    label: 'Animation Speed',
-    min: 0.001,
-    max: 0.5,
-    step: 0.001,
-    value: params.animationSpeed
-  },
-  strokeWeight: {
-    type: 'number',
-    label: 'Stroke Weight',
-    min: 0.5,
-    max: 10,
-    step: 0.5,
-    value: params.strokeWeight
-  },
-  autoRegenerate: {
-    type: 'boolean',
-    label: 'Auto Regenerate',
-    value: params.autoRegenerate
-  },
-  regenerateSpeed: {
-    type: 'number',
-    label: 'Regenerate Speed',
-    min: 0.1,
-    max: 5.0,
-    step: 0.1,
-    value: params.regenerateSpeed
-  }
-};
-
 // Communication with parent window
 function sendMessageToParent(type, data = {}) {
   if (window.parent && window.parent !== window) {
-    // Try to send to parent origin first, then fallback to wildcard
     try {
       // Get parent origin from document.referrer or try common origins
       const parentOrigin = window.location.ancestorOrigins?.[0] || 
@@ -137,7 +133,7 @@ function sendReadyMessage() {
   setTimeout(() => {
     sendMessageToParent('log', {
       level: 'info',
-      message: 'Circle sketch is ready and communicating!'
+      message: 'Project is ready and communicating!'
     });
   }, 1000);
 }
@@ -177,54 +173,34 @@ window.addEventListener('message', (event) => {
 
 function setup(){
   createCanvas(600, 400);
+  // Start with noLoop, will be enabled if autoRegenerate is true
+  noLoop();
   
   // Initialize Tweakpane controls after a short delay to ensure it's loaded
   setTimeout(() => {
     if (typeof Pane !== 'undefined') {
       try {
-        // Find the ControlPanel container
+        // Find the ControlPanel container (if using external control panel)
         const controlContainer = document.querySelector('.tweakpane-container');
         
         if (controlContainer) {
           // Create pane and attach to ControlPanel container
           const pane = new Pane({
             container: controlContainer,
-            title: "Circle Controls",
+            title: "Generative Art Controls",
           });
           
           // Store pane globally for external updates
           window.pane = pane;
           
           // Add bindings for each parameter with change handlers
-          const backgroundBinding = pane.addBinding(params, 'background', { label: 'Background' });
-          backgroundBinding.on('change', (ev) => sendParameterChange('background', ev.value));
-          
-          const strokeColorBinding = pane.addBinding(params, 'strokeColor', { label: 'Stroke' });
-          strokeColorBinding.on('change', (ev) => sendParameterChange('strokeColor', ev.value));
-          
-          const radiusBinding = pane.addBinding(params, 'radius', { 
-            label: 'Radius Base',
+          const gridSizeBinding = pane.addBinding(params, 'gridSize', {
             min: 10,
-            max: 300,
-            step: 1
+            max: 100,
+            step: 5,
+            label: 'Grid Size'
           });
-          radiusBinding.on('change', (ev) => sendParameterChange('radius', ev.value));
-          
-          const amplitudeBinding = pane.addBinding(params, 'amplitude', { 
-            label: 'Animation Amplitude',
-            min: 0,
-            max: 50,
-            step: 1
-          });
-          amplitudeBinding.on('change', (ev) => sendParameterChange('amplitude', ev.value));
-          
-          const animationSpeedBinding = pane.addBinding(params, 'animationSpeed', { 
-            label: 'Animation Speed',
-            min: 0.001,
-            max: 0.5,
-            step: 0.001
-          });
-          animationSpeedBinding.on('change', (ev) => sendParameterChange('animationSpeed', ev.value));
+          gridSizeBinding.on('change', (ev) => sendParameterChange('gridSize', ev.value));
           
           const strokeWeightBinding = pane.addBinding(params, 'strokeWeight', {
             min: 0.5,
@@ -233,6 +209,29 @@ function setup(){
             label: 'Stroke Weight'
           });
           strokeWeightBinding.on('change', (ev) => sendParameterChange('strokeWeight', ev.value));
+          
+          const diagonalProbabilityBinding = pane.addBinding(params, 'diagonalProbability', {
+            min: 0,
+            max: 1,
+            step: 0.1,
+            label: 'Diagonal Probability'
+          });
+          diagonalProbabilityBinding.on('change', (ev) => sendParameterChange('diagonalProbability', ev.value));
+          
+          const color1Binding = pane.addBinding(params, 'color1', {
+            label: 'Primary Color'
+          });
+          color1Binding.on('change', (ev) => sendParameterChange('color1', ev.value));
+          
+          const color2Binding = pane.addBinding(params, 'color2', {
+            label: 'Secondary Color'
+          });
+          color2Binding.on('change', (ev) => sendParameterChange('color2', ev.value));
+          
+          const backgroundColorBinding = pane.addBinding(params, 'backgroundColor', {
+            label: 'Background Color'
+          });
+          backgroundColorBinding.on('change', (ev) => sendParameterChange('backgroundColor', ev.value));
           
           const autoRegenerateBinding = pane.addBinding(params, 'autoRegenerate', {
             label: 'Auto Regenerate'
@@ -258,38 +257,21 @@ function setup(){
           sendReadyMessage();
         } else {
           // Fallback: create standalone pane
-          const pane = new Pane();
+          const pane = new Pane({
+            title: "Generative Art Controls",
+          });
+          
+          // Store pane globally for external updates
+          window.pane = pane;
           
           // Add bindings for each parameter with change handlers
-          const backgroundBindingFallback = pane.addBinding(params, 'background', { label: 'Background' });
-          backgroundBindingFallback.on('change', (ev) => sendParameterChange('background', ev.value));
-          
-          const strokeColorBindingFallback = pane.addBinding(params, 'strokeColor', { label: 'Stroke' });
-          strokeColorBindingFallback.on('change', (ev) => sendParameterChange('strokeColor', ev.value));
-          
-          const radiusBindingFallback = pane.addBinding(params, 'radius', { 
-            label: 'Radius Base',
+          const gridSizeBindingFallback = pane.addBinding(params, 'gridSize', {
             min: 10,
-            max: 300,
-            step: 1
+            max: 100,
+            step: 5,
+            label: 'Grid Size'
           });
-          radiusBindingFallback.on('change', (ev) => sendParameterChange('radius', ev.value));
-          
-          const amplitudeBindingFallback = pane.addBinding(params, 'amplitude', { 
-            label: 'Animation Amplitude',
-            min: 0,
-            max: 50,
-            step: 1
-          });
-          amplitudeBindingFallback.on('change', (ev) => sendParameterChange('amplitude', ev.value));
-          
-          const animationSpeedBindingFallback = pane.addBinding(params, 'animationSpeed', { 
-            label: 'Animation Speed',
-            min: 0.001,
-            max: 0.5,
-            step: 0.001
-          });
-          animationSpeedBindingFallback.on('change', (ev) => sendParameterChange('animationSpeed', ev.value));
+          gridSizeBindingFallback.on('change', (ev) => sendParameterChange('gridSize', ev.value));
           
           const strokeWeightBindingFallback = pane.addBinding(params, 'strokeWeight', {
             min: 0.5,
@@ -298,6 +280,29 @@ function setup(){
             label: 'Stroke Weight'
           });
           strokeWeightBindingFallback.on('change', (ev) => sendParameterChange('strokeWeight', ev.value));
+          
+          const diagonalProbabilityBindingFallback = pane.addBinding(params, 'diagonalProbability', {
+            min: 0,
+            max: 1,
+            step: 0.1,
+            label: 'Diagonal Probability'
+          });
+          diagonalProbabilityBindingFallback.on('change', (ev) => sendParameterChange('diagonalProbability', ev.value));
+          
+          const color1BindingFallback = pane.addBinding(params, 'color1', {
+            label: 'Primary Color'
+          });
+          color1BindingFallback.on('change', (ev) => sendParameterChange('color1', ev.value));
+          
+          const color2BindingFallback = pane.addBinding(params, 'color2', {
+            label: 'Secondary Color'
+          });
+          color2BindingFallback.on('change', (ev) => sendParameterChange('color2', ev.value));
+          
+          const backgroundColorBindingFallback = pane.addBinding(params, 'backgroundColor', {
+            label: 'Background Color'
+          });
+          backgroundColorBindingFallback.on('change', (ev) => sendParameterChange('backgroundColor', ev.value));
           
           const autoRegenerateBindingFallback = pane.addBinding(params, 'autoRegenerate', {
             label: 'Auto Regenerate'
@@ -339,18 +344,46 @@ function setup(){
 // Auto-regeneration functionality
 let lastRegenerateTime = 0;
 
-function draw(){
-  background(params.background);
-  stroke(params.strokeColor);
-  strokeWeight(params.strokeWeight);
-  noFill();
-  const r = params.radius + params.amplitude * sin(frameCount * params.animationSpeed);
-  circle(width/2, height/2, r*2);
+function draw() {
+  // Use params.backgroundColor for background
+  background(params.backgroundColor);
+
+  // Use params.gridSize for grid size
+  const gridSize = params.gridSize;
+  const cols = floor(width / gridSize);
+  const rows = floor(height / gridSize);
+
+  for(let i = 0; i < cols; i++){
+    for(let j = 0; j < rows; j++){
+      const x = i * gridSize + gridSize/2;
+      const y = j * gridSize + gridSize/2;
+
+      const r = random(1);
+
+      push();
+      translate(x, y);
+
+      // Use params.diagonalProbability for diagonal probability
+      if(r < params.diagonalProbability){
+        // Use params.color1 and params.strokeWeight
+        stroke(params.color1);
+        strokeWeight(params.strokeWeight);
+        line(-gridSize/3, -gridSize/3, gridSize/3, gridSize/3);
+      } else {
+        // Use params.color2 and params.strokeWeight
+        stroke(params.color2);
+        strokeWeight(params.strokeWeight);
+        line(-gridSize/3, gridSize/3, gridSize/3, -gridSize/3);
+      }
+
+      pop();
+    }
+  }
   
   // Auto-regeneration logic
   if (params.autoRegenerate) {
     const currentTime = millis();
-    const regenerateInterval = 1000 / params.regenerateSpeed;
+    const regenerateInterval = 1000 / params.regenerateSpeed; // Convert speed to interval
     
     if (currentTime - lastRegenerateTime > regenerateInterval) {
       lastRegenerateTime = currentTime;
@@ -365,11 +398,10 @@ function mousePressed(){
   // Send a test message when mouse is pressed
   sendMessageToParent('log', {
     level: 'info',
-    message: `Mouse pressed! Current radius: ${params.radius}`
+    message: `Mouse pressed! Current state: ${JSON.stringify(params)}`
   });
 }
 
-// Add keyboard shortcuts for testing
 function keyPressed() {
   if (key === 't' || key === 'T') {
     // Send test message
@@ -379,8 +411,8 @@ function keyPressed() {
     });
   } else if (key === 'r' || key === 'R') {
     // Send parameter change test
-    const newRadius = Math.random() * 200 + 50;
-    params.radius = newRadius;
-    sendParameterChange('radius', newRadius);
+    const randomValue = Math.random() * 100;
+    params.gridSize = randomValue;
+    sendParameterChange('gridSize', randomValue);
   }
 }
