@@ -1,4 +1,15 @@
+'use client'
 // Types for iframe communication
+
+import {AddEventListenerOptions} from "undici-types/patch";
+
+const windowObj = typeof window === 'undefined' ? {
+
+addEventListener: () => {
+
+},
+} : window
+
 export interface IframeMessage {
   type: 'parameterChange' | 'ready' | 'error' | 'log';
   data?: any;
@@ -116,10 +127,12 @@ export class IframeCommunication {
 
   // Setup message listener for incoming messages
   private setupMessageListener() {
-    window.addEventListener('message', (event) => {
+
+
+      windowObj.addEventListener('message', (event) => {
       // Allow messages from Sandpack origin and localhost
       const allowedOrigins = [
-        window.location.origin,
+          windowObj.location.origin,
         'https://2718a0e15ae4f00-preview.sandpack-static-server.codesandbox.io',
         'https://preview.sandpack-static-server.codesandbox.io',
         'http://localhost:3000',
