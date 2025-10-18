@@ -92,6 +92,12 @@ export default function HomePage() {
     URL.revokeObjectURL(url);
   }, [files]);
 
+  const onParameterChange = useCallback((key: string, value: any) => {
+    // Parameters are now handled directly in sketch.js
+    // No need to update files since the controls are live
+    console.log('Parameter changed:', key, value);
+  }, []);
+
   return (
     <div className="grid h-screen grid-cols-studio gap-4 p-4">
       {/* <div className="flex flex-col overflow-hidden rounded-2xl border border-border bg-surface shadow-brand"> */}
@@ -108,7 +114,7 @@ export default function HomePage() {
         />
       {/* </div> */}
 
-      <PreviewPanel files={sandpackFiles} onDownload={onDownload} />
+      <PreviewPanel files={sandpackFiles} onDownload={onDownload} onParameterChange={onParameterChange} />
 
       <PresetsModal
         isOpen={showPresets}

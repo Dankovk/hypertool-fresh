@@ -2,6 +2,105 @@
 @tailwind components;
 @tailwind utilities;
 
+
+/* Routed Gothic Font Family */
+@font-face {
+  font-family: "Routed Gothic";
+  src: url("/fonts/routed-gothic/routed-gothic.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Routed Gothic";
+  src: url("/fonts/routed-gothic/routed-gothic-italic.ttf") format("truetype");
+  font-weight: 400;
+  font-style: italic;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Routed Gothic";
+  src: url("/fonts/routed-gothic/routed-gothic-half-italic.ttf")
+    format("truetype");
+  font-weight: 400;
+  font-style: oblique;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Routed Gothic Wide";
+  src: url("/fonts/routed-gothic/routed-gothic-wide.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Routed Gothic Wide";
+  src: url("/fonts/routed-gothic/routed-gothic-wide-italic.ttf")
+    format("truetype");
+  font-weight: 400;
+  font-style: italic;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Routed Gothic Wide";
+  src: url("/fonts/routed-gothic/routed-gothic-wide-half-italic.ttf")
+    format("truetype");
+  font-weight: 400;
+  font-style: oblique;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Routed Gothic Narrow";
+  src: url("/fonts/routed-gothic/routed-gothic-narrow.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Routed Gothic Narrow";
+  src: url("/fonts/routed-gothic/routed-gothic-narrow-italic.ttf")
+    format("truetype");
+  font-weight: 400;
+  font-style: italic;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Routed Gothic Narrow";
+  src: url("/fonts/routed-gothic/routed-gothic-narrow-half-italic.ttf")
+    format("truetype");
+  font-weight: 400;
+  font-style: oblique;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Departure Mono";
+  src: url("/fonts/departure-mono/DepartureMono-Regular.woff2") format("woff2"),
+    url("/fonts/departure-mono/DepartureMono-Regular.otf") format("opentype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "HydrogenType400";
+  src: url("/fonts/hydrogen/HydrogenType400.woff") format("woff"),
+  url("/fonts/hydrogen/HydrogenType400.woff2") format("woff2"),
+  url("/fonts/hydrogen/HydrogenType400.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+
 :root {
   --bg: #0a0e14;
   --bg-elevated: #0f1419;
@@ -14,6 +113,91 @@
   --border-hover: #30363d;
   --success: #3fb950;
   --error: #f85149;
+
+  --ht-text-color-main-200: #00ffd4;
+  --ht-text-color-main-300: #6ff3dd;
+  --ht-text-color-main-500: #4b8e85;
+  --ht-text-color-grey-200: #8c8d8f;
+
+  --ht-bg-color-200: #8c8d8f;
+  --ht-bg-color-300: #5e6068;
+  --ht-bg-color-500: #37383d;
+  --ht-bg-color-700: #28292e;
+
+  --ht-border-radius: 8px;
+
+
+  --ht-base-font-family-base: "HydrogenType400", ui-sans-serif, system-ui, sans-serif;
+  --ht-base-font-family-display: "Departure Mono", Roboto Mono, Source Code Pro, Menlo,
+    Courier, monospace;
+  --ht-base-font-family-sans: "Routed Gothic", ui-sans-serif, system-ui, sans-serif;
+  --ht-base-font-family-mono: "Routed Gothic Narrow", ui-monospace, SFMono-Regular, SF Mono, Consolas, Liberation Mono, Menlo, monospace;
+
+  --radius: 0.625rem;
+  --background: oklch(1 0 0);
+  --foreground: oklch(0.145 0 0);
+  --background-grey: #c0c0c0;
+  --accent-grey: #e7e7e7;
+  --dark-grey: #28292e;
+  --text-cyan-main: #00ffd4;
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.145 0 0);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.145 0 0);
+  --primary: oklch(0.205 0 0);
+  --primary-foreground: oklch(0.985 0 0);
+  --secondary: oklch(0.97 0 0);
+  --secondary-foreground: oklch(0.205 0 0);
+  --muted: oklch(0.97 0 0);
+  --muted-foreground: oklch(0.556 0 0);
+  --accent: oklch(0.97 0 0);
+  --accent-foreground: oklch(0.205 0 0);
+  --destructive: oklch(0.577 0.245 27.325);
+  --border: oklch(0.922 0 0);
+  --input: oklch(0.922 0 0);
+  --ring: oklch(0.708 0 0);
+  --chart-1: oklch(0.646 0.222 41.116);
+  --chart-2: oklch(0.6 0.118 184.704);
+  --chart-3: oklch(0.398 0.07 227.392);
+  --chart-4: oklch(0.828 0.189 84.429);
+  --chart-5: oklch(0.769 0.188 70.08);
+  --sidebar: oklch(0.985 0 0);
+  --sidebar-foreground: oklch(0.145 0 0);
+  --sidebar-primary: oklch(0.205 0 0);
+  --sidebar-primary-foreground: oklch(0.985 0 0);
+  --sidebar-accent: oklch(0.97 0 0);
+  --sidebar-accent-foreground: oklch(0.205 0 0);
+  --sidebar-border: oklch(0.922 0 0);
+  --sidebar-ring: oklch(0.708 0 0);
+  /* --tp-base-background-color: hsla(0, 0%, 10%, 0.8); */
+  --tp-base-shadow-color: hsla(0, 0%, 0%, 0.2);
+  --tp-button-background-color: hsla(0, 0%, 80%, 1);
+  --tp-button-background-color-active: hsla(0, 0%, 100%, 1);
+  --tp-button-background-color-focus: hsla(0, 0%, 95%, 1);
+  --tp-button-background-color-hover: hsla(0, 0%, 85%, 1);
+  --tp-button-foreground-color: hsla(0, 0%, 0%, 0.8);
+  /* --tp-container-background-color: hsla(0, 0%, 0%, 0.3); */
+  --tp-container-background-color-active: hsla(0, 0%, 0%, 0.6);
+  --tp-container-background-color-focus: hsla(0, 0%, 0%, 0.5);
+  --tp-container-background-color-hover: hsla(0, 0%, 0%, 0.4);
+  /* --tp-container-foreground-color: hsla(0, 0%, 100%, 0.5); */
+  --tp-groove-foreground-color: hsla(0, 0%, 0%, 0.2);
+  --tp-input-background-color: hsla(0, 0%, 0%, 0.3);
+  --tp-input-background-color-active: hsla(0, 0%, 0%, 0.6);
+  --tp-input-background-color-focus: hsla(0, 0%, 0%, 0.5);
+  --tp-input-background-color-hover: hsla(0, 0%, 0%, 0.4);
+  /* --tp-input-foreground-color: hsla(0, 0%, 100%, 0.5); */
+  /* --tp-label-foreground-color: hsla(0, 0%, 100%, 0.5); */
+  /* --tp-monitor-background-color: hsla(0, 0%, 0%, 0.3); */
+  /* --tp-monitor-foreground-color: hsla(0, 0%, 100%, 0.3); */
+
+  --tp-base-background-color: var(--ht-bg-color-700);
+  --tp-input-foreground-color: var(--ht-text-color-main-300);
+  --tp-label-foreground-color: var(--ht-text-color-main-300);
+  --tp-container-foreground-color: var(--ht-text-color-main-300);
+  --tp-container-background-color: var(--ht-bg-color-500);
+  --tp-monitor-foreground-color: var(--ht-text-color-main-300);
+  --tp-monitor-background-color: var(--ht-bg-color-500);
 }
 
 *,
@@ -28,8 +212,9 @@
   }
 
   body {
-    @apply min-h-screen bg-background font-sans text-text antialiased;
+    @apply min-h-screen bg-background font-mono text-text antialiased;
     line-height: 1.6;
+    font-family: var(--ht-base-font-family-base);
   }
 
   a {
@@ -74,6 +259,18 @@
   .scrollbar-thin::-webkit-scrollbar-thumb:hover {
     background: #3a4149;
   }
+
+  .font-display {
+    font-family: var(--font-display);
+  }
+
+  .font-mono {
+    font-family: var(--font-mono);
+  }
+
+  .font-sans {
+    font-family: var(--font-sans);
+  }
 }
 
 @keyframes messageSlide {
@@ -108,4 +305,251 @@
 
 .sp-preview {
     height: 100%!important;
+}
+
+/* Tweakpane styling for iframe content */
+.sp-preview iframe {
+    /* Ensure Tweakpane styles are applied to iframe content */
+}
+
+/* Tweakpane custom styling for better integration */
+.tp-dfwv {
+    /* Main Tweakpane container */
+    --tp-base-background-color: var(--ht-bg-color-700) !important;
+    --tp-container-background-color: var(--ht-bg-color-500) !important;
+    --tp-container-foreground-color: var(--ht-text-color-main-300) !important;
+    --tp-label-foreground-color: var(--ht-text-color-main-300) !important;
+    --tp-input-foreground-color: var(--ht-text-color-main-300) !important;
+    --tp-input-background-color: var(--ht-bg-color-500) !important;
+    --tp-input-background-color-hover: var(--ht-bg-color-300) !important;
+    --tp-input-background-color-focus: var(--ht-bg-color-300) !important;
+    --tp-input-background-color-active: var(--ht-bg-color-200) !important;
+    --tp-monitor-background-color: var(--ht-bg-color-500) !important;
+    --tp-monitor-foreground-color: var(--ht-text-color-main-300) !important;
+    --tp-button-background-color: var(--ht-bg-color-500) !important;
+    --tp-button-background-color-hover: var(--ht-bg-color-300) !important;
+    --tp-button-background-color-focus: var(--ht-bg-color-300) !important;
+    --tp-button-background-color-active: var(--ht-bg-color-200) !important;
+    --tp-button-foreground-color: var(--ht-text-color-main-300) !important;
+    --tp-groove-foreground-color: var(--ht-bg-color-300) !important;
+    --tp-base-shadow-color: hsla(0, 0%, 0%, 0.3) !important;
+    
+    /* Custom styling for better visual integration */
+    border-radius: var(--ht-border-radius) !important;
+    border: 1px solid var(--ht-bg-color-300) !important;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3) !important;
+    font-family: var(--ht-base-font-family-mono) !important;
+    font-size: 12px !important;
+}
+
+/* Tweakpane title styling */
+.tp-dfwv .tp-dfwv-title {
+    color: var(--ht-text-color-main-200) !important;
+    font-weight: 600 !important;
+    font-size: 13px !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.5px !important;
+}
+
+/* Tweakpane folder styling */
+.tp-dfwv .tp-fldv {
+    border-bottom: 1px solid var(--ht-bg-color-300) !important;
+}
+
+.tp-dfwv .tp-fldv:last-child {
+    border-bottom: none !important;
+}
+
+/* Tweakpane folder title */
+.tp-dfwv .tp-fldv_t {
+    color: var(--ht-text-color-main-300) !important;
+    font-weight: 500 !important;
+    font-size: 11px !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.3px !important;
+}
+
+/* Tweakpane input styling */
+.tp-dfwv .tp-txtv_i {
+    background-color: var(--ht-bg-color-500) !important;
+    border: 1px solid var(--ht-bg-color-300) !important;
+    border-radius: 4px !important;
+    color: var(--ht-text-color-main-300) !important;
+    font-family: var(--ht-base-font-family-mono) !important;
+    font-size: 11px !important;
+    padding: 4px 6px !important;
+}
+
+.tp-dfwv .tp-txtv_i:focus {
+    border-color: var(--ht-text-color-main-200) !important;
+    outline: none !important;
+    box-shadow: 0 0 0 2px rgba(0, 255, 212, 0.1) !important;
+}
+
+/* Tweakpane slider styling */
+.tp-dfwv .tp-sldv {
+    background-color: var(--ht-bg-color-300) !important;
+    border-radius: 2px !important;
+}
+
+.tp-dfwv .tp-sldv_i {
+    background-color: var(--ht-text-color-main-200) !important;
+    border-radius: 2px !important;
+}
+
+.tp-dfwv .tp-sldv_i:hover {
+    background-color: var(--ht-text-color-main-300) !important;
+}
+
+/* Tweakpane button styling */
+.tp-dfwv .tp-btni {
+    background-color: var(--ht-bg-color-500) !important;
+    border: 1px solid var(--ht-bg-color-300) !important;
+    border-radius: 4px !important;
+    color: var(--ht-text-color-main-300) !important;
+    font-family: var(--ht-base-font-family-mono) !important;
+    font-size: 11px !important;
+    padding: 4px 8px !important;
+    transition: all 0.2s ease !important;
+}
+
+.tp-dfwv .tp-btni:hover {
+    background-color: var(--ht-bg-color-300) !important;
+    border-color: var(--ht-text-color-main-200) !important;
+    color: var(--ht-text-color-main-200) !important;
+}
+
+.tp-dfwv .tp-btni:active {
+    background-color: var(--ht-bg-color-200) !important;
+    transform: translateY(1px) !important;
+}
+
+/* Tweakpane checkbox styling */
+.tp-dfwv .tp-chkv_i {
+    background-color: var(--ht-bg-color-500) !important;
+    border: 1px solid var(--ht-bg-color-300) !important;
+    border-radius: 3px !important;
+}
+
+.tp-dfwv .tp-chkv_i:checked {
+    background-color: var(--ht-text-color-main-200) !important;
+    border-color: var(--ht-text-color-main-200) !important;
+}
+
+/* Tweakpane color picker styling */
+.tp-dfwv .tp-clrv_i {
+    border: 1px solid var(--ht-bg-color-300) !important;
+    border-radius: 4px !important;
+}
+
+/* Tweakpane monitor styling */
+.tp-dfwv .tp-mnvi {
+    background-color: var(--ht-bg-color-500) !important;
+    border: 1px solid var(--ht-bg-color-300) !important;
+    border-radius: 4px !important;
+    color: var(--ht-text-color-main-300) !important;
+    font-family: var(--ht-base-font-family-mono) !important;
+    font-size: 11px !important;
+    padding: 4px 6px !important;
+}
+
+/* Ensure Tweakpane styles are applied to iframe content */
+.sp-preview iframe body {
+    /* This will be applied to the iframe content */
+}
+
+/* Additional iframe-specific Tweakpane styling */
+.sp-preview iframe .tp-dfwv {
+    position: fixed !important;
+    top: 20px !important;
+    right: 20px !important;
+    z-index: 1000 !important;
+    max-width: 280px !important;
+    max-height: 80vh !important;
+    overflow-y: auto !important;
+    backdrop-filter: blur(10px) !important;
+    background-color: rgba(40, 41, 46, 0.95) !important;
+}
+
+/* Tweakpane External Controls Styling - Strict Tweakpane GUI */
+.tweakpane-external-controls {
+    /* Remove any custom styling to let Tweakpane use its native styles */
+}
+
+/* Import Tweakpane's default styles */
+/* @import 'tweakpane/dist/tweakpane.css'; */
+
+/* Override Tweakpane styles to match app theme */
+.tweakpane-external-controls .tp-pnl {
+    background: var(--ht-surface-color) !important;
+    border: 1px solid var(--ht-border-color) !important;
+    border-radius: 8px !important;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1) !important;
+}
+
+.tweakpane-external-controls .tp-pnl_h {
+    background: var(--ht-accent-color-100) !important;
+    color: var(--ht-accent-color-900) !important;
+    border-bottom: 1px solid var(--ht-border-color) !important;
+    font-weight: 600 !important;
+}
+
+.tweakpane-external-controls .tp-lblv_l {
+    color: var(--ht-text-color-main-900) !important;
+    font-size: 12px !important;
+    font-weight: 500 !important;
+}
+
+.tweakpane-external-controls .tp-txtv_i {
+    background: var(--ht-surface-color) !important;
+    border: 1px solid var(--ht-border-color) !important;
+    color: var(--ht-text-color-main-900) !important;
+    border-radius: 4px !important;
+}
+
+.tweakpane-external-controls .tp-txtv_i:focus {
+    border-color: var(--ht-accent-color-500) !important;
+    box-shadow: 0 0 0 2px var(--ht-accent-color-100) !important;
+}
+
+.tweakpane-external-controls .tp-sldv_s {
+    background: var(--ht-border-color) !important;
+    border-radius: 2px !important;
+}
+
+.tweakpane-external-controls .tp-sldv_s::before {
+    background: var(--ht-accent-color-500) !important;
+    border-radius: 2px !important;
+}
+
+.tweakpane-external-controls .tp-cb {
+    border: 1px solid var(--ht-border-color) !important;
+    background: var(--ht-surface-color) !important;
+    border-radius: 3px !important;
+}
+
+.tweakpane-external-controls .tp-cb:checked {
+    background: var(--ht-accent-color-500) !important;
+    border-color: var(--ht-accent-color-500) !important;
+}
+
+.tweakpane-external-controls .tp-cb:checked::after {
+    border-color: white !important;
+}
+
+.tweakpane-external-controls .tp-btnv_b {
+    background: var(--ht-accent-color-500) !important;
+    color: white !important;
+    border: none !important;
+    border-radius: 4px !important;
+    font-weight: 500 !important;
+}
+
+.tweakpane-external-controls .tp-btnv_b:hover {
+    background: var(--ht-accent-color-600) !important;
+}
+
+.tweakpane-external-controls .tp-clrv_w {
+    border: 1px solid var(--ht-border-color) !important;
+    border-radius: 4px !important;
 }
