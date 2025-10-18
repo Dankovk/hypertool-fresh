@@ -3,7 +3,7 @@ import { NextResponse } from "next/server";
 import { loadBoilerplateFiles } from "@/lib/boilerplate";
 import { AiRequestSchema } from "@/types/ai";
 import { getProviderForModel } from "@/lib/aiProviders";
-import { DEFAULT_SYSTEM_PROMPT_FULL, DEFAULT_SYSTEM_PROMPT_PATCH } from "@/config/prompts";
+import { DEFAULT_SYSTEM_PROMPT, DEFAULT_SYSTEM_PROMPT_FULL } from "@/config/prompts";
 import {
   generateFullFiles,
   generatePatches,
@@ -35,7 +35,7 @@ export async function POST(req: Request) {
     const aiModel = provider.chat(model);
 
     const defaultPrompt = usePatchMode
-      ? DEFAULT_SYSTEM_PROMPT_PATCH
+      ? DEFAULT_SYSTEM_PROMPT
       : DEFAULT_SYSTEM_PROMPT_FULL;
 
     const conversation = buildConversationPrompt({
