@@ -11,7 +11,7 @@ export function ChatInput({ value, onChange, onSubmit, loading }: ChatInputProps
   return (
     <div className="flex items-center gap-3 border-t border-border bg-black/20 px-5 py-4">
       <input
-        className="flex-1 rounded-lg border border-border bg-background px-3 py-2 text-sm text-text shadow-sm transition focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/30"
+        className="flex-1 rounded-lg border border-border bg-background px-3 py-2 text-base text-text shadow-sm transition focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/30"
         placeholder="Describe the visual you want (p5.js)"
         value={value}
         onChange={(e) => onChange(e.target.value)}
