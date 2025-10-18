@@ -3,6 +3,11 @@ module.exports = {
   content: ["./src/**/*.{js,ts,jsx,tsx}"],
   theme: {
     extend: {
+      fontFamily: {
+        sans: ["Routed Gothic Narrow", "ui-sans-serif", "system-ui", "sans-serif"],
+        mono: ["Departure Mono", "ui-monospace", "SFMono-Regular", "SF Mono", "Consolas", "Liberation Mono", "Menlo", "monospace"],
+        display: ["Routed Gothic", "ui-sans-serif", "system-ui", "sans-serif"],
+      },
       gridTemplateColumns: {
         studio: "480px minmax(0,1fr)",
       },
@@ -14,6 +19,7 @@ module.exports = {
         border: "var(--border)",
         text: "var(--text)",
         "text-secondary": "var(--text-secondary)",
+        muted: "var(--muted)",
       },
       boxShadow: {
         brand: "0 8px 24px rgba(0,0,0,0.4)",

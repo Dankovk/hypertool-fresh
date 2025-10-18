@@ -1,0 +1,149 @@
+/* Tweakpane styling for iframe content */
+:root {
+  --ht-bg-color-200: #8c8d8f;
+  --ht-bg-color-300: #5e6068;
+  --ht-bg-color-500: #37383d;
+  --ht-bg-color-700: #28292e;
+  --ht-text-color-main-200: #00ffd4;
+  --ht-text-color-main-300: #6ff3dd;
+  --ht-border-radius: 8px;
+  --ht-base-font-family-mono: "Departure Mono", Roboto Mono, Source Code Pro, Menlo, Courier, monospace;
+}
+
+.tp-dfwv {
+  --tp-base-background-color: var(--ht-bg-color-700) !important;
+  --tp-container-background-color: var(--ht-bg-color-500) !important;
+  --tp-container-foreground-color: var(--ht-text-color-main-300) !important;
+  --tp-label-foreground-color: var(--ht-text-color-main-300) !important;
+  --tp-input-foreground-color: var(--ht-text-color-main-300) !important;
+  --tp-input-background-color: var(--ht-bg-color-500) !important;
+  --tp-input-background-color-hover: var(--ht-bg-color-300) !important;
+  --tp-input-background-color-focus: var(--ht-bg-color-300) !important;
+  --tp-input-background-color-active: var(--ht-bg-color-200) !important;
+  --tp-monitor-background-color: var(--ht-bg-color-500) !important;
+  --tp-monitor-foreground-color: var(--ht-text-color-main-300) !important;
+  --tp-button-background-color: var(--ht-bg-color-500) !important;
+  --tp-button-background-color-hover: var(--ht-bg-color-300) !important;
+  --tp-button-background-color-focus: var(--ht-bg-color-300) !important;
+  --tp-button-background-color-active: var(--ht-bg-color-200) !important;
+  --tp-button-foreground-color: var(--ht-text-color-main-300) !important;
+  --tp-groove-foreground-color: var(--ht-bg-color-300) !important;
+  --tp-base-shadow-color: hsla(0, 0%, 0%, 0.3) !important;
+  
+  border-radius: var(--ht-border-radius) !important;
+  border: 1px solid var(--ht-bg-color-300) !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3) !important;
+  font-family: var(--ht-base-font-family-mono) !important;
+  font-size: 12px !important;
+  position: fixed !important;
+  top: 20px !important;
+  right: 20px !important;
+  z-index: 1000 !important;
+  max-width: 280px !important;
+  max-height: 80vh !important;
+  overflow-y: auto !important;
+  backdrop-filter: blur(10px) !important;
+  background-color: rgba(40, 41, 46, 0.95) !important;
+}
+
+.tp-dfwv .tp-dfwv-title {
+  color: var(--ht-text-color-main-200) !important;
+  font-weight: 600 !important;
+  font-size: 13px !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.5px !important;
+}
+
+.tp-dfwv .tp-fldv {
+  border-bottom: 1px solid var(--ht-bg-color-300) !important;
+}
+
+.tp-dfwv .tp-fldv:last-child {
+  border-bottom: none !important;
+}
+
+.tp-dfwv .tp-fldv_t {
+  color: var(--ht-text-color-main-300) !important;
+  font-weight: 500 !important;
+  font-size: 11px !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.3px !important;
+}
+
+.tp-dfwv .tp-txtv_i {
+  background-color: var(--ht-bg-color-500) !important;
+  border: 1px solid var(--ht-bg-color-300) !important;
+  border-radius: 4px !important;
+  color: var(--ht-text-color-main-300) !important;
+  font-family: var(--ht-base-font-family-mono) !important;
+  font-size: 11px !important;
+  padding: 4px 6px !important;
+}
+
+.tp-dfwv .tp-txtv_i:focus {
+  border-color: var(--ht-text-color-main-200) !important;
+  outline: none !important;
+  box-shadow: 0 0 0 2px rgba(0, 255, 212, 0.1) !important;
+}
+
+.tp-dfwv .tp-sldv {
+  background-color: var(--ht-bg-color-300) !important;
+  border-radius: 2px !important;
+}
+
+.tp-dfwv .tp-sldv_i {
+  background-color: var(--ht-text-color-main-200) !important;
+  border-radius: 2px !important;
+}
+
+.tp-dfwv .tp-sldv_i:hover {
+  background-color: var(--ht-text-color-main-300) !important;
+}
+
+.tp-dfwv .tp-btni {
+  background-color: var(--ht-bg-color-500) !important;
+  border: 1px solid var(--ht-bg-color-300) !important;
+  border-radius: 4px !important;
+  color: var(--ht-text-color-main-300) !important;
+  font-family: var(--ht-base-font-family-mono) !important;
+  font-size: 11px !important;
+  padding: 4px 8px !important;
+  transition: all 0.2s ease !important;
+}
+
+.tp-dfwv .tp-btni:hover {
+  background-color: var(--ht-bg-color-300) !important;
+  border-color: var(--ht-text-color-main-200) !important;
+  color: var(--ht-text-color-main-200) !important;
+}
+
+.tp-dfwv .tp-btni:active {
+  background-color: var(--ht-bg-color-200) !important;
+  transform: translateY(1px) !important;
+}
+
+.tp-dfwv .tp-chkv_i {
+  background-color: var(--ht-bg-color-500) !important;
+  border: 1px solid var(--ht-bg-color-300) !important;
+  border-radius: 3px !important;
+}
+
+.tp-dfwv .tp-chkv_i:checked {
+  background-color: var(--ht-text-color-main-200) !important;
+  border-color: var(--ht-text-color-main-200) !important;
+}
+
+.tp-dfwv .tp-clrv_i {
+  border: 1px solid var(--ht-bg-color-300) !important;
+  border-radius: 4px !important;
+}
+
+.tp-dfwv .tp-mnvi {
+  background-color: var(--ht-bg-color-500) !important;
+  border: 1px solid var(--ht-bg-color-300) !important;
+  border-radius: 4px !important;
+  color: var(--ht-text-color-main-300) !important;
+  font-family: var(--ht-base-font-family-mono) !important;
+  font-size: 11px !important;
+  padding: 4px 6px !important;
+}
