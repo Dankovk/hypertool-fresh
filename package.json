@@ -2,9 +2,13 @@
   "name": "studio",
   "version": "0.1.0",
   "private": true,
+  "workspaces": [
+    "./controls-lib"
+  ],
   "scripts": {
     "dev": "next dev  -p 3030",
-    "build": "next build",
+    "build": "bun run build:controls && next build",
+    "build:controls": "cd controls-lib && bun run build && cp dist/index.js ../boilerplate-presets/shared/hypertool-controls.js",
     "start": "next start -p 3030",
     "lint": "next lint",
     "typecheck": "tsc -p tsconfig.json --noEmit"

@@ -58,12 +58,23 @@ export function readDirectoryRecursive(dir: string, base: string = dir, out: Fil
 }
 
 export function loadBoilerplateFiles(presetId?: string): FileMap {
+  let files: FileMap = {};
+
   if (presetId) {
     const presetsPath = resolvePresetsPath();
     if (presetsPath) {
+      // Load shared files first (if they exist)
+      const sharedPath = join(presetsPath, "shared");
+      if (existsSync(sharedPath)) {
+        files = readDirectoryRecursive(sharedPath);
+      }
+
+      // Load preset-specific files (overwrites shared if there are conflicts)
       const presetPath = join(presetsPath, presetId);
       if (existsSync(presetPath) && existsSync(join(presetPath, "index.html"))) {
-        return readDirectoryRecursive(presetPath);
+        const presetFiles = readDirectoryRecursive(presetPath);
+        files = { ...files, ...presetFiles };
+        return files;
       }
     }
   }
@@ -82,7 +93,8 @@ export function listAvailablePresets(): PresetInfo[] {
   const entries = readdirSync(presetsPath, { withFileTypes: true });
 
   for (const entry of entries) {
-    if (entry.isDirectory()) {
+    // Skip the shared folder - it's not a preset
+    if (entry.isDirectory() && entry.name !== "shared") {
       const presetPath = join(presetsPath, entry.name);
       const packageJsonPath = join(presetPath, "package.json");
 
