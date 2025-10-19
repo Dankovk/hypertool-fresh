@@ -1,5 +1,3 @@
-import P5 from 'p5';
-
 export type P5Instance = any;
 
 export type P5Handler = (instance: P5Instance, ...args: any[]) => void;
@@ -43,41 +41,61 @@ export interface MountResult {
   destroy(): void;
 }
 
+type P5Constructor = new (sketch: (p5: P5Instance) => void, node?: HTMLElement) => P5Instance;
+
+function getP5Constructor(): P5Constructor {
+  if (typeof window === 'undefined') {
+    throw new Error('[hyper-frame] window is not available');
+  }
+
+  const ctor = (window as any).p5;
+
+  if (typeof ctor !== 'function') {
+    throw new Error('[hyper-frame] p5 constructor not found on window. Ensure p5 is loaded before hyper-frame.');
+  }
+
+  return ctor as P5Constructor;
+}
+
 /**
  * Mount a p5 sketch with the provided lifecycle handlers.
  */
-export function mountP5Sketch(initialHandlers: P5HandlerMap, options: MountOptions = {}): MountResult {
+export function mountP5Sketch(initialHandlers: P5HandlerMap, options?: MountOptions): MountResult {
   if (typeof document === 'undefined') {
     throw new Error('mountP5Sketch cannot run outside a browser environment');
   }
 
-  let currentHandlers = { ...initialHandlers };
-  const { element: container, createdInternally } = resolveContainer(options);
+  var opts: MountOptions = options || {};
+  var currentHandlers: P5HandlerMap = { ...initialHandlers };
+  var containerInfo = resolveContainer(opts);
+  var container = containerInfo.element;
+  var createdInternally = containerInfo.createdInternally;
 
-  let instance: P5Instance | null = null;
+  var instance: P5Instance | null = null;
 
-  const sketch = (p5Instance: P5Instance) => {
+  function sketch(p5Instance: P5Instance) {
     instance = p5Instance;
     applyHandlers(p5Instance, currentHandlers);
-    if (options.onReady) {
-      options.onReady({ p5: p5Instance, container });
+    if (opts.onReady) {
+      opts.onReady({ p5: p5Instance, container });
     }
-  };
+  }
 
-  const p5Controller = new P5(sketch, container);
+  var P5Ctor = getP5Constructor();
+  var p5Controller = new P5Ctor(sketch, container);
   if (!instance) {
     // Fallback in case P5 constructor behaved differently
     instance = (p5Controller as unknown) as P5Instance;
   }
 
-  const setHandlers = (nextHandlers: P5HandlerMap) => {
+  function setHandlers(nextHandlers: P5HandlerMap) {
     currentHandlers = { ...nextHandlers };
     if (instance) {
       applyHandlers(instance, currentHandlers);
     }
-  };
+  }
 
-  const destroy = () => {
+  function destroy() {
     if (instance) {
       instance.remove();
       instance = null;
@@ -87,26 +105,29 @@ export function mountP5Sketch(initialHandlers: P5HandlerMap, options: MountOptio
       // Remove container only when library created it
       container.remove();
     }
-  };
+  }
 
   return {
-    container,
-    getInstance() {
+    container: container,
+    getInstance: function getInstance() {
       return instance;
     },
-    setHandlers,
-    destroy,
+    setHandlers: setHandlers,
+    destroy: destroy,
   };
 }
 
 function applyHandlers(instance: P5Instance, handlers: P5HandlerMap) {
-  Object.entries(handlers).forEach(([key, handler]) => {
-    if (typeof handler === 'function') {
-      (instance as Record<string, unknown>)[key] = (...args: any[]) => {
-      return (handler as P5Handler)(instance, ...args);
-      };
+  for (const key in handlers) {
+    if (Object.prototype.hasOwnProperty.call(handlers, key)) {
+      const handler = handlers[key];
+      if (typeof handler === 'function') {
+        (instance as Record<string, unknown>)[key] = function handlerWrapper(...args: any[]) {
+          return (handler as P5Handler)(instance, ...args);
+        };
+      }
     }
-  });
+  }
 }
 
 function resolveContainer(options: MountOptions): { element: HTMLElement; createdInternally: boolean } {
@@ -131,4 +152,329 @@ function resolveContainer(options: MountOptions): { element: HTMLElement; create
   container.classList.add(className);
   document.body.appendChild(container);
   return { element: container, createdInternally: true };
+}
+
+export type ControlType = 'number' | 'color' | 'boolean' | 'string' | 'select';
+
+export interface BaseControlDefinition {
+  label?: string;
+  value: any;
+}
+
+export interface NumberControlDefinition extends BaseControlDefinition {
+  type: 'number';
+  value: number;
+  min?: number;
+  max?: number;
+  step?: number;
+}
+
+export interface ColorControlDefinition extends BaseControlDefinition {
+  type: 'color';
+  value: string;
+}
+
+export interface BooleanControlDefinition extends BaseControlDefinition {
+  type: 'boolean';
+  value: boolean;
+}
+
+export interface StringControlDefinition extends BaseControlDefinition {
+  type: 'string';
+  value: string;
+}
+
+export interface SelectControlDefinition extends BaseControlDefinition {
+  type: 'select';
+  value: string | number;
+  options: Record<string, string | number> | Array<string | number>;
+}
+
+export type ControlDefinition =
+  | NumberControlDefinition
+  | ColorControlDefinition
+  | BooleanControlDefinition
+  | StringControlDefinition
+  | SelectControlDefinition;
+
+export type ControlDefinitions = Record<string, ControlDefinition>;
+
+export interface ControlChangePayload {
+  key: string;
+  value: any;
+  event: any;
+}
+
+export interface P5SketchContext {
+  params: Record<string, any>;
+  controls: any;
+  getP5Instance(): P5Instance | null;
+}
+
+export type P5SketchHandler = (p5: P5Instance, context: P5SketchContext, ...args: any[]) => void;
+
+export type P5SketchHandlers = Record<string, P5SketchHandler | undefined>;
+
+export interface ControlPanelOptions {
+  title?: string;
+  position?: string;
+  expanded?: boolean;
+  container?: HTMLElement | string | null;
+  onChange?: (change: ControlChangePayload, context: P5SketchContext) => void;
+}
+
+export interface RunP5SketchOptions {
+  controlDefinitions: ControlDefinitions;
+  handlers: P5SketchHandlers;
+  controls?: ControlPanelOptions;
+  mount?: MountOptions;
+}
+
+export interface RunP5SketchResult {
+  params: Record<string, any>;
+  controls: any;
+  context: P5SketchContext;
+  destroy(): void;
+  setHandlers(handlers: P5SketchHandlers): void;
+  getInstance(): P5Instance | null;
+}
+
+function getHypertoolControls(): any {
+  if (typeof window === 'undefined') {
+    throw new Error('[hyper-frame] window is not available');
+  }
+  const hyperWindow = window as unknown as {
+    hypertoolControls?: any;
+  };
+
+  if (!hyperWindow.hypertoolControls) {
+    throw new Error('[hyper-frame] hypertool controls are not available on window');
+  }
+
+  return hyperWindow.hypertoolControls;
+}
+
+function wrapHandlers(
+  handlers: P5SketchHandlers,
+  context: P5SketchContext,
+  setActiveInstance: (instance: P5Instance) => void
+): P5HandlerMap {
+  const wrapped: P5HandlerMap = {};
+
+  Object.entries(handlers).forEach(function entry([key, handler]) {
+    if (typeof handler === 'function') {
+      wrapped[key] = function wrappedHandler(instance: P5Instance, ...args: any[]) {
+        setActiveInstance(instance);
+        return (handler as P5SketchHandler)(instance, context, ...args);
+      };
+    }
+  });
+
+  return wrapped;
+}
+
+/**
+ * High level helper that wires up controls-lib and p5 mounting in one call.
+ */
+export function runP5Sketch(options: RunP5SketchOptions): RunP5SketchResult {
+  const controlsApi = getHypertoolControls();
+  const controlOptions = options.controls || {};
+
+  const controls = controlsApi.createControlPanel(options.controlDefinitions, {
+    title: controlOptions.title,
+    position: controlOptions.position,
+    expanded: controlOptions.expanded,
+    container: controlOptions.container,
+    onChange: (params: Record<string, any>, changeContext: any) => {
+      if (typeof controlOptions.onChange === 'function') {
+        const change: ControlChangePayload = {
+          key: changeContext.key,
+          value: changeContext.value,
+          event: changeContext.event,
+        };
+        controlOptions.onChange(change, sketchContext);
+      }
+    },
+  });
+
+  const sketchContext: P5SketchContext = {
+    params: controls.params,
+    controls,
+    getP5Instance: function getP5Instance() {
+      return activeInstance;
+    },
+  };
+
+  let activeInstance: P5Instance | null = null;
+
+  function setActiveInstance(instance: P5Instance) {
+    activeInstance = instance;
+  }
+
+  const mounted = mountP5Sketch(
+    wrapHandlers(options.handlers, sketchContext, setActiveInstance),
+    options.mount || {}
+  );
+
+  function setHandlers(handlers: P5SketchHandlers) {
+    mounted.setHandlers(wrapHandlers(handlers, sketchContext, setActiveInstance));
+  }
+
+  return {
+    params: controls.params,
+    controls,
+    context: sketchContext,
+    destroy() {
+      mounted.destroy();
+    },
+    setHandlers,
+    getInstance() {
+      return mounted.getInstance();
+    },
+  };
+}
+
+function nextFrame(callback: () => void) {
+  if (typeof requestAnimationFrame === 'function') {
+    requestAnimationFrame(callback);
+  } else {
+    setTimeout(callback, 16);
+  }
+}
+
+function waitForCondition(condition: () => boolean, maxAttempts: number, label: string): Promise<void> {
+  return new Promise((resolve, reject) => {
+    let attempts = 0;
+
+    function tick() {
+      attempts += 1;
+
+      try {
+        if (condition()) {
+          resolve();
+          return;
+        }
+      } catch (error) {
+        // ignore errors from condition evaluation and keep waiting
+      }
+
+      if (attempts >= maxAttempts) {
+        reject(new Error(`[hyper-frame] Timed out waiting for ${label}`));
+        return;
+      }
+
+      nextFrame(tick);
+    }
+
+    tick();
+  });
+}
+
+const DEFAULT_P5_CDN_URL = 'https://cdn.jsdelivr.net/npm/p5@1.6.0/lib/p5.min.js';
+const P5_SCRIPT_SELECTOR = 'script[data-hypertool="p5"]';
+
+function ensureP5Script(url: string, maxAttempts: number): Promise<void> {
+  if (typeof window === 'undefined') {
+    return Promise.reject(new Error('[hyper-frame] window is not available'));
+  }
+
+  if (typeof (window as any).p5 === 'function') {
+    return Promise.resolve();
+  }
+
+  return new Promise((resolve, reject) => {
+    let settled = false;
+
+    function fulfill() {
+      if (settled) return;
+      settled = true;
+      resolve();
+    }
+
+    function fail(error: Error) {
+      if (settled) return;
+      settled = true;
+      reject(error);
+    }
+
+    waitForCondition(
+      () => typeof (window as any).p5 === 'function',
+      maxAttempts,
+      'p5 constructor'
+    )
+      .then(fulfill)
+      .catch(fail);
+
+    function handleScriptError() {
+      fail(new Error(`[hyper-frame] Failed to load p5 script from ${url}`));
+    }
+
+    const existing = document.querySelector<HTMLScriptElement>(P5_SCRIPT_SELECTOR);
+    if (existing) {
+      existing.addEventListener('error', handleScriptError, { once: true });
+      return;
+    }
+
+    const script = document.createElement('script');
+    script.src = url;
+    script.async = true;
+    script.dataset.hypertool = 'p5';
+    script.addEventListener('error', handleScriptError, { once: true });
+    document.head.appendChild(script);
+  });
+}
+
+function ensureControlsReady(maxAttempts: number): Promise<void> {
+  return waitForCondition(function condition() {
+    try {
+      getHypertoolControls();
+      return true;
+    } catch (error) {
+      return false;
+    }
+  }, maxAttempts, 'hypertool controls');
+}
+
+export interface StartP5SketchOptions extends RunP5SketchOptions {
+  p5?: {
+    url?: string;
+    maxAttempts?: number;
+  };
+  readiness?: {
+    maxAttempts?: number;
+  };
+}
+
+/**
+ * Bootstrap a p5 sketch by ensuring p5 and the controls library are ready.
+ */
+export async function startP5Sketch(options: StartP5SketchOptions): Promise<RunP5SketchResult> {
+  if (typeof window === 'undefined') {
+    throw new Error('[hyper-frame] window is not available');
+  }
+
+  const readinessOptions = options.readiness || {};
+  const p5Options = options.p5 || {};
+
+  const readinessAttempts = typeof readinessOptions.maxAttempts === 'number'
+    ? readinessOptions.maxAttempts
+    : 600;
+
+  const p5Attempts = typeof p5Options.maxAttempts === 'number'
+    ? p5Options.maxAttempts
+    : readinessAttempts;
+
+  const p5Url = typeof p5Options.url === 'string' && p5Options.url.trim().length > 0
+    ? p5Options.url
+    : DEFAULT_P5_CDN_URL;
+
+  await ensureP5Script(p5Url, p5Attempts);
+  await ensureControlsReady(readinessAttempts);
+
+  return runP5Sketch({
+    controlDefinitions: options.controlDefinitions,
+    handlers: options.handlers,
+    controls: options.controls,
+    mount: options.mount,
+  });
 }

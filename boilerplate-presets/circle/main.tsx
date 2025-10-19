@@ -1,67 +1,49 @@
-import {setup, draw, mousePressed, keyPressed, controlDefinitions} from './sketch';
+import {
+  controlDefinitions,
+  setup,
+  draw,
+  mousePressed,
+  keyPressed,
+  handleControlChange,
+} from './sketch';
 
-type ParameterValues<T extends Record<string, { value: unknown }>> = {
-  [K in keyof T]: T[K]['value'];
+type HyperFrameWindow = Window & {
+  hyperFrame?: {
+    p5?: {
+      start?: (options: any) => Promise<any>;
+    };
+  };
 };
 
-type HyperWindow = Window & {
-  hypertoolControls?: any;
-  hyperFrame?: any;
-};
-
-
-
-type CircleParameters = ParameterValues<typeof controlDefinitions>;
-
-let p5Instance: any = null;
-
-function getHyperControls() {
+function getP5Starter() {
   if (typeof window === 'undefined') {
-    throw new Error('Hypertool controls library is not available');
+    throw new Error('Window is not available');
   }
-  const hyperWindow = window as HyperWindow;
-  if (!hyperWindow.hypertoolControls) {
-    throw new Error('Hypertool controls library is not available');
+
+  const hyperFrame = (window as HyperFrameWindow).hyperFrame;
+
+  if (!hyperFrame || !hyperFrame.p5 || typeof hyperFrame.p5.start !== 'function') {
+    throw new Error('HyperFrame p5 starter is not available');
   }
-  return hyperWindow.hypertoolControls;
+
+  return hyperFrame.p5.start;
 }
 
-function getHyperFrame() {
-  if (typeof window === 'undefined') {
-    throw new Error('HyperFrame library is not available');
-  }
-  const hyperWindow = window as HyperWindow;
-  if (!hyperWindow.hyperFrame) {
-    throw new Error('HyperFrame library is not available');
-  }
-  return hyperWindow.hyperFrame;
-}
-
-const controls = getHyperControls().createControlPanel(controlDefinitions, {
-  title: 'Circle Controls',
-  onChange: (values, { key }) => {
-    if (!p5Instance) {
-      return;
-    }
-
-    if (key === 'autoRegenerate') {
-      values.autoRegenerate ? p5Instance.loop() : p5Instance.noLoop();
-    }
-  },
-});
-
-const params = controls.params as CircleParameters;
-
-
-
-getHyperFrame().mountP5Sketch(
-  {
+getP5Starter()({
+  controlDefinitions,
+  handlers: {
     setup,
     draw,
     keyPressed,
     mousePressed,
   },
-  {
+  controls: {
+    title: 'Circle Controls',
+    onChange: handleControlChange,
+  },
+  mount: {
     containerClassName: 'circle',
-  }
-);
+  },
+}).catch((error: unknown) => {
+  console.error('[circle] Failed to initialize p5 sketch:', error);
+});
