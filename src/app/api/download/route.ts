@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import JSZip from "jszip";
 
-export const runtime = "nodejs";
+// export const runtime = "nodejs";
 
 const FileMapSchema = z.record(z.string());
 

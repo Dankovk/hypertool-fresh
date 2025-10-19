@@ -19,5 +19,5 @@ export async function GET(req: Request) {
   }
 }
 
-export const runtime = "nodejs";
+// export const runtime = "nodejs";
 

@@ -7,7 +7,12 @@ const nextConfig = {
   eslint: {
     ignoreDuringBuilds: true,
   },
+    reactCompiler: true,
+
+
   experimental: {
+      reactCompiler: true,
+      cacheComponents: true,
     serverActions: {
       allowedOrigins: ["localhost:3030", "127.0.0.1:3030"],
     },
