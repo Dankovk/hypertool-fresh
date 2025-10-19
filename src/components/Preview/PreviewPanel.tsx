@@ -1,14 +1,16 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState, memo } from "react";
+import { useCallback, useEffect, useRef, useState, memo } from "react";
 import type {
   FileSystemTree,
   WebContainer as WebContainerInstance,
   WebContainerProcess,
 } from "@webcontainer/api";
 import { WebContainer } from "@webcontainer/api";
-import { IconDownload } from "@tabler/icons-react";
+import { IconDownload, IconTerminal } from "@tabler/icons-react";
 import { config } from "@/config";
+import { Terminal } from "@xterm/xterm";
+import "@xterm/xterm/css/xterm.css";
 
 interface PreviewPanelProps {
   files: Record<string, string>;
@@ -58,11 +60,17 @@ export const PreviewPanel = memo(({ files, onDownload }: PreviewPanelProps)=> {
   const syncQueueRef = useRef<Promise<void>>(Promise.resolve());
   const lastPackageJsonRef = useRef<string | null>(null);
 
+  // Terminal refs
+  const terminalRef = useRef<Terminal | null>(null);
+  const terminalElRef = useRef<HTMLDivElement | null>(null);
+  const shellProcessRef = useRef<WebContainerProcess | null>(null);
+
   const [status, setStatus] = useState<string>("Booting preview runtime…");
   const [error, setError] = useState<string | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [logs, setLogs] = useState<LogEntry[]>([]);
   const [containerReady, setContainerReady] = useState(false);
+  const [terminalExpanded, setTerminalExpanded] = useState(true);
 
   const appendLog = useCallback((message: string) => {
     if (!isMountedRef.current) {
@@ -80,21 +88,37 @@ export const PreviewPanel = memo(({ files, onDownload }: PreviewPanelProps)=> {
   const pipeProcessOutput = useCallback(
     (stream: ReadableStream<string> | undefined, prefix: string) => {
       if (!stream) return;
-      stream
-        .pipeTo(
-          new WritableStream<string>({
-            write(chunk) {
-              if (!chunk.trim().length) return;
-              chunk.split(/\r?\n/).forEach((line) => {
-                if (line.trim().length === 0) return;
-                appendLog(prefix ? `[${prefix}] ${line}` : line);
-              });
-            },
-          }),
-        )
-        .catch(() => {
-          /* no-op */
-        });
+      const reader = stream.getReader();
+
+      const pump = async () => {
+        try {
+          while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
+
+            if (!value || !value.trim().length) continue;
+
+            // Write to terminal if available
+            if (terminalRef.current) {
+              // Add prefix in terminal for clarity
+              const prefixedValue = prefix ? `\x1b[36m[${prefix}]\x1b[0m ${value}` : value;
+              terminalRef.current.write(prefixedValue);
+            }
+
+            // Also keep logs
+            value.split(/\r?\n/).forEach((line) => {
+              if (line.trim().length === 0) return;
+              appendLog(prefix ? `[${prefix}] ${line}` : line);
+            });
+          }
+        } catch (err) {
+          // Stream closed or error
+        }
+      };
+
+      pump().catch(() => {
+        /* no-op */
+      });
     },
     [appendLog],
   );
@@ -104,6 +128,10 @@ export const PreviewPanel = memo(({ files, onDownload }: PreviewPanelProps)=> {
       setStatus("Installing dependencies…");
       appendLog("Installing dependencies…");
 
+      if (terminalRef.current) {
+        terminalRef.current.writeln("\x1b[1;33m>>> Running: " + config.preview.installCommand.join(" ") + "\x1b[0m");
+      }
+
       const [command, ...args] = config.preview.installCommand;
       const installProcess = await container.spawn(command, args);
       pipeProcessOutput(installProcess.output, "npm");
@@ -112,6 +140,10 @@ export const PreviewPanel = memo(({ files, onDownload }: PreviewPanelProps)=> {
         throw new Error(`npm install failed (exit code ${exitCode})`);
       }
       appendLog("Dependencies installed.");
+
+      if (terminalRef.current) {
+        terminalRef.current.writeln("\x1b[1;32m✓ Dependencies installed\x1b[0m");
+      }
     },
     [appendLog, pipeProcessOutput],
   );
@@ -120,6 +152,11 @@ export const PreviewPanel = memo(({ files, onDownload }: PreviewPanelProps)=> {
     async (container: WebContainerInstance) => {
       setStatus("Starting dev server…");
       appendLog("Starting Vite dev server…");
+
+      if (terminalRef.current) {
+        terminalRef.current.writeln("\x1b[1;33m>>> Running: " + config.preview.devCommand.join(" ") + "\x1b[0m");
+      }
+
       const [command, ...args] = config.preview.devCommand;
       const process = await container.spawn(command, args);
       devServerRef.current = process;
@@ -266,7 +303,7 @@ export const PreviewPanel = memo(({ files, onDownload }: PreviewPanelProps)=> {
       }
     };
 
-    boot().then(() => {});
+    boot();
 
     return () => {
       cancelled = true;
@@ -277,6 +314,149 @@ export const PreviewPanel = memo(({ files, onDownload }: PreviewPanelProps)=> {
       }
     };
   }, [appendLog]);
+
+  // Initialize terminal when container is ready
+  useEffect(() => {
+    if (!containerReady || !containerRef.current || !terminalElRef.current) {
+      console.log("[Terminal] Not ready:", { containerReady, hasContainer: !!containerRef.current, hasTerminalEl: !!terminalElRef.current });
+      return;
+    }
+
+    // Check if terminal already initialized
+    if (terminalRef.current) {
+      console.log("[Terminal] Already initialized");
+      return;
+    }
+
+    const container = containerRef.current;
+    console.log("[Terminal] Initializing terminal...");
+
+    // Initialize terminal
+    const term = new Terminal({
+      cursorBlink: true,
+      fontSize: 13,
+      fontFamily: 'Menlo, Monaco, "Courier New", monospace',
+      theme: {
+        background: "#0a0a0a",
+        foreground: "#d4d4d4",
+        cursor: "#d4d4d4",
+        black: "#000000",
+        red: "#cd3131",
+        green: "#0dbc79",
+        yellow: "#e5e510",
+        blue: "#2472c8",
+        magenta: "#bc3fbc",
+        cyan: "#11a8cd",
+        white: "#e5e5e5",
+        brightBlack: "#666666",
+        brightRed: "#f14c4c",
+        brightGreen: "#23d18b",
+        brightYellow: "#f5f543",
+        brightBlue: "#3b8eea",
+        brightMagenta: "#d670d6",
+        brightCyan: "#29b8db",
+        brightWhite: "#e5e5e5",
+      },
+    });
+
+    terminalRef.current = term;
+    term.open(terminalElRef.current);
+    console.log("[Terminal] Terminal opened in DOM");
+
+    // Write welcome message
+    term.writeln("\x1b[1;32m╔═════════════════════════════════════════════╗\x1b[0m");
+    term.writeln("\x1b[1;32m║      WebContainer Terminal Ready            ║\x1b[0m");
+    term.writeln("\x1b[1;32m║  Type commands or view build output here    ║\x1b[0m");
+    term.writeln("\x1b[1;32m╚═════════════════════════════════════════════╝\x1b[0m");
+    term.writeln("");
+
+    let resizeObserver: ResizeObserver | null = null;
+
+    // Spawn shell process
+    const startShell = async () => {
+      try {
+        console.log("[Terminal] Starting shell...");
+        const shellProcess = await container.spawn("jsh", {
+          terminal: {
+            cols: term.cols,
+            rows: term.rows,
+          },
+        });
+
+        console.log("[Terminal] Shell started");
+        shellProcessRef.current = shellProcess;
+
+        // Pipe shell output to terminal
+        const output = shellProcess.output;
+        const reader = output.getReader();
+
+        const pumpOutput = async () => {
+          try {
+            while (true) {
+              const { done, value } = await reader.read();
+              if (done) break;
+              term.write(value);
+            }
+          } catch (err) {
+            console.error("[Terminal] Output stream error:", err);
+          }
+        };
+
+        pumpOutput().catch((err) => {
+          console.error("[Terminal] Failed to pump output:", err);
+        });
+
+        // Handle terminal input
+        term.onData((data) => {
+          if (shellProcessRef.current) {
+            const input = shellProcessRef.current.input;
+            const writer = input.getWriter();
+            writer.write(data).catch((err) => {
+              console.error("[Terminal] Failed to write input:", err);
+            });
+            writer.releaseLock();
+          }
+        });
+
+        // Handle terminal resize
+        resizeObserver = new ResizeObserver(() => {
+          if (terminalElRef.current) {
+            const { clientWidth, clientHeight } = terminalElRef.current;
+            const cols = Math.max(20, Math.floor(clientWidth / 9)); // Approximate char width
+            const rows = Math.max(10, Math.floor(clientHeight / 17)); // Approximate line height
+            term.resize(cols, rows);
+          }
+        });
+
+        if (terminalElRef.current) {
+          resizeObserver.observe(terminalElRef.current);
+        }
+
+        // Handle shell exit
+        shellProcess.exit.then((code) => {
+          console.log("[Terminal] Shell exited with code", code);
+          term.writeln(`\r\n\x1b[1;31mShell exited with code ${code}\x1b[0m`);
+          shellProcessRef.current = null;
+        });
+      } catch (err: any) {
+        console.error("[Terminal] Failed to start shell:", err);
+        term.writeln(`\r\n\x1b[1;31mFailed to start shell: ${err?.message}\x1b[0m`);
+      }
+    };
+
+    startShell();
+
+    return () => {
+      console.log("[Terminal] Cleaning up terminal...");
+      if (resizeObserver) {
+        resizeObserver.disconnect();
+      }
+      shellProcessRef.current?.kill();
+      shellProcessRef.current = null;
+      term.dispose();
+      terminalRef.current = null;
+    };
+  }, [containerReady]);
 
   // Track last synced files to prevent unnecessary re-syncs
   const lastSyncedFilesHashRef = useRef<string | null>(null);
@@ -305,8 +485,6 @@ export const PreviewPanel = memo(({ files, onDownload }: PreviewPanelProps)=> {
     lastSyncedFilesHashRef.current = filesHash;
     queueSync(files, { forceInstall: lastPackageJsonRef.current === null });
   }, [containerReady, files, queueSync]);
-
-  const logOutput = useMemo(() => logs.map((entry) => entry.message).join("\n"), [logs]);
 
   return (
     <div className="flex flex-col overflow-hidden rounded-2xl border border-border bg-surface shadow-brand">
@@ -341,13 +519,42 @@ export const PreviewPanel = memo(({ files, onDownload }: PreviewPanelProps)=> {
             {error}
           </div>
         )}
+
+        {/* Floating Terminal Panel */}
+        <div
+          className="absolute left-0 right-0 bottom-0 border-t border-border"
+          style={{
+            height: terminalExpanded ? "350px" : "auto",
+            transition: "height 0.2s ease-in-out",
+
+          }}
+        >
+          <button
+            className="flex w-full items-center justify-between px-5 py-3 text-sm text-text bg-background  hover:bg-muted/95 transition cursor-pointer"
+            onClick={() => setTerminalExpanded(!terminalExpanded)}
+          >
+            <div className="flex items-center gap-2">
+              <IconTerminal size={16} />
+              <span className="font-medium">Terminal</span>
+            </div>
+            <span className="text-xs text-text-secondary">
+              {terminalExpanded ? "▼" : "▶"}
+            </span>
+          </button>
+          <div
+            ref={terminalElRef}
+            className="w-full"
+            style={{
+              backgroundColor: "#0a0a0a",
+              height: terminalExpanded ? "calc(100% - 49px)" : "0px",
+              overflow: "hidden",
+
+            }}
+          />
+        </div>
       </div>
-      <details className="border-t border-border bg-background/50 px-5 py-3 text-sm text-text-secondary">
-        <summary className="cursor-pointer select-none text-text">Logs</summary>
-        <pre className="mt-2 max-h-48 overflow-auto whitespace-pre-wrap text-xs text-text-secondary">
-          {logOutput || "Logs will appear here."}
-        </pre>
-      </details>
     </div>
   );
-})
+});
+
+PreviewPanel.displayName = "PreviewPanel";

@@ -12,6 +12,7 @@
         "@tweakpane/plugin-camerakit": "^0.3.0",
         "@tweakpane/plugin-essentials": "^0.2.1",
         "@webcontainer/api": "^1.4.0",
+        "@xterm/xterm": "^5.5.0",
         "ai": "^5.0.60",
         "babel-plugin-react-compiler": "^1.0.0",
         "diff": "^8.0.2",
@@ -308,6 +309,8 @@
     "@vercel/oidc": ["@vercel/oidc@3.0.3", "", {}, "sha512-yNEQvPcVrK9sIe637+I0jD6leluPxzwJKx/Haw6F4H77CdDsszUn5V3o96LPziXkSNE2B83+Z3mjqGKBK/R6Gg=="],
 
     "@webcontainer/api": ["@webcontainer/api@1.6.1", "", {}, "sha512-2RS2KiIw32BY1Icf6M1DvqSmcon9XICZCDgS29QJb2NmF12ZY2V5Ia+949hMKB3Wno+P/Y8W+sPP59PZeXSELg=="],
+
+    "@xterm/xterm": ["@xterm/xterm@5.5.0", "", {}, "sha512-hqJHYaQb5OptNunnyAnkHyM8aCjZ1MEIDTQu1iIbbTD/xops91NB5yq1ZK/dC2JDbVWtF23zUtl9JE2NqwT87A=="],
 
     "acorn": ["acorn@8.15.0", "", { "bin": { "acorn": "bin/acorn" } }, "sha512-NZyJarBfL7nWwIq+FDL6Zp/yHEhePMNnnJ0y3qfieCrmNvYct8uvtiV41UvlSe6apAfk0fY1FbWx+NwfmpvtTg=="],
 

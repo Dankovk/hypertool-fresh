@@ -3,7 +3,6 @@
   "private": true,
   "version": "0.1.0",
   "description": "all-in-one-and-drag",
-
   "scripts": {
     "dev": "vite",
     "start": "vite"
@@ -12,5 +11,4 @@
     "p5": "latest",
     "vite": "^7.1.10"
   }
-
 }

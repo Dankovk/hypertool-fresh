@@ -3,8 +3,8 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "cd controls-lib && bun run build && cd ../hyper-frame && bun run build && cd .. && next dev  -p 3030",
-    "build": "cd controls-lib && bun run build && cd ../hyper-frame && bun run build && cd .. && next build",
+    "dev": "cd controls-lib && bun run build && cd ../hyper-frame && bun run build && cd .. && next dev --turbo  -p 3030",
+    "build": "cd controls-lib && bun run build && cd ../hyper-frame && bun run build && cd .. && next build --turbo",
     "build:controls": "cd controls-lib && bun run build",
     "start": "next start -p 3030",
     "lint": "next lint",
@@ -19,6 +19,7 @@
     "@tweakpane/plugin-camerakit": "^0.3.0",
     "@tweakpane/plugin-essentials": "^0.2.1",
     "@webcontainer/api": "^1.4.0",
+    "@xterm/xterm": "^5.5.0",
     "ai": "^5.0.60",
     "babel-plugin-react-compiler": "^1.0.0",
     "diff": "^8.0.2",
