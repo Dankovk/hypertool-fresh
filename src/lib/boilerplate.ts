@@ -14,12 +14,13 @@ interface PresetInfo {
   description: string;
 }
 
-const DEFAULT_RELATIVE_PATH = "boilerplate-presets/circle";
+const DEFAULT_RELATIVE_PATH = "boilerplate-presets/three.js";
 const PRESETS_RELATIVE_PATH = "boilerplate-presets";
 const FALLBACK_RELATIVE_PATHS = [
-  "./boilerplate-presets/circle",
+  "./boilerplate-presets/three.js",
   "../boilerplate-presets/circle",
   "../../boilerplate-presets/circle",
+    "../../boilerplate-presets/three.js",
   "./boilerplate-presets",
   "../boilerplate-presets",
   "../../boilerplate-presets",

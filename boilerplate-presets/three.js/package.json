@@ -1,16 +1,14 @@
 {
-  "name": "clown-and-3d",
+  "name": "three-demo-new",
   "private": true,
   "version": "0.1.0",
-  "description": "Animated pulsating clown and 3d",
-
+  "description": "Interactive Three.js 3D Scene",
   "scripts": {
     "dev": "vite",
     "start": "vite"
   },
   "dependencies": {
-    "p5": "latest",
+    "three": "^0.160.0",
     "vite": "^7.1.10"
   }
-
 }

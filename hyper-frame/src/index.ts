@@ -478,3 +478,381 @@ export async function startP5Sketch(options: StartP5SketchOptions): Promise<RunP
     mount: options.mount,
   });
 }
+
+// ============================================================================
+// THREE.JS INTEGRATION
+// ============================================================================
+
+export type ThreeInstance = any;
+
+export interface ThreeContext {
+  scene: any;
+  camera: any;
+  renderer: any;
+  controls?: any;
+}
+
+export interface ThreeSketchContext {
+  params: Record<string, any>;
+  controls: any;
+  getThreeContext(): ThreeContext | null;
+}
+
+export type ThreeSketchHandler = (three: ThreeContext, context: ThreeSketchContext, ...args: any[]) => void;
+
+export interface ThreeLifecycleHandlers {
+  setup?: ThreeSketchHandler;
+  animate?: ThreeSketchHandler;
+  resize?: ThreeSketchHandler;
+  dispose?: () => void;
+}
+
+export interface MountThreeOptions {
+  target?: HTMLElement | string | null;
+  containerClassName?: string;
+  camera?: {
+    type?: 'perspective' | 'orthographic';
+    fov?: number;
+    near?: number;
+    far?: number;
+    position?: [number, number, number];
+  };
+  renderer?: {
+    antialias?: boolean;
+    alpha?: boolean;
+    preserveDrawingBuffer?: boolean;
+  };
+  orbitControls?: boolean;
+  onReady?: (context: ThreeContext) => void;
+}
+
+export interface MountThreeResult {
+  container: HTMLElement;
+  getContext(): ThreeContext | null;
+  destroy(): void;
+  startAnimation(): void;
+  stopAnimation(): void;
+}
+
+function getThreeConstructors(): any {
+  if (typeof window === 'undefined') {
+    throw new Error('[hyper-frame] window is not available');
+  }
+
+  const THREE = (window as any).THREE;
+
+  if (typeof THREE !== 'object') {
+    throw new Error('[hyper-frame] THREE not found on window. Make sure to import and expose Three.js on window in your sketch.');
+  }
+
+  return THREE;
+}
+
+/**
+ * Mount a Three.js scene with basic setup
+ */
+export function mountThreeSketch(handlers: ThreeLifecycleHandlers, options?: MountThreeOptions): MountThreeResult {
+  if (typeof document === 'undefined') {
+    throw new Error('mountThreeSketch cannot run outside a browser environment');
+  }
+
+  const opts: MountThreeOptions = options || {};
+  const THREE = getThreeConstructors();
+
+  const containerInfo = resolveContainer({
+    target: opts.target,
+    containerClassName: opts.containerClassName || 'hypertool-three-sketch'
+  });
+  const container = containerInfo.element;
+  const createdInternally = containerInfo.createdInternally;
+
+  // Create scene
+  const scene = new THREE.Scene();
+
+  // Create camera
+  const cameraOpts = opts.camera || {};
+  const cameraType = cameraOpts.type || 'perspective';
+  let camera: any;
+
+  if (cameraType === 'perspective') {
+    camera = new THREE.PerspectiveCamera(
+      cameraOpts.fov || 75,
+      window.innerWidth / window.innerHeight,
+      cameraOpts.near || 0.1,
+      cameraOpts.far || 1000
+    );
+  } else {
+    const aspect = window.innerWidth / window.innerHeight;
+    camera = new THREE.OrthographicCamera(
+      -aspect, aspect, 1, -1,
+      cameraOpts.near || 0.1,
+      cameraOpts.far || 1000
+    );
+  }
+
+  if (cameraOpts.position) {
+    camera.position.set(...cameraOpts.position);
+  } else {
+    camera.position.z = 5;
+  }
+
+  // Create renderer
+  const rendererOpts = opts.renderer || {};
+  const renderer = new THREE.WebGLRenderer({
+    antialias: rendererOpts.antialias !== false,
+    alpha: rendererOpts.alpha || false,
+    preserveDrawingBuffer: rendererOpts.preserveDrawingBuffer || false,
+  });
+  renderer.setSize(container.clientWidth || window.innerWidth, container.clientHeight || window.innerHeight);
+  renderer.setPixelRatio(window.devicePixelRatio);
+  container.appendChild(renderer.domElement);
+
+  // Optional orbit controls
+  let orbitControls: any = null;
+  if (opts.orbitControls) {
+    const OrbitControls = (window as any).OrbitControls || THREE.OrbitControls;
+    if (OrbitControls) {
+      orbitControls = new OrbitControls(camera, renderer.domElement);
+    } else {
+      console.warn('[hyper-frame] OrbitControls not found. Make sure to import and expose it on window.');
+    }
+  }
+
+  const threeContext: ThreeContext = {
+    scene,
+    camera,
+    renderer,
+    controls: orbitControls,
+  };
+
+  let animationId: number | null = null;
+  let isAnimating = false;
+
+  // Handle window resize
+  function handleResize() {
+    const width = container.clientWidth || window.innerWidth;
+    const height = container.clientHeight || window.innerHeight;
+
+    camera.aspect = width / height;
+    camera.updateProjectionMatrix();
+    renderer.setSize(width, height);
+
+    if (handlers.resize) {
+      handlers.resize(threeContext, {} as ThreeSketchContext);
+    }
+  }
+
+  window.addEventListener('resize', handleResize);
+
+  // Animation loop
+  function animate() {
+    if (!isAnimating) return;
+
+    animationId = requestAnimationFrame(animate);
+
+    if (orbitControls) {
+      orbitControls.update();
+    }
+
+    if (handlers.animate) {
+      handlers.animate(threeContext, {} as ThreeSketchContext);
+    }
+
+    renderer.render(scene, camera);
+  }
+
+  // Call setup if provided
+  if (handlers.setup) {
+    handlers.setup(threeContext, {} as ThreeSketchContext);
+  }
+
+  if (opts.onReady) {
+    opts.onReady(threeContext);
+  }
+
+  function startAnimation() {
+    if (!isAnimating) {
+      isAnimating = true;
+      animate();
+    }
+  }
+
+  function stopAnimation() {
+    isAnimating = false;
+    if (animationId !== null) {
+      cancelAnimationFrame(animationId);
+      animationId = null;
+    }
+  }
+
+  function destroy() {
+    stopAnimation();
+    window.removeEventListener('resize', handleResize);
+
+    if (handlers.dispose) {
+      handlers.dispose();
+    }
+
+    if (orbitControls) {
+      orbitControls.dispose();
+    }
+
+    renderer.dispose();
+    container.removeChild(renderer.domElement);
+
+    if (createdInternally) {
+      container.remove();
+    }
+  }
+
+  // Start animation by default
+  startAnimation();
+
+  return {
+    container,
+    getContext: () => threeContext,
+    destroy,
+    startAnimation,
+    stopAnimation,
+  };
+}
+
+export interface RunThreeSketchOptions {
+  controlDefinitions: ControlDefinitions;
+  handlers: ThreeLifecycleHandlers;
+  controls?: ControlPanelOptions;
+  mount?: MountThreeOptions;
+}
+
+export interface RunThreeSketchResult {
+  params: Record<string, any>;
+  controls: any;
+  context: ThreeSketchContext;
+  threeContext: ThreeContext;
+  destroy(): void;
+  getInstance(): ThreeContext | null;
+}
+
+/**
+ * High level helper that wires up controls-lib and Three.js mounting in one call.
+ */
+export function runThreeSketch(options: RunThreeSketchOptions): RunThreeSketchResult {
+  const controlsApi = getHypertoolControls();
+  const controlOptions = options.controls || {};
+
+  const sketchContext: ThreeSketchContext = {
+    params: {},
+    controls: null as any,
+    getThreeContext: () => threeContext,
+  };
+
+  const controls = controlsApi.createControlPanel(options.controlDefinitions, {
+    title: controlOptions.title,
+    position: controlOptions.position,
+    expanded: controlOptions.expanded,
+    container: controlOptions.container,
+    onChange: (params: Record<string, any>, changeContext: any) => {
+      sketchContext.params = params;
+      if (typeof controlOptions.onChange === 'function') {
+        const change: ControlChangePayload = {
+          key: changeContext.key,
+          value: changeContext.value,
+          event: changeContext.event,
+        };
+        (controlOptions.onChange as any)(change, sketchContext);
+      }
+    },
+  });
+
+  sketchContext.params = controls.params;
+  sketchContext.controls = controls;
+
+  // Wrap handlers with context
+  const wrappedHandlers: ThreeLifecycleHandlers = {};
+
+  if (options.handlers.setup) {
+    const originalSetup = options.handlers.setup;
+    wrappedHandlers.setup = (three: ThreeContext, _ctx: ThreeSketchContext) => {
+      originalSetup(three, sketchContext);
+    };
+  }
+
+  if (options.handlers.animate) {
+    const originalAnimate = options.handlers.animate;
+    wrappedHandlers.animate = (three: ThreeContext, _ctx: ThreeSketchContext) => {
+      originalAnimate(three, sketchContext);
+    };
+  }
+
+  if (options.handlers.resize) {
+    const originalResize = options.handlers.resize;
+    wrappedHandlers.resize = (three: ThreeContext, _ctx: ThreeSketchContext) => {
+      originalResize(three, sketchContext);
+    };
+  }
+
+  if (options.handlers.dispose) {
+    wrappedHandlers.dispose = options.handlers.dispose;
+  }
+
+  const mounted = mountThreeSketch(wrappedHandlers, options.mount || {});
+  const threeContext = mounted.getContext()!;
+
+  return {
+    params: controls.params,
+    controls,
+    context: sketchContext,
+    threeContext,
+    destroy() {
+      mounted.destroy();
+    },
+    getInstance() {
+      return mounted.getContext();
+    },
+  };
+}
+
+function ensureThreeReady(maxAttempts: number): Promise<void> {
+  return waitForCondition(function condition() {
+    try {
+      getThreeConstructors();
+      return true;
+    } catch (error) {
+      return false;
+    }
+  }, maxAttempts, 'THREE constructor');
+}
+
+export interface StartThreeSketchOptions extends RunThreeSketchOptions {
+  readiness?: {
+    maxAttempts?: number;
+  };
+}
+
+/**
+ * Bootstrap a Three.js sketch by ensuring Three.js and the controls library are ready.
+ *
+ * Note: Three.js should be imported as a module and exposed on window.THREE
+ * in your sketch entry point.
+ */
+export async function startThreeSketch(options: StartThreeSketchOptions): Promise<RunThreeSketchResult> {
+  if (typeof window === 'undefined') {
+    throw new Error('[hyper-frame] window is not available');
+  }
+
+  const readinessOptions = options.readiness || {};
+
+  const readinessAttempts = typeof readinessOptions.maxAttempts === 'number'
+    ? readinessOptions.maxAttempts
+    : 600;
+
+  await ensureThreeReady(readinessAttempts);
+  await ensureControlsReady(readinessAttempts);
+
+  return runThreeSketch({
+    controlDefinitions: options.controlDefinitions,
+    handlers: options.handlers,
+    controls: options.controls,
+    mount: options.mount,
+  });
+}
