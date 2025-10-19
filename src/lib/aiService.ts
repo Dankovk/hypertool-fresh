@@ -86,7 +86,16 @@ export async function generatePatches({
   }
 
   // Validate and cast edits - zod already validated the schema
-  const edits = value.edits as unknown as CodeEdit[];
+  const rawEdits = value.edits as unknown as CodeEdit[];
+
+  const edits = rawEdits
+    .map((edit) => {
+      const normalizedPath = edit.filePath.startsWith('/')
+        ? edit.filePath
+        : `/${edit.filePath}`;
+      return { ...edit, filePath: normalizedPath };
+    })
+    .filter((edit) => !edit.filePath.startsWith('/__hypertool__/'));
 
   if (edits.length === 0) {
     throw new Error("No valid edits generated");

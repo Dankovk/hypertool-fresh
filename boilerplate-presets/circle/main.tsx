@@ -15,35 +15,57 @@ type HyperFrameWindow = Window & {
   };
 };
 
-function getP5Starter() {
-  if (typeof window === 'undefined') {
-    throw new Error('Window is not available');
-  }
+function waitForStarter(maxAttempts = 600): Promise<(options: any) => Promise<any>> {
+  return new Promise((resolve, reject) => {
+    if (typeof window === 'undefined') {
+      reject(new Error('Window is not available'));
+      return;
+    }
 
-  const hyperFrame = (window as HyperFrameWindow).hyperFrame;
+    let attempts = 0;
 
-  if (!hyperFrame || !hyperFrame.p5 || typeof hyperFrame.p5.start !== 'function') {
-    throw new Error('HyperFrame p5 starter is not available');
-  }
+    function tick() {
+      attempts += 1;
 
-  return hyperFrame.p5.start;
+      const hyperFrame = (window as HyperFrameWindow).hyperFrame;
+      if (hyperFrame && hyperFrame.p5 && typeof hyperFrame.p5.start === 'function') {
+        resolve(hyperFrame.p5.start);
+        return;
+      }
+
+      if (attempts >= maxAttempts) {
+        reject(new Error('Timed out waiting for HyperFrame p5 starter'));
+        return;
+      }
+
+      if (typeof requestAnimationFrame === 'function') {
+        requestAnimationFrame(tick);
+      } else {
+        setTimeout(tick, 16);
+      }
+    }
+
+    tick();
+  });
 }
 
-getP5Starter()({
-  controlDefinitions,
-  handlers: {
-    setup,
-    draw,
-    keyPressed,
-    mousePressed,
-  },
-  controls: {
-    title: 'Circle Controls',
-    onChange: handleControlChange,
-  },
-  mount: {
-    containerClassName: 'circle',
-  },
-}).catch((error: unknown) => {
-  console.error('[circle] Failed to initialize p5 sketch:', error);
-});
+waitForStarter()
+  .then((start) => start({
+    controlDefinitions,
+    handlers: {
+      setup,
+      draw,
+      keyPressed,
+      mousePressed,
+    },
+    controls: {
+      title: 'Circle Controls',
+      onChange: handleControlChange,
+    },
+    mount: {
+      containerClassName: 'circle',
+    },
+  }))
+  .catch((error: unknown) => {
+    console.error('[circle] Failed to initialize p5 sketch:', error);
+  });

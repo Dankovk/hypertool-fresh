@@ -5,9 +5,7 @@ import {
   SandpackPreview,
 } from "@codesandbox/sandpack-react";
 import { config } from "@/config";
-import { ControlPanel } from "@/components/ControlPanel";
-import { iframeCommunication, type IframeMessage } from "@/lib/iframeCommunication";
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import type { ControlDefinitions } from "@/components/ControlPanel/ControlGenerator";
 
 interface PreviewPanelProps {
@@ -183,14 +181,14 @@ export function PreviewPanel({ files, onDownload, onParameterChange }: PreviewPa
   // }, [files]);
 
   // Send parameter changes to iframe (only when not updating from iframe)
-  const handleParameterChange = (key: string, value: any) => {
-    if (isIframeReady && !isUpdatingFromIframe.current) {
-      console.log(`Sending parameter change to iframe: ${key} = ${value}`);
-      iframeCommunication.sendParameterChange(key, value);
-    }
-  };
+  // const handleParameterChange = (key: string, value: any) => {
+  //   if (isIframeReady && !isUpdatingFromIframe.current) {
+  //     console.log(`Sending parameter change to iframe: ${key} = ${value}`);
+  //     iframeCommunication.sendParameterChange(key, value);
+  //   }
+  // };
 
-  if (!files['/package.json']) {
+  if (!Object.keys(files).length) {
       return null;
   }
 

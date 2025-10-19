@@ -80,23 +80,7 @@ export function loadBoilerplateFiles(presetId?: string): FileMap {
     files = readDirectoryRecursive(boilerplatePath);
   }
 
-  const scriptSources: ScriptDescriptor[] = [];
-
-  const frameScripts = injectFrameLibrary(files);
-  if (frameScripts.length > 0) {
-    scriptSources.push(...frameScripts);
-  }
-
-  const controlsScript = injectControlsLibrary(files);
-  if (controlsScript) {
-    scriptSources.push(controlsScript);
-  }
-
-  if (files["/index.html"] && scriptSources.length > 0) {
-    files["/index.html"] = injectLibraryScripts(files["/index.html"], scriptSources);
-  }
-
-  return files;
+  return ensureSystemFiles(files);
 }
 
 export function listAvailablePresets(): PresetInfo[] {
@@ -249,4 +233,25 @@ function injectLibraryScripts(html: string, scriptSources: ScriptDescriptor[]): 
   }
 
   return output;
+}
+
+export function ensureSystemFiles(original: FileMap): FileMap {
+  const files = { ...original };
+  const scriptSources: ScriptDescriptor[] = [];
+
+  const frameScripts = injectFrameLibrary(files);
+  if (frameScripts.length > 0) {
+    scriptSources.push(...frameScripts);
+  }
+
+  const controlsScript = injectControlsLibrary(files);
+  if (controlsScript) {
+    scriptSources.push(controlsScript);
+  }
+
+  if (files["/index.html"] && scriptSources.length > 0) {
+    files["/index.html"] = injectLibraryScripts(files["/index.html"], scriptSources);
+  }
+
+  return files;
 }

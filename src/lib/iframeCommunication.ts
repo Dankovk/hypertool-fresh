@@ -237,4 +237,4 @@ export class IframeCommunication {
 }
 
 // Global instance
-export const iframeCommunication = new IframeCommunication();
+// export const iframeCommunication = new IframeCommunication();

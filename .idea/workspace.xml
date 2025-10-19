@@ -6,33 +6,17 @@
   <component name="ChangeListManager">
     <list default="true" id="51bc1ced-b378-46bc-8004-9aa3de836607" name="Changes" comment="added hyper-frame">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/boilerplate-presets/blank/index.html" beforeDir="false" afterPath="$PROJECT_DIR$/boilerplate-presets/__non-migrated__/blank/index.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/boilerplate-presets/blank/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/boilerplate-presets/__non-migrated__/blank/package.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/boilerplate-presets/blank/sketch.js" beforeDir="false" afterPath="$PROJECT_DIR$/boilerplate-presets/__non-migrated__/blank/sketch.js" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/boilerplate-presets/circle/main.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/boilerplate-presets/circle/main.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/boilerplate-presets/circle/sketch.tsx" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/boilerplate-presets/fractal/index.html" beforeDir="false" afterPath="$PROJECT_DIR$/boilerplate-presets/__non-migrated__/fractal/index.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/boilerplate-presets/fractal/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/boilerplate-presets/__non-migrated__/fractal/package.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/boilerplate-presets/fractal/sketch.js" beforeDir="false" afterPath="$PROJECT_DIR$/boilerplate-presets/__non-migrated__/fractal/sketch.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/boilerplate-presets/generative-art-external/index.html" beforeDir="false" afterPath="$PROJECT_DIR$/boilerplate-presets/__non-migrated__/generative-art-external/index.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/boilerplate-presets/generative-art-external/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/boilerplate-presets/__non-migrated__/generative-art-external/package.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/boilerplate-presets/generative-art-external/sketch.js" beforeDir="false" afterPath="$PROJECT_DIR$/boilerplate-presets/__non-migrated__/generative-art-external/sketch.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/boilerplate-presets/generative-art/index.html" beforeDir="false" afterPath="$PROJECT_DIR$/boilerplate-presets/__non-migrated__/generative-art/index.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/boilerplate-presets/generative-art/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/boilerplate-presets/__non-migrated__/generative-art/package.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/boilerplate-presets/generative-art/sketch.js" beforeDir="false" afterPath="$PROJECT_DIR$/boilerplate-presets/__non-migrated__/generative-art/sketch.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/boilerplate-presets/particles/index.html" beforeDir="false" afterPath="$PROJECT_DIR$/boilerplate-presets/__non-migrated__/particles/index.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/boilerplate-presets/particles/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/boilerplate-presets/__non-migrated__/particles/package.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/boilerplate-presets/particles/sketch.js" beforeDir="false" afterPath="$PROJECT_DIR$/boilerplate-presets/__non-migrated__/particles/sketch.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/boilerplate-presets/shared/tweakpane-styles.css" beforeDir="false" afterPath="$PROJECT_DIR$/boilerplate-presets/__non-migrated__/shared/tweakpane-styles.css" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/boilerplate-presets/shared/tweakpane.min.js" beforeDir="false" afterPath="$PROJECT_DIR$/boilerplate-presets/__non-migrated__/shared/tweakpane.min.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/boilerplate-presets/waves/index.html" beforeDir="false" afterPath="$PROJECT_DIR$/boilerplate-presets/__non-migrated__/waves/index.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/boilerplate-presets/waves/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/boilerplate-presets/__non-migrated__/waves/package.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/boilerplate-presets/waves/sketch.js" beforeDir="false" afterPath="$PROJECT_DIR$/boilerplate-presets/__non-migrated__/waves/sketch.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/hyper-frame/dist/index.d.ts" beforeDir="false" afterPath="$PROJECT_DIR$/hyper-frame/dist/index.d.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/hyper-frame/dist/index.js" beforeDir="false" afterPath="$PROJECT_DIR$/hyper-frame/dist/index.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/hyper-frame/dist/index.js.map" beforeDir="false" afterPath="$PROJECT_DIR$/hyper-frame/dist/index.js.map" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/hyper-frame/src/index.ts" beforeDir="false" afterPath="$PROJECT_DIR$/hyper-frame/src/index.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/boilerplate-presets/circle/package-lock.json" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/boilerplate-presets/circle/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/boilerplate-presets/circle/package.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/package.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/app/api/ai/route.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/app/api/ai/route.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/components/Preview/PreviewPanel.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/components/Preview/PreviewPanel.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/config/prompts.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/config/prompts.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/lib/aiService.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/lib/aiService.ts" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/lib/boilerplate.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/lib/boilerplate.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/lib/iframeCommunication.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/lib/iframeCommunication.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/lib/patches.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/lib/patches.ts" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/tsconfig.tsbuildinfo" beforeDir="false" afterPath="$PROJECT_DIR$/tsconfig.tsbuildinfo" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -208,7 +192,15 @@
       <option name="project" value="LOCAL" />
       <updated>1760860438213</updated>
     </task>
-    <option name="localTasksCounter" value="8" />
+    <task id="LOCAL-00008" summary="added hyper-frame">
+      <option name="closed" value="true" />
+      <created>1760862418553</created>
+      <option name="number" value="00008" />
+      <option name="presentableId" value="LOCAL-00008" />
+      <option name="project" value="LOCAL" />
+      <updated>1760862418553</updated>
+    </task>
+    <option name="localTasksCounter" value="9" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">

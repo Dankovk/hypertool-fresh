@@ -233,15 +233,37 @@ export function applyEditsToFiles(
   errors: string[];
 } {
   const newFiles = { ...files };
+  if (process.env.NODE_ENV !== 'production') {
+    console.debug('[patches] initial files:', Object.keys(newFiles));
+  }
   const results: PatchResult[] = [];
   const errors: string[] = [];
 
   for (const edit of edits) {
-    const filePath = edit.filePath;
-    const content = newFiles[filePath];
+    let filePath = edit.filePath;
+    if (!filePath.startsWith("/")) {
+      filePath = "/" + filePath;
+    }
 
-    if (!content) {
-      errors.push(`File not found: ${filePath}`);
+    let content = newFiles[filePath];
+
+    if (content === undefined) {
+      const altPath = filePath.startsWith("/") ? filePath.slice(1) : `/${filePath}`;
+      content = newFiles[altPath];
+      if (content !== undefined) {
+        filePath = altPath;
+      }
+    }
+
+    if (content === undefined) {
+      const availableKeys = Object.keys(newFiles);
+      if (process.env.NODE_ENV !== 'production') {
+        console.debug('[patches] missing file', filePath, 'available keys:', availableKeys);
+      }
+      const available = availableKeys
+        .map((key) => (key === filePath ? `${key}*` : key))
+        .join(", ");
+      errors.push(`File not found: ${filePath} (available: ${available})`);
       continue;
     }
 
