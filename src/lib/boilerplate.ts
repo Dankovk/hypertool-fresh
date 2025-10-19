@@ -58,18 +58,24 @@ export function readDirectoryRecursive(dir: string, base: string = dir, out: Fil
 }
 
 export function loadBoilerplateFiles(presetId?: string): FileMap {
+  let files: FileMap | null = null;
+
   if (presetId) {
     const presetsPath = resolvePresetsPath();
     if (presetsPath) {
       const presetPath = join(presetsPath, presetId);
       if (existsSync(presetPath) && existsSync(join(presetPath, "index.html"))) {
-        return readDirectoryRecursive(presetPath);
+        files = readDirectoryRecursive(presetPath);
       }
     }
   }
 
-  const boilerplatePath = resolveBoilerplatePath();
-  return readDirectoryRecursive(boilerplatePath);
+  if (!files) {
+    const boilerplatePath = resolveBoilerplatePath();
+    files = readDirectoryRecursive(boilerplatePath);
+  }
+
+  return injectControlsLibrary(files);
 }
 
 export function listAvailablePresets(): PresetInfo[] {
@@ -113,4 +119,63 @@ export function listAvailablePresets(): PresetInfo[] {
   return presets;
 }
 
+const CONTROLS_DIST_RELATIVE_PATH = "controls-lib/dist/index.js";
+const CONTROLS_BUNDLE_PATH = "/__hypertool__/controls/index.js";
+const CONTROLS_GLOBALS_PATH = "/__hypertool__/controls/globals.js";
+
+function injectControlsLibrary(files: FileMap): FileMap {
+  try {
+    const distPath = resolve(process.cwd(), CONTROLS_DIST_RELATIVE_PATH);
+    if (!existsSync(distPath)) {
+      console.warn(`[boilerplate] Controls dist not found at ${distPath}`);
+      return files;
+    }
+
+    const distCode = readFileSync(distPath, "utf8");
+    files[CONTROLS_BUNDLE_PATH] = distCode;
+
+    const globalsCode = `
+import { createControls, createControlPanel, HypertoolControls, injectThemeVariables, studioTheme } from "./index.js";
+
+if (typeof window !== "undefined") {
+  window.hypertoolControls = {
+    createControls,
+    createControlPanel,
+    HypertoolControls,
+    injectThemeVariables,
+    studioTheme,
+  };
+}
+`.trimStart();
+
+    files[CONTROLS_GLOBALS_PATH] = globalsCode;
+
+    if (files["/index.html"]) {
+      files["/index.html"] = injectControlsScript(files["/index.html"]);
+    }
+  } catch (error) {
+    console.error("[boilerplate] Failed to inject controls library:", error);
+  }
+
+  return files;
+}
+
+function injectControlsScript(html: string): string {
+  if (html.includes("__hypertool__/controls/globals.js")) {
+    return html;
+  }
+
+  const scriptTag = '    <script type="module" src="./__hypertool__/controls/globals.js"></script>';
+  const mainScriptTag = '<script type="module" src="./main.tsx"></script>';
+
+  if (html.includes(mainScriptTag)) {
+    return html.replace(mainScriptTag, `${scriptTag}\n    ${mainScriptTag}`);
+  }
+
+  if (html.includes("</body>")) {
+    return html.replace("</body>", `${scriptTag}\n</body>`);
+  }
+
+  return `${html.trim()}\n${scriptTag}\n`;
+}
 

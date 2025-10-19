@@ -4,15 +4,34 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="51bc1ced-b378-46bc-8004-9aa3de836607" name="Changes" comment="moved from sandpack to webcontainers">
-      <change afterPath="$PROJECT_DIR$/boilerplate-presets/circle/main.tsx" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/boilerplate-presets/circle/tweakpane-styles.css" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/boilerplate-presets/circle/index.html" beforeDir="false" afterPath="$PROJECT_DIR$/boilerplate-presets/circle/index.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/boilerplate-presets/circle/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/boilerplate-presets/circle/package.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/boilerplate-presets/circle/sketch.js" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/components/Preview/PreviewPanel.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/components/Preview/PreviewPanel.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/config/index.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/config/index.ts" afterDir="false" />
+    <list default="true" id="51bc1ced-b378-46bc-8004-9aa3de836607" name="Changes" comment="">
+      <change afterPath="$PROJECT_DIR$/controls-lib/README.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/controls-lib/bun.lock" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/controls-lib/dist/HypertoolControls.d.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/controls-lib/dist/HypertoolControls.d.ts.map" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/controls-lib/dist/index.d.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/controls-lib/dist/index.d.ts.map" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/controls-lib/dist/index.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/controls-lib/dist/index.js.map" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/controls-lib/dist/simple-api.d.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/controls-lib/dist/simple-api.d.ts.map" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/controls-lib/dist/theme.d.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/controls-lib/dist/theme.d.ts.map" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/controls-lib/dist/types.d.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/controls-lib/dist/types.d.ts.map" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/controls-lib/package.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/controls-lib/src/HypertoolControls.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/controls-lib/src/index.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/controls-lib/src/simple-api.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/controls-lib/src/theme.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/controls-lib/src/types.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/controls-lib/tsconfig.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/boilerplate-presets/circle/main.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/boilerplate-presets/circle/main.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/boilerplate-presets/circle/tweakpane-styles.css" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/package.json" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/lib/boilerplate.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/lib/boilerplate.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tsconfig.tsbuildinfo" beforeDir="false" afterPath="$PROJECT_DIR$/tsconfig.tsbuildinfo" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -66,28 +85,28 @@
     <option name="openDirectoriesWithSingleClick" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent"><![CDATA[{
-  "keyToString": {
-    "ASKED_SHARE_PROJECT_CONFIGURATION_FILES": "true",
-    "ModuleVcsDetector.initialDetectionPerformed": "true",
-    "RunOnceActivity.ShowReadmeOnStart": "true",
-    "RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252": "true",
-    "RunOnceActivity.git.unshallow": "true",
-    "git-widget-placeholder": "main",
-    "js.debugger.nextJs.config.created.client": "true",
-    "js.debugger.nextJs.config.created.server": "true",
-    "junie.onboarding.icon.badge.shown": "true",
-    "last_opened_file_path": "/Users/koristuvac/WebstormProjects/hypertool/fresh-breeze/boilerplate-presets/circle",
-    "node.js.detected.package.eslint": "true",
-    "node.js.detected.package.tslint": "true",
-    "node.js.selected.package.eslint": "(autodetect)",
-    "node.js.selected.package.tslint": "(autodetect)",
-    "nodejs_package_manager_path": "bun",
-    "to.speed.mode.migration.done": "true",
-    "ts.external.directory.path": "/Users/koristuvac/WebstormProjects/hypertool/fresh-breeze/node_modules/typescript/lib",
-    "vue.rearranger.settings.migration": "true"
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;ASKED_SHARE_PROJECT_CONFIGURATION_FILES&quot;: &quot;true&quot;,
+    &quot;ModuleVcsDetector.initialDetectionPerformed&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;main&quot;,
+    &quot;js.debugger.nextJs.config.created.client&quot;: &quot;true&quot;,
+    &quot;js.debugger.nextJs.config.created.server&quot;: &quot;true&quot;,
+    &quot;junie.onboarding.icon.badge.shown&quot;: &quot;true&quot;,
+    &quot;last_opened_file_path&quot;: &quot;/Users/koristuvac/WebstormProjects/hypertool/fresh-breeze/boilerplate-presets/circle&quot;,
+    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
+    &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
+    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
+    &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
+    &quot;nodejs_package_manager_path&quot;: &quot;bun&quot;,
+    &quot;to.speed.mode.migration.done&quot;: &quot;true&quot;,
+    &quot;ts.external.directory.path&quot;: &quot;/Users/koristuvac/WebstormProjects/hypertool/fresh-breeze/node_modules/typescript/lib&quot;,
+    &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
   }
-}]]></component>
+}</component>
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
       <recent name="$PROJECT_DIR$/boilerplate-presets/circle" />
@@ -199,13 +218,11 @@
         <line-breakpoint enabled="true" type="javascript">
           <url>file://$PROJECT_DIR$/src/components/Preview/PreviewPanel.tsx</url>
           <line>124</line>
-          <properties lambdaOrdinal="-1" />
           <option name="timeStamp" value="2" />
         </line-breakpoint>
         <line-breakpoint enabled="true" type="javascript">
           <url>file://$PROJECT_DIR$/src/components/Preview/PreviewPanel.tsx</url>
           <line>25</line>
-          <properties lambdaOrdinal="-1" />
           <option name="timeStamp" value="3" />
         </line-breakpoint>
       </breakpoints>
