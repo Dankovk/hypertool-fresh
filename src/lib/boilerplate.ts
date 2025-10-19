@@ -94,10 +94,13 @@ export function listAvailablePresets(): PresetInfo[] {
           const packageJson = JSON.parse(readFileSync(packageJsonPath, "utf8"));
           name = packageJson.name || entry.name;
           description = packageJson.description || "";
+          console.log(packageJson)
         } catch (e) {
           // Ignore invalid package.json
         }
       }
+
+
 
       presets.push({
         id: entry.name,

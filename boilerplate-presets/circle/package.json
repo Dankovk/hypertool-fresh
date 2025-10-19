@@ -4,8 +4,16 @@
   "version": "0.1.0",
   "description": "Animated pulsating circle",
   "scripts": {
-    "dev": "serve . -l 4000"
+    "dev": "parcel",
+    "start": "parcel"
   },
-  "dependencies": {}
+  "dependencies": {
+    "react": "18.2.0",
+    "react-dom": "18.2.0",
+    "@p5-wrapper/react": "latest",
+    "tweakpane": "latest",
+    "p5": "latest"
+  }
+
 }
 

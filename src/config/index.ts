@@ -8,6 +8,6 @@ export const config = {
   sandpack: {
     recompileDelay: 500,
     theme: 'dark' as const,
-    template: 'static' as const,
+    template: 'parcel' as const,
   },
 } as const;

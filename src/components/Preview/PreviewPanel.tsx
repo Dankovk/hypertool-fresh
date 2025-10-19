@@ -23,116 +23,164 @@ export function PreviewPanel({ files, onDownload, onParameterChange }: PreviewPa
   const isUpdatingFromIframe = useRef(false);
 
   // Handle messages from iframe
-  useEffect(() => {
-    const handleMessage = (message: IframeMessage) => {
-      // Only log important messages to reduce console spam
-      if (message.type === 'ready' || message.type === 'parameterChange' || message.type === 'error') {
-        console.log('Received message from iframe:', message);
-      }
-      
-      switch (message.type) {
-        case 'ready':
-          setIsIframeReady(true);
-          if (message.data?.controlDefinitions) {
-            setControlDefinitions(message.data.controlDefinitions);
-            console.log('Received control definitions:', message.data.controlDefinitions);
-          }
-          break;
-          
-        case 'parameterChange':
-          if (message.parameter && message.value !== undefined) {
-            // Set flag to prevent sending message back
-            isUpdatingFromIframe.current = true;
-            
-            // Notify parent component about parameter change
-            if (onParameterChange) {
-              onParameterChange(message.parameter, message.value);
-            }
-            
-            // Reset flag after a short delay
-            setTimeout(() => {
-              isUpdatingFromIframe.current = false;
-            }, 100);
-          }
-          break;
-          
-        case 'error':
-          console.error('Error from iframe:', message.data);
-          break;
-          
-        case 'log':
-          console.log(`[Iframe ${message.data?.level}]:`, message.data?.message);
-          break;
-      }
-    };
-
-    iframeCommunication.addMessageHandler(handleMessage);
-
-    return () => {
-      iframeCommunication.removeMessageHandler(handleMessage);
-    };
-  }, [onParameterChange]);
+  // useEffect(() => {
+  //   const handleMessage = (message: IframeMessage) => {
+  //     // Only log important messages to reduce console spam
+  //     if (message.type === 'ready' || message.type === 'parameterChange' || message.type === 'error') {
+  //       console.log('Received message from iframe:', message);
+  //     }
+  //
+  //     switch (message.type) {
+  //       case 'ready':
+  //         setIsIframeReady(true);
+  //         if (message.data?.controlDefinitions) {
+  //           setControlDefinitions(message.data.controlDefinitions);
+  //           console.log('Received control definitions:', message.data.controlDefinitions);
+  //         }
+  //         break;
+  //
+  //       case 'parameterChange':
+  //         if (message.parameter && message.value !== undefined) {
+  //           // Set flag to prevent sending message back
+  //           isUpdatingFromIframe.current = true;
+  //
+  //           // Notify parent component about parameter change
+  //           if (onParameterChange) {
+  //             onParameterChange(message.parameter, message.value);
+  //           }
+  //
+  //           // Reset flag after a short delay
+  //           setTimeout(() => {
+  //             isUpdatingFromIframe.current = false;
+  //           }, 100);
+  //         }
+  //         break;
+  //
+  //       case 'error':
+  //         console.error('Error from iframe:', message.data);
+  //         break;
+  //
+  //       case 'log':
+  //         console.log(`[Iframe ${message.data?.level}]:`, message.data?.message);
+  //         break;
+  //     }
+  //   };
+  //
+  //   iframeCommunication.addMessageHandler(handleMessage);
+  //
+  //   return () => {
+  //     iframeCommunication.removeMessageHandler(handleMessage);
+  //   };
+  // }, [onParameterChange]);useEffect(() => {
+  //   const handleMessage = (message: IframeMessage) => {
+  //     // Only log important messages to reduce console spam
+  //     if (message.type === 'ready' || message.type === 'parameterChange' || message.type === 'error') {
+  //       console.log('Received message from iframe:', message);
+  //     }
+  //
+  //     switch (message.type) {
+  //       case 'ready':
+  //         setIsIframeReady(true);
+  //         if (message.data?.controlDefinitions) {
+  //           setControlDefinitions(message.data.controlDefinitions);
+  //           console.log('Received control definitions:', message.data.controlDefinitions);
+  //         }
+  //         break;
+  //
+  //       case 'parameterChange':
+  //         if (message.parameter && message.value !== undefined) {
+  //           // Set flag to prevent sending message back
+  //           isUpdatingFromIframe.current = true;
+  //
+  //           // Notify parent component about parameter change
+  //           if (onParameterChange) {
+  //             onParameterChange(message.parameter, message.value);
+  //           }
+  //
+  //           // Reset flag after a short delay
+  //           setTimeout(() => {
+  //             isUpdatingFromIframe.current = false;
+  //           }, 100);
+  //         }
+  //         break;
+  //
+  //       case 'error':
+  //         console.error('Error from iframe:', message.data);
+  //         break;
+  //
+  //       case 'log':
+  //         console.log(`[Iframe ${message.data?.level}]:`, message.data?.message);
+  //         break;
+  //     }
+  //   };
+  //
+  //   iframeCommunication.addMessageHandler(handleMessage);
+  //
+  //   return () => {
+  //     iframeCommunication.removeMessageHandler(handleMessage);
+  //   };
+  // }, [onParameterChange]);
 
   // Set up iframe reference when Sandpack loads
-  useEffect(() => {
-    // Reset iframe communication state when files change
-    iframeCommunication.reset();
-    setIsIframeReady(false);
-    setControlDefinitions({});
-    
-    let retryCount = 0;
-    const maxRetries = 50; // 5 seconds max
-    let isIframeSet = false; // Prevent multiple iframe settings
-    let timeoutId: NodeJS.Timeout | null = null;
-    
-    const checkForIframe = () => {
-      if (isIframeSet) return; // Already set, don't retry
-      
-      const iframe = previewRef.current?.querySelector('iframe');
-      if (iframe) {
-        // Check if iframe has a proper src (not just about:blank)
-        if (iframe.src && iframe.src !== 'about:blank' && iframe.src.includes('sandpack')) {
-          iframeCommunication.setIframe(iframe);
-          console.log('Iframe reference set with src:', iframe.src);
-          isIframeSet = true; // Mark as set
-          
-          // Also listen for iframe load event with debounce
-          let loadTimeout: NodeJS.Timeout | null = null;
-          iframe.addEventListener('load', () => {
-            if (loadTimeout) {
-              clearTimeout(loadTimeout);
-            }
-            loadTimeout = setTimeout(() => {
-              console.log('Iframe loaded, ready for communication');
-            }, 100);
-          });
-          return; // Success, stop retrying
-        } else {
-          // Iframe exists but doesn't have proper src yet, retry
-          if (retryCount % 10 === 0) { // Only log every 10th attempt to reduce spam
-            console.log('Iframe found but src not ready yet:', iframe.src);
-          }
-        }
-      }
-      
-      // Retry logic
-      retryCount++;
-      if (retryCount < maxRetries) {
-        timeoutId = setTimeout(checkForIframe, 100);
-      } else {
-        console.warn('Max retries reached for iframe detection');
-      }
-    };
-
-    checkForIframe();
-    
-    // Cleanup timeout on unmount
-    return () => {
-      if (timeoutId) {
-        clearTimeout(timeoutId);
-      }
-    };
-  }, [files]);
+  // useEffect(() => {
+  //   // Reset iframe communication state when files change
+  //   iframeCommunication.reset();
+  //   setIsIframeReady(false);
+  //   setControlDefinitions({});
+  //
+  //   let retryCount = 0;
+  //   const maxRetries = 50; // 5 seconds max
+  //   let isIframeSet = false; // Prevent multiple iframe settings
+  //   let timeoutId: NodeJS.Timeout | null = null;
+  //
+  //   const checkForIframe = () => {
+  //     if (isIframeSet) return; // Already set, don't retry
+  //
+  //     const iframe = previewRef.current?.querySelector('iframe');
+  //     if (iframe) {
+  //       // Check if iframe has a proper src (not just about:blank)
+  //       if (iframe.src && iframe.src !== 'about:blank' && iframe.src.includes('sandpack')) {
+  //         iframeCommunication.setIframe(iframe);
+  //         console.log('Iframe reference set with src:', iframe.src);
+  //         isIframeSet = true; // Mark as set
+  //
+  //         // Also listen for iframe load event with debounce
+  //         let loadTimeout: NodeJS.Timeout | null = null;
+  //         iframe.addEventListener('load', () => {
+  //           if (loadTimeout) {
+  //             clearTimeout(loadTimeout);
+  //           }
+  //           loadTimeout = setTimeout(() => {
+  //             console.log('Iframe loaded, ready for communication');
+  //           }, 100);
+  //         });
+  //         return; // Success, stop retrying
+  //       } else {
+  //         // Iframe exists but doesn't have proper src yet, retry
+  //         if (retryCount % 10 === 0) { // Only log every 10th attempt to reduce spam
+  //           console.log('Iframe found but src not ready yet:', iframe.src);
+  //         }
+  //       }
+  //     }
+  //
+  //     // Retry logic
+  //     retryCount++;
+  //     if (retryCount < maxRetries) {
+  //       timeoutId = setTimeout(checkForIframe, 100);
+  //     } else {
+  //       console.warn('Max retries reached for iframe detection');
+  //     }
+  //   };
+  //
+  //   checkForIframe();
+  //
+  //   // Cleanup timeout on unmount
+  //   return () => {
+  //     if (timeoutId) {
+  //       clearTimeout(timeoutId);
+  //     }
+  //   };
+  // }, [files]);
 
   // Send parameter changes to iframe (only when not updating from iframe)
   const handleParameterChange = (key: string, value: any) => {
@@ -141,6 +189,10 @@ export function PreviewPanel({ files, onDownload, onParameterChange }: PreviewPa
       iframeCommunication.sendParameterChange(key, value);
     }
   };
+
+  if (!files['/package.json']) {
+      return null;
+  }
 
   return (
     <div className="flex h-full gap-4">
@@ -161,19 +213,28 @@ export function PreviewPanel({ files, onDownload, onParameterChange }: PreviewPa
         </div>
         <div className="flex-1">
           <SandpackProvider
-            template={config.sandpack.template}
+
             theme={config.sandpack.theme}
             files={files}
+
+
             options={{
               recompileMode: "delayed",
-              recompileDelay: config.sandpack.recompileDelay,
+                experimental_enableServiceWorker: true,
+                // bundlerURL: "https://sandpack-bundler.codesandbox.io",
+                recompileDelay: config.sandpack.recompileDelay,
             }}
             customSetup={{
-              entry: "/index.html",
-              environment: "static",
+                // entry: "index.html",
+                environment: "parcel",
+
+
               dependencies: {
-                "tweakpane": "4.0.5"
-              }
+                "tweakpane": "4.0.5",
+
+              },
+
+
             }}
           >
             <SandpackLayout className="sandpack-layout h-full w-full">
@@ -186,12 +247,12 @@ export function PreviewPanel({ files, onDownload, onParameterChange }: PreviewPa
       </div>
 
       {/* Control Panel */}
-        <ControlPanel
-          files={files}
-          onParameterChange={handleParameterChange}
-          isIframeReady={isIframeReady}
-          controlDefinitions={controlDefinitions}
-        />
+      {/*  <ControlPanel*/}
+      {/*    files={files}*/}
+      {/*    onParameterChange={handleParameterChange}*/}
+      {/*    isIframeReady={isIframeReady}*/}
+      {/*    controlDefinitions={controlDefinitions}*/}
+      {/*  />*/}
     </div>
   );
 }
