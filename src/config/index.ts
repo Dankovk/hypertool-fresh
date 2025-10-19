@@ -5,9 +5,11 @@ export const config = {
   history: {
     maxVersions: 10,
   },
-  sandpack: {
-    recompileDelay: 500,
-    theme: 'dark' as const,
-    template: 'parcel' as const,
+  preview: {
+    port: 3000,
+    host: "0.0.0.0",
+    installCommand: ["npm", "install"] as const,
+    devCommand: ["npm", "run", "dev"] as const,
+    maxLogEntries: 200,
   },
 } as const;

@@ -5,11 +5,12 @@
   "description": "Animated pulsating circle",
 
   "scripts": {
-    "dev": "parcel",
-    "start": "parcel"
+    "dev": "vite",
+    "start": "vite"
   },
   "dependencies": {
-    "p5": "latest"
+    "p5": "latest",
+    "vite": "^7.1.10"
   }
 
 }

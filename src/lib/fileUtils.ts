@@ -49,10 +49,10 @@ export function toClientFiles(incoming: FileMap): FileMap {
 }
 
 /**
- * Convert files to Sandpack format (with leading slashes)
+ * Add leading slashes to file paths (required by server/runtime APIs)
  * @param files - File map to convert
- * @returns File map with leading slashes for Sandpack
+ * @returns File map with leading slashes
  */
-export function toSandpackFormat(files: FileMap): Record<string, string> {
+export function toRuntimeFileMap(files: FileMap): Record<string, string> {
   return normalizeFileMap(files, { ensureLeadingSlash: true });
 }

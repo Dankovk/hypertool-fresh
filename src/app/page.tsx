@@ -10,7 +10,7 @@ import { useStudioSettings } from "@/hooks/useStudioSettings";
 import { useBoilerplate } from "@/hooks/useBoilerplate";
 import { useCodeVersions } from "@/hooks/useCodeVersions";
 import { useAIChat } from "@/hooks/useAIChat";
-import { toSandpackFormat } from "@/lib/fileUtils";
+import { toRuntimeFileMap } from "@/lib/fileUtils";
 import type { FileMap, CodeVersion } from "@/types/studio";
 
 export default function HomePage() {
@@ -44,8 +44,8 @@ export default function HomePage() {
     loadInitial();
   }, [loadBoilerplate]);
 
-  // Convert files to Sandpack format
-  const sandpackFiles = toSandpackFormat(files);
+  // Normalize files for runtime (leading slashes)
+  const previewFiles = toRuntimeFileMap(files);
 
   const onReset = useCallback(async () => {
     const boilerplate = await loadBoilerplate();
@@ -92,12 +92,6 @@ export default function HomePage() {
     URL.revokeObjectURL(url);
   }, [files]);
 
-  const onParameterChange = useCallback((key: string, value: any) => {
-    // Parameters are now handled directly in sketch.js
-    // No need to update files since the controls are live
-    console.log('Parameter changed:', key, value);
-  }, []);
-
   return (
     <div className="grid h-screen grid-cols-studio gap-4 p-4">
       {/* <div className="flex flex-col overflow-hidden rounded-2xl border border-border bg-surface shadow-brand"> */}
@@ -114,7 +108,7 @@ export default function HomePage() {
         />
       {/* </div> */}
 
-      <PreviewPanel files={sandpackFiles} onDownload={onDownload} onParameterChange={onParameterChange} />
+      <PreviewPanel files={previewFiles} onDownload={onDownload} />
 
       <PresetsModal
         isOpen={showPresets}

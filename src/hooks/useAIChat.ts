@@ -1,7 +1,7 @@
 import { useCallback, useState } from "react";
 import { toast } from "sonner";
 import { FileMapSchema } from "@/types/studio";
-import { toClientFiles, toSandpackFormat } from "@/lib/fileUtils";
+import { toClientFiles, toRuntimeFileMap } from "@/lib/fileUtils";
 import type { ChatMessage, FileMap } from "@/types/studio";
 
 interface UseAIChatParams {
@@ -42,7 +42,7 @@ export function useAIChat({
     setLoading(true);
 
     try {
-      const sandpackFiles = toSandpackFormat(files);
+      const sandpackFiles = toRuntimeFileMap(files);
       const res = await fetch("/api/ai", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
