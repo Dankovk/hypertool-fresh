@@ -4,20 +4,8 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="51bc1ced-b378-46bc-8004-9aa3de836607" name="Changes" comment="added hyper-frame">
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/boilerplate-presets/circle/main.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/boilerplate-presets/circle/main.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/boilerplate-presets/circle/package-lock.json" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/boilerplate-presets/circle/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/boilerplate-presets/circle/package.json" afterDir="false" />
+    <list default="true" id="51bc1ced-b378-46bc-8004-9aa3de836607" name="Changes" comment="Debug with new flow">
       <change beforePath="$PROJECT_DIR$/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/package.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/app/api/ai/route.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/app/api/ai/route.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/components/Preview/PreviewPanel.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/components/Preview/PreviewPanel.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/config/prompts.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/config/prompts.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/lib/aiService.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/lib/aiService.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/lib/boilerplate.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/lib/boilerplate.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/lib/iframeCommunication.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/lib/iframeCommunication.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/lib/patches.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/lib/patches.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tsconfig.tsbuildinfo" beforeDir="false" afterPath="$PROJECT_DIR$/tsconfig.tsbuildinfo" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -200,7 +188,15 @@
       <option name="project" value="LOCAL" />
       <updated>1760862418553</updated>
     </task>
-    <option name="localTasksCounter" value="9" />
+    <task id="LOCAL-00009" summary="Debug with new flow">
+      <option name="closed" value="true" />
+      <created>1760864839921</created>
+      <option name="number" value="00009" />
+      <option name="presentableId" value="LOCAL-00009" />
+      <option name="project" value="LOCAL" />
+      <updated>1760864839921</updated>
+    </task>
+    <option name="localTasksCounter" value="10" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -223,19 +219,20 @@
     <MESSAGE value="moved from sandpack to webcontainers" />
     <MESSAGE value="adapted controls" />
     <MESSAGE value="added hyper-frame" />
-    <option name="LAST_COMMIT_MESSAGE" value="added hyper-frame" />
+    <MESSAGE value="Debug with new flow" />
+    <option name="LAST_COMMIT_MESSAGE" value="Debug with new flow" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
       <breakpoints>
         <line-breakpoint enabled="true" type="javascript">
           <url>file://$PROJECT_DIR$/src/components/Preview/PreviewPanel.tsx</url>
-          <line>124</line>
+          <line>122</line>
           <option name="timeStamp" value="2" />
         </line-breakpoint>
         <line-breakpoint enabled="true" type="javascript">
           <url>file://$PROJECT_DIR$/src/components/Preview/PreviewPanel.tsx</url>
-          <line>25</line>
+          <line>23</line>
           <option name="timeStamp" value="3" />
         </line-breakpoint>
       </breakpoints>
