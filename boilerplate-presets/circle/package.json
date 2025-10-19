@@ -8,12 +8,7 @@
     "start": "parcel"
   },
   "dependencies": {
-    "react": "18.2.0",
-    "react-dom": "18.2.0",
-    "@p5-wrapper/react": "latest",
-    "tweakpane": "latest",
     "p5": "latest"
   }
 
 }
-

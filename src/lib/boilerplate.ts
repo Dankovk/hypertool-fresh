@@ -75,7 +75,23 @@ export function loadBoilerplateFiles(presetId?: string): FileMap {
     files = readDirectoryRecursive(boilerplatePath);
   }
 
-  return injectControlsLibrary(files);
+  const scriptSources: string[] = [];
+
+  const frameScript = injectFrameLibrary(files);
+  if (frameScript) {
+    scriptSources.push(frameScript);
+  }
+
+  const controlsScript = injectControlsLibrary(files);
+  if (controlsScript) {
+    scriptSources.push(controlsScript);
+  }
+
+  if (files["/index.html"] && scriptSources.length > 0) {
+    files["/index.html"] = injectLibraryScripts(files["/index.html"], scriptSources);
+  }
+
+  return files;
 }
 
 export function listAvailablePresets(): PresetInfo[] {
@@ -122,13 +138,16 @@ export function listAvailablePresets(): PresetInfo[] {
 const CONTROLS_DIST_RELATIVE_PATH = "controls-lib/dist/index.js";
 const CONTROLS_BUNDLE_PATH = "/__hypertool__/controls/index.js";
 const CONTROLS_GLOBALS_PATH = "/__hypertool__/controls/globals.js";
+const FRAME_DIST_RELATIVE_PATH = "hyper-frame/dist/index.js";
+const FRAME_BUNDLE_PATH = "/__hypertool__/frame/index.js";
+const FRAME_GLOBALS_PATH = "/__hypertool__/frame/globals.js";
 
-function injectControlsLibrary(files: FileMap): FileMap {
+function injectControlsLibrary(files: FileMap): string | null {
   try {
     const distPath = resolve(process.cwd(), CONTROLS_DIST_RELATIVE_PATH);
     if (!existsSync(distPath)) {
       console.warn(`[boilerplate] Controls dist not found at ${distPath}`);
-      return files;
+      return null;
     }
 
     const distCode = readFileSync(distPath, "utf8");
@@ -149,33 +168,65 @@ if (typeof window !== "undefined") {
 `.trimStart();
 
     files[CONTROLS_GLOBALS_PATH] = globalsCode;
-
-    if (files["/index.html"]) {
-      files["/index.html"] = injectControlsScript(files["/index.html"]);
-    }
+    return "./__hypertool__/controls/globals.js";
   } catch (error) {
     console.error("[boilerplate] Failed to inject controls library:", error);
+    return null;
   }
-
-  return files;
 }
 
-function injectControlsScript(html: string): string {
-  if (html.includes("__hypertool__/controls/globals.js")) {
-    return html;
-  }
+function injectFrameLibrary(files: FileMap): string | null {
+  try {
+    const distPath = resolve(process.cwd(), FRAME_DIST_RELATIVE_PATH);
+    if (!existsSync(distPath)) {
+      console.warn(`[boilerplate] Frame dist not found at ${distPath}`);
+      return null;
+    }
 
-  const scriptTag = '    <script type="module" src="./__hypertool__/controls/globals.js"></script>';
+    const distCode = readFileSync(distPath, "utf8");
+    files[FRAME_BUNDLE_PATH] = distCode;
+
+    const globalsCode = `
+import { mountP5Sketch } from "./index.js";
+
+if (typeof window !== "undefined") {
+  window.hyperFrame = Object.assign({}, window.hyperFrame || {}, {
+    mountP5Sketch,
+  });
+}
+`.trimStart();
+
+    files[FRAME_GLOBALS_PATH] = globalsCode;
+    return "./__hypertool__/frame/globals.js";
+  } catch (error) {
+    console.error("[boilerplate] Failed to inject frame library:", error);
+    return null;
+  }
+}
+
+function injectLibraryScripts(html: string, scriptSources: string[]): string {
+  let output = html;
   const mainScriptTag = '<script type="module" src="./main.tsx"></script>';
 
-  if (html.includes(mainScriptTag)) {
-    return html.replace(mainScriptTag, `${scriptTag}\n    ${mainScriptTag}`);
+  for (const source of scriptSources) {
+    if (output.includes(source)) {
+      continue;
+    }
+
+    const scriptTag = `    <script type="module" src="${source}"></script>`;
+
+    if (output.includes(mainScriptTag)) {
+      output = output.replace(mainScriptTag, `${scriptTag}\n    ${mainScriptTag}`);
+      continue;
+    }
+
+    if (output.includes("</body>")) {
+      output = output.replace("</body>", `${scriptTag}\n</body>`);
+      continue;
+    }
+
+    output = `${output.trim()}\n${scriptTag}\n`;
   }
 
-  if (html.includes("</body>")) {
-    return html.replace("</body>", `${scriptTag}\n</body>`);
-  }
-
-  return `${html.trim()}\n${scriptTag}\n`;
+  return output;
 }
-

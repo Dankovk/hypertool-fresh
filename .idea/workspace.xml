@@ -4,32 +4,11 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="51bc1ced-b378-46bc-8004-9aa3de836607" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/controls-lib/README.md" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/controls-lib/bun.lock" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/controls-lib/dist/HypertoolControls.d.ts" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/controls-lib/dist/HypertoolControls.d.ts.map" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/controls-lib/dist/index.d.ts" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/controls-lib/dist/index.d.ts.map" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/controls-lib/dist/index.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/controls-lib/dist/index.js.map" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/controls-lib/dist/simple-api.d.ts" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/controls-lib/dist/simple-api.d.ts.map" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/controls-lib/dist/theme.d.ts" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/controls-lib/dist/theme.d.ts.map" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/controls-lib/dist/types.d.ts" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/controls-lib/dist/types.d.ts.map" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/controls-lib/package.json" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/controls-lib/src/HypertoolControls.ts" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/controls-lib/src/index.ts" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/controls-lib/src/simple-api.ts" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/controls-lib/src/theme.ts" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/controls-lib/src/types.ts" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/controls-lib/tsconfig.json" afterDir="false" />
+    <list default="true" id="51bc1ced-b378-46bc-8004-9aa3de836607" name="Changes" comment="adapted controls">
+      <change afterPath="$PROJECT_DIR$/boilerplate-presets/circle/sketch.tsx" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/boilerplate-presets/circle/main.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/boilerplate-presets/circle/main.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/boilerplate-presets/circle/tweakpane-styles.css" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/package.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/boilerplate-presets/circle/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/boilerplate-presets/circle/package.json" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/lib/boilerplate.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/lib/boilerplate.ts" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/tsconfig.tsbuildinfo" beforeDir="false" afterPath="$PROJECT_DIR$/tsconfig.tsbuildinfo" afterDir="false" />
     </list>
@@ -189,7 +168,15 @@
       <option name="project" value="LOCAL" />
       <updated>1760848539597</updated>
     </task>
-    <option name="localTasksCounter" value="6" />
+    <task id="LOCAL-00006" summary="adapted controls">
+      <option name="closed" value="true" />
+      <created>1760859329095</created>
+      <option name="number" value="00006" />
+      <option name="presentableId" value="LOCAL-00006" />
+      <option name="project" value="LOCAL" />
+      <updated>1760859329095</updated>
+    </task>
+    <option name="localTasksCounter" value="7" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -210,7 +197,8 @@
     <MESSAGE value="Added controls lib" />
     <MESSAGE value="window check" />
     <MESSAGE value="moved from sandpack to webcontainers" />
-    <option name="LAST_COMMIT_MESSAGE" value="moved from sandpack to webcontainers" />
+    <MESSAGE value="adapted controls" />
+    <option name="LAST_COMMIT_MESSAGE" value="adapted controls" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
