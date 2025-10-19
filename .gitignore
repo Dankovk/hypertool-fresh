@@ -10,19 +10,8 @@ yarn-error.log*
 bun.lockb
 coverage
 .DS_Store
-*.local
-dist
-dist/
-build/
 
+*.local
 .env.local
 next
 .next/
-
-# IDE
-.idea/
-.vscode/
-
-# Controls lib build artifacts
-controls-lib/dist/
-controls-lib/node_modules/
