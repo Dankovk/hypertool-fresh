@@ -1,31 +1,37 @@
-import { useCallback, useState } from "react";
+import { useCallback } from "react";
 import { toast } from "sonner";
+import { useChatStore, useFilesStore, useVersionsStore, useSettingsStore } from "@/stores";
 import { FileMapSchema } from "@/types/studio";
 import { toClientFiles, toRuntimeFileMap } from "@/lib/fileUtils";
-import type { ChatMessage, FileMap } from "@/types/studio";
+import type { ChatMessage } from "@/types/studio";
 
-interface UseAIChatParams {
-  model: string;
-  apiKey: string;
-  systemPrompt: string;
-  editMode: "full" | "patch";
-  files: FileMap;
-  onFilesUpdate: (files: FileMap) => void;
-  onVersionSave: (files: FileMap, prompt: string, model: string) => void;
-}
+/**
+ * Hook for AI chat functionality using Zustand stores.
+ * Integrates chat, files, versions, and settings stores.
+ */
+export function useAIChat() {
+  // Chat store
+  const messages = useChatStore((state) => state.messages);
+  const input = useChatStore((state) => state.input);
+  const loading = useChatStore((state) => state.isLoading);
+  const setInput = useChatStore((state) => state.setInput);
+  const clearInput = useChatStore((state) => state.clearInput);
+  const setLoading = useChatStore((state) => state.setLoading);
+  const addMessage = useChatStore((state) => state.addMessage);
+  const clearMessages = useChatStore((state) => state.clearMessages);
 
-export function useAIChat({
-  model,
-  apiKey,
-  systemPrompt,
-  editMode,
-  files,
-  onFilesUpdate,
-  onVersionSave,
-}: UseAIChatParams) {
-  const [messages, setMessages] = useState<ChatMessage[]>([]);
-  const [input, setInput] = useState("");
-  const [loading, setLoading] = useState(false);
+  // Files store
+  const files = useFilesStore((state) => state.files);
+  const setFiles = useFilesStore((state) => state.setFiles);
+
+  // Versions store
+  const addVersion = useVersionsStore((state) => state.addVersion);
+
+  // Settings store
+  const model = useSettingsStore((state) => state.model);
+  const apiKey = useSettingsStore((state) => state.apiKey);
+  const systemPrompt = useSettingsStore((state) => state.systemPrompt);
+  const editMode = useSettingsStore((state) => state.editMode);
 
   const sendMessage = useCallback(async () => {
     if (!input.trim() || loading) return;
@@ -33,12 +39,12 @@ export function useAIChat({
     const userMsg: ChatMessage = {
       id: crypto.randomUUID(),
       role: "user",
-      content: input
+      content: input,
     };
-    const nextMessages = [...messages, userMsg];
-    setMessages(nextMessages);
+
+    addMessage(userMsg);
     const currentInput = input;
-    setInput("");
+    clearInput();
     setLoading(true);
 
     try {
@@ -47,7 +53,7 @@ export function useAIChat({
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          messages: nextMessages.map((m) => ({ role: m.role, content: m.content })),
+          messages: [...messages, userMsg].map((m) => ({ role: m.role, content: m.content })),
           model,
           apiKey: apiKey.trim() || undefined,
           systemPrompt: systemPrompt.trim() || undefined,
@@ -65,28 +71,38 @@ export function useAIChat({
       const normalized = toClientFiles(parsed.data);
 
       // Save version before updating
-      onVersionSave(normalized, currentInput, model);
+      addVersion(normalized, currentInput, model);
 
       // Update files
-      onFilesUpdate(normalized);
+      setFiles(normalized);
 
       const assistantMsg: ChatMessage = {
         id: crypto.randomUUID(),
         role: "assistant",
         content: json.explanation ?? "Updated project files.",
       };
-      setMessages((prev) => [...prev, assistantMsg]);
+      addMessage(assistantMsg);
       toast.success("Project updated");
     } catch (err: any) {
       toast.error(err?.message || "AI error");
     } finally {
       setLoading(false);
     }
-  }, [apiKey, editMode, input, loading, messages, model, files, systemPrompt, onFilesUpdate, onVersionSave]);
-
-  const clearMessages = useCallback(() => {
-    setMessages([]);
-  }, []);
+  }, [
+    input,
+    loading,
+    messages,
+    files,
+    model,
+    apiKey,
+    systemPrompt,
+    editMode,
+    addMessage,
+    clearInput,
+    setLoading,
+    addVersion,
+    setFiles,
+  ]);
 
   return {
     messages,

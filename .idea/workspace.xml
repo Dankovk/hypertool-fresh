@@ -4,17 +4,19 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="51bc1ced-b378-46bc-8004-9aa3de836607" name="Changes" comment="">
+    <list default="true" id="51bc1ced-b378-46bc-8004-9aa3de836607" name="Changes" comment="moved to webcontainers and zustand">
+      <change afterPath="$PROJECT_DIR$/boilerplate-presets/circle-with-triangle/index.html" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/boilerplate-presets/circle-with-triangle/main.tsx" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/boilerplate-presets/circle-with-triangle/package.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/boilerplate-presets/circle-with-triangle/sketch.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/boilerplate-presets/circle/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/boilerplate-presets/circle/package.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/bun.lock" beforeDir="false" afterPath="$PROJECT_DIR$/bun.lock" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/next.config.js" beforeDir="false" afterPath="$PROJECT_DIR$/next.config.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/package.json" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/app/page.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/app/page.tsx" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/components/Preview/PreviewPanel.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/components/Preview/PreviewPanel.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/config/index.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/config/index.ts" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/hooks/useAIChat.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/hooks/useAIChat.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/lib/fileUtils.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/lib/fileUtils.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/hooks/useBoilerplate.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/hooks/useBoilerplate.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/hooks/useCodeVersions.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/hooks/useCodeVersions.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/hooks/useStudioSettings.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/hooks/useStudioSettings.ts" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -68,30 +70,31 @@
     <option name="openDirectoriesWithSingleClick" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent">{
-  &quot;keyToString&quot;: {
-    &quot;ASKED_SHARE_PROJECT_CONFIGURATION_FILES&quot;: &quot;true&quot;,
-    &quot;ModuleVcsDetector.initialDetectionPerformed&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
-    &quot;git-widget-placeholder&quot;: &quot;main&quot;,
-    &quot;js.debugger.nextJs.config.created.client&quot;: &quot;true&quot;,
-    &quot;js.debugger.nextJs.config.created.server&quot;: &quot;true&quot;,
-    &quot;junie.onboarding.icon.badge.shown&quot;: &quot;true&quot;,
-    &quot;last_opened_file_path&quot;: &quot;/Users/koristuvac/WebstormProjects/hypertool/fresh-breeze/boilerplate-presets/circle&quot;,
-    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
-    &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
-    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
-    &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
-    &quot;nodejs_package_manager_path&quot;: &quot;bun&quot;,
-    &quot;to.speed.mode.migration.done&quot;: &quot;true&quot;,
-    &quot;ts.external.directory.path&quot;: &quot;/Users/koristuvac/WebstormProjects/hypertool/fresh-breeze/node_modules/typescript/lib&quot;,
-    &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "ASKED_SHARE_PROJECT_CONFIGURATION_FILES": "true",
+    "ModuleVcsDetector.initialDetectionPerformed": "true",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252": "true",
+    "RunOnceActivity.git.unshallow": "true",
+    "git-widget-placeholder": "main",
+    "js.debugger.nextJs.config.created.client": "true",
+    "js.debugger.nextJs.config.created.server": "true",
+    "junie.onboarding.icon.badge.shown": "true",
+    "last_opened_file_path": "/Users/koristuvac/WebstormProjects/hypertool/fresh-breeze/boilerplate-presets/circle-with-triangle",
+    "node.js.detected.package.eslint": "true",
+    "node.js.detected.package.tslint": "true",
+    "node.js.selected.package.eslint": "(autodetect)",
+    "node.js.selected.package.tslint": "(autodetect)",
+    "nodejs_package_manager_path": "bun",
+    "to.speed.mode.migration.done": "true",
+    "ts.external.directory.path": "/Users/koristuvac/WebstormProjects/hypertool/fresh-breeze/node_modules/typescript/lib",
+    "vue.rearranger.settings.migration": "true"
   }
-}</component>
+}]]></component>
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$/boilerplate-presets/circle-with-triangle" />
       <recent name="$PROJECT_DIR$/boilerplate-presets/circle" />
       <recent name="$PROJECT_DIR$" />
     </key>
@@ -205,7 +208,15 @@
       <option name="project" value="LOCAL" />
       <updated>1760864839921</updated>
     </task>
-    <option name="localTasksCounter" value="10" />
+    <task id="LOCAL-00010" summary="moved to webcontainers and zustand">
+      <option name="closed" value="true" />
+      <created>1760888302524</created>
+      <option name="number" value="00010" />
+      <option name="presentableId" value="LOCAL-00010" />
+      <option name="project" value="LOCAL" />
+      <updated>1760888302524</updated>
+    </task>
+    <option name="localTasksCounter" value="11" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -229,7 +240,8 @@
     <MESSAGE value="adapted controls" />
     <MESSAGE value="added hyper-frame" />
     <MESSAGE value="Debug with new flow" />
-    <option name="LAST_COMMIT_MESSAGE" value="Debug with new flow" />
+    <MESSAGE value="moved to webcontainers and zustand" />
+    <option name="LAST_COMMIT_MESSAGE" value="moved to webcontainers and zustand" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>

@@ -1,11 +1,16 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect } from "react";
 import { toast } from "sonner";
+import { useBoilerplateStore } from "@/stores";
 import { FileMapSchema } from "@/types/studio";
 import { toClientFiles } from "@/lib/fileUtils";
-import type { FileMap, PresetInfo } from "@/types/studio";
+import type { FileMap } from "@/types/studio";
 
+/**
+ * Hook for managing boilerplate presets using Zustand store.
+ */
 export function useBoilerplate() {
-  const [presets, setPresets] = useState<PresetInfo[]>([]);
+  const presets = useBoilerplateStore((state) => state.presets);
+  const setPresets = useBoilerplateStore((state) => state.setPresets);
 
   const loadBoilerplate = useCallback(async (presetId?: string): Promise<FileMap | null> => {
     const url = presetId ? `/api/boilerplate?preset=${presetId}` : "/api/boilerplate?preset=circle";
@@ -30,7 +35,7 @@ export function useBoilerplate() {
     if (json.presets) {
       setPresets(json.presets);
     }
-  }, []);
+  }, [setPresets]);
 
   useEffect(() => {
     loadPresets();

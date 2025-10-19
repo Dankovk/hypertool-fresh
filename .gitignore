@@ -15,3 +15,7 @@ coverage
 .env.local
 next
 .next/
+
+
+.idea
+dist

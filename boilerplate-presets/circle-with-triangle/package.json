@@ -1,0 +1,16 @@
+{
+  "name": "circle-with-triangle",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Animated pulsating circle",
+
+  "scripts": {
+    "dev": "vite",
+    "start": "vite"
+  },
+  "dependencies": {
+    "p5": "latest",
+    "vite": "^7.1.10"
+  }
+
+}

@@ -204,14 +204,21 @@ export const PreviewPanel = memo(({ files, onDownload }: PreviewPanelProps)=> {
       return;
     }
 
+    // Prevent multiple boots - check if already booting or booted
+    if (containerRef.current) {
+      console.log("WebContainer already booted, skipping");
+      return;
+    }
+
     let cancelled = false;
+    let bootedInstance: WebContainerInstance | null = null;
 
     const boot = async () => {
       let timeout: ReturnType<typeof setTimeout> | null = null;
       try {
         setStatus("Booting preview runtime…");
         appendLog("Booting WebContainer runtime…");
-        console.log('Booting')
+        console.log('Booting WebContainer')
 
         timeout = setTimeout(() => {
           if (!isMountedRef.current) return;
@@ -220,12 +227,11 @@ export const PreviewPanel = memo(({ files, onDownload }: PreviewPanelProps)=> {
           );
           setStatus("Preview error");
           appendLog("WebContainer boot timed out (20s).");
-            console.log('"WebContainer boot timed out (20s).')
+          console.log("WebContainer boot timed out (20s).")
         }, 20000);
 
-        const instance = await WebContainer.boot({
-
-        });
+        const instance = await WebContainer.boot();
+        bootedInstance = instance;
 
         if (timeout) {
           clearTimeout(timeout);
@@ -233,7 +239,9 @@ export const PreviewPanel = memo(({ files, onDownload }: PreviewPanelProps)=> {
         }
 
         if (cancelled || !isMountedRef.current) {
+          console.log("Boot cancelled, tearing down");
           await instance.teardown();
+          bootedInstance = null;
           return;
         }
 
@@ -262,13 +270,39 @@ export const PreviewPanel = memo(({ files, onDownload }: PreviewPanelProps)=> {
 
     return () => {
       cancelled = true;
+      // Cleanup the booted instance if boot effect is cancelled
+      if (bootedInstance && bootedInstance !== containerRef.current) {
+        console.log("Cleaning up boot effect instance");
+        bootedInstance.teardown().catch(console.error);
+      }
     };
-  }, []);
+  }, [appendLog]);
+
+  // Track last synced files to prevent unnecessary re-syncs
+  const lastSyncedFilesHashRef = useRef<string | null>(null);
 
   useEffect(() => {
     if (!containerReady || !containerRef.current) {
       return;
     }
+    // Don't sync if files are empty (waiting for initial load)
+    const hasFiles = Object.keys(files).length > 0;
+    const hasPackageJson = files["/package.json"] || files["package.json"];
+    if (!hasFiles || !hasPackageJson) {
+      setStatus("Waiting for project files...");
+      return;
+    }
+
+    // Create a hash of file contents to detect actual changes
+    const filesHash = JSON.stringify(Object.keys(files).sort()) +
+                      JSON.stringify(Object.values(files).map(v => v.substring(0, 100)));
+
+    // Only sync if files actually changed
+    if (lastSyncedFilesHashRef.current === filesHash) {
+      return;
+    }
+
+    lastSyncedFilesHashRef.current = filesHash;
     queueSync(files, { forceInstall: lastPackageJsonRef.current === null });
   }, [containerReady, files, queueSync]);
 
