@@ -167,26 +167,6 @@ let lastRegenerateTime = 0;
 
 let g3d: any;
 
-type DragTarget = 'circle' | 'triangle' | 'clown' | 'model' | null;
-
-let circlePos = { x: 0, y: 0 };
-let trianglePos = { x: 0, y: 0 };
-let clownPos = { x: 0, y: 0 };
-let modelPos = { x: 0, y: 0 };
-
-let dragging: DragTarget = null;
-let dragOffset = { x: 0, y: 0 };
-
-function pointInTriangle(px: number, py: number, x1: number, y1: number, x2: number, y2: number, x3: number, y3: number): boolean {
-  function sign(ax: number, ay: number, bx: number, by: number, cx: number, cy: number) {
-    return (ax - cx) * (by - cy) - (bx - cx) * (ay - cy);
-  }
-  const b1 = sign(px, py, x1, y1, x2, y2) < 0;
-  const b2 = sign(px, py, x2, y2, x3, y3) < 0;
-  const b3 = sign(px, py, x3, y3, x1, y1) < 0;
-  return (b1 === b2) && (b2 === b3);
-}
-
 function drawClown(p5: any, cx: number, cy: number, size: number, t: number) {
   p5.push();
   p5.translate(cx, cy + p5.sin(t) * size * 0.05);
@@ -289,12 +269,6 @@ function drawClown(p5: any, cx: number, cy: number, size: number, t: number) {
 
 export function setup(p5: any) {
   p5.createCanvas(window.innerWidth, window.innerHeight);
-
-  circlePos = { x: p5.width / 2, y: p5.height / 2 };
-  trianglePos = { x: p5.width / 2, y: p5.height / 2 };
-  clownPos = { x: p5.width / 2, y: p5.height * 0.7 };
-  modelPos = { x: p5.width * 0.75, y: p5.height * 0.35 };
-
   g3d = p5.createGraphics(p5.width, p5.height, p5.WEBGL);
   g3d.setAttributes('alpha', true);
   g3d.pixelDensity(1);
@@ -309,12 +283,12 @@ export function draw(p5: any, context: P5SketchContext) {
   p5.noFill();
 
   const radius = params.radius + params.amplitude * p5.sin(p5.frameCount * params.animationSpeed);
-  p5.circle(circlePos.x, circlePos.y, radius * 2);
+  p5.circle(p5.width / 2, p5.height / 2, radius * 2);
 
   // Draw centered equilateral triangle with independent colors
   const tSize = radius * 0.9;
-  const cx = trianglePos.x;
-  const cy = trianglePos.y;
+  const cx = p5.width / 2;
+  const cy = p5.height / 2;
   const a = -p5.PI / 2; // top vertex angle
   const x1 = cx + tSize * p5.cos(a);
   const y1 = cy + tSize * p5.sin(a);
@@ -330,7 +304,8 @@ export function draw(p5: any, context: P5SketchContext) {
   if (params.showClown) {
     const t = p5.frameCount * 0.05 * params.clownSpeed;
     const cSize = params.clownSize;
-    drawClown(p5, clownPos.x, clownPos.y, cSize, t);
+    const cY = p5.height * 0.7;
+    drawClown(p5, p5.width / 2, cY, cSize, t);
   }
 
   // 3D model floating
@@ -354,11 +329,6 @@ export function draw(p5: any, context: P5SketchContext) {
 
     const tt = p5.frameCount * params.modelRotationSpeed;
     const amp = params.modelFloatAmplitude;
-
-    // Base screen position
-    g3d.translate(modelPos.x - p5.width / 2, modelPos.y - p5.height / 2, 0);
-
-    // Floating motion
     g3d.translate(
       p5.sin(tt * 0.9) * amp,
       p5.cos(tt * 0.7) * amp,
@@ -390,49 +360,8 @@ export function draw(p5: any, context: P5SketchContext) {
 
 export function mousePressed(p5: any, context: P5SketchContext) {
   const { params } = context;
-  const mx = p5.mouseX;
-  const my = p5.mouseY;
-
-  // Top-most first: 3D model
-  const modelPickR = params.modelSize * 1.3;
-  if (p5.dist(mx, my, modelPos.x, modelPos.y) <= modelPickR) {
-    dragging = 'model';
-    dragOffset = { x: mx - modelPos.x, y: my - modelPos.y };
-  } else {
-    // Clown bounding box
-    const halfW = params.clownSize * 0.25;
-    const halfH = params.clownSize * 0.5;
-    if (params.showClown && mx >= clownPos.x - halfW && mx <= clownPos.x + halfW && my >= clownPos.y - halfH && my <= clownPos.y + halfH) {
-      dragging = 'clown';
-      dragOffset = { x: mx - clownPos.x, y: my - clownPos.y };
-    } else {
-      // Triangle
-      const radius = params.radius + params.amplitude * p5.sin(p5.frameCount * params.animationSpeed);
-      const tSize = radius * 0.9;
-      const a = -p5.PI / 2;
-      const x1 = trianglePos.x + tSize * p5.cos(a);
-      const y1 = trianglePos.y + tSize * p5.sin(a);
-      const x2 = trianglePos.x + tSize * p5.cos(a + (2 * p5.PI) / 3);
-      const y2 = trianglePos.y + tSize * p5.sin(a + (2 * p5.PI) / 3);
-      const x3 = trianglePos.x + tSize * p5.cos(a + (4 * p5.PI) / 3);
-      const y3 = trianglePos.y + tSize * p5.sin(a + (4 * p5.PI) / 3);
-      if (pointInTriangle(mx, my, x1, y1, x2, y2, x3, y3)) {
-        dragging = 'triangle';
-        dragOffset = { x: mx - trianglePos.x, y: my - trianglePos.y };
-      } else {
-        // Circle
-        if (p5.dist(mx, my, circlePos.x, circlePos.y) <= radius + 10) {
-          dragging = 'circle';
-          dragOffset = { x: mx - circlePos.x, y: my - circlePos.y };
-        } else {
-          dragging = null;
-        }
-      }
-    }
-  }
-
   p5.redraw();
-  console.info(`Mouse pressed. Dragging: ${dragging ?? 'none'}`);
+  console.info(`Mouse pressed. Current radius: ${params.radius.toFixed(2)}`);
 }
 
 export function keyPressed(p5: any, context: P5SketchContext) {
@@ -440,24 +369,6 @@ export function keyPressed(p5: any, context: P5SketchContext) {
     const newRadius = Math.random() * 200 + 50;
     context.controls.set('radius', newRadius);
   }
-}
-
-export function mouseDragged(p5: any, context: P5SketchContext) {
-  const mx = p5.mouseX;
-  const my = p5.mouseY;
-  if (dragging === 'circle') {
-    circlePos = { x: mx - dragOffset.x, y: my - dragOffset.y };
-  } else if (dragging === 'triangle') {
-    trianglePos = { x: mx - dragOffset.x, y: my - dragOffset.y };
-  } else if (dragging === 'clown') {
-    clownPos = { x: mx - dragOffset.x, y: my - dragOffset.y };
-  } else if (dragging === 'model') {
-    modelPos = { x: mx - dragOffset.x, y: my - dragOffset.y };
-  }
-}
-
-export function mouseReleased(p5: any) {
-  dragging = null;
 }
 
 export function handleControlChange(change: ControlChangePayload, context: P5SketchContext) {

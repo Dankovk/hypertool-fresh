@@ -3,8 +3,6 @@ import {
   setup,
   draw,
   mousePressed,
-  mouseDragged,
-  mouseReleased,
   keyPressed,
   handleControlChange,
 } from './sketch';
@@ -59,8 +57,6 @@ waitForStarter()
       draw,
       keyPressed,
       mousePressed,
-      mouseDragged,
-      mouseReleased,
     },
     controls: {
       title: 'Circle, Triangle & Clown Controls',

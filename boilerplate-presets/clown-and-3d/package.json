@@ -1,8 +1,8 @@
 {
-  "name": "all-in-one-and-drag",
+  "name": "clown-and-3d",
   "private": true,
   "version": "0.1.0",
-  "description": "all-in-one-and-drag",
+  "description": "Animated pulsating clown and 3d",
 
   "scripts": {
     "dev": "vite",
