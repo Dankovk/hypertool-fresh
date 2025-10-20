@@ -130,8 +130,7 @@ ${cssVars}
     right: 0 !important;
     height: 100%;
     background: var(--tp-base-background-color);
-    border-top-right-radius: 0;
-    border-bottom-right-radius: 0;
+    border-radius: 0 !important;
     z-index: 10000;
 }
 
