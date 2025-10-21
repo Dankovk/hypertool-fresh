@@ -101,7 +101,15 @@ export default function HomePage() {
 
     const fetchBundles = async () => {
       try {
-        const response = await fetch("/api/runtime-watch/snapshot");
+        // Add cache-busting and no-cache headers
+        const response = await fetch(`/api/runtime-watch/snapshot?t=${Date.now()}`, {
+          cache: "no-store",
+          headers: {
+            "Cache-Control": "no-cache, no-store, must-revalidate",
+            "Pragma": "no-cache",
+          },
+        });
+
         if (!response.ok) {
           return null;
         }
@@ -110,7 +118,6 @@ export default function HomePage() {
         if (!json || typeof json !== "object" || !json.bundles) {
           return null;
         }
-
         return json.bundles as Record<string, string>;
       } catch (error) {
         return null;
@@ -127,11 +134,14 @@ export default function HomePage() {
           return;
         }
 
+        console.log("[runtime-watch] Fetching fresh bundles from snapshot endpoint...");
         const runtimeFiles = await fetchBundles();
         if (!runtimeFiles || !active) {
+          console.log("[runtime-watch] No runtime files received");
           return;
         }
 
+        console.log("[runtime-watch] Received bundles:", Object.keys(runtimeFiles));
         const currentFiles = useFilesStore.getState().files;
         let changed = false;
         const nextFiles = { ...currentFiles };
@@ -141,14 +151,22 @@ export default function HomePage() {
             continue;
           }
 
-          if (nextFiles[path] !== contents) {
+          const oldContent = nextFiles[path];
+          if (oldContent !== contents) {
+            console.log(`[runtime-watch] Bundle changed: ${path}`);
+            console.log(`  Old size: ${oldContent?.length ?? 0} bytes`);
+            console.log(`  New size: ${contents.length} bytes`);
+            console.log(`  First 100 chars: ${contents.substring(0, 100)}`);
             nextFiles[path] = contents;
             changed = true;
           }
         }
 
         if (changed) {
+          console.log("[runtime-watch] ✅ Updating files store with new bundles");
           setFiles(nextFiles);
+        } else {
+          console.log("[runtime-watch] ⚠️ No bundle changes detected (bundles are identical)");
         }
       }, 250);
     };
@@ -169,6 +187,7 @@ export default function HomePage() {
         if (!active) {
           return;
         }
+        console.log("[runtime-watch] SSE connection ready, scheduling initial fetch");
         scheduleRefresh();
       });
 
@@ -179,13 +198,16 @@ export default function HomePage() {
 
         try {
           const payload = JSON.parse(event.data);
+          console.log("[runtime-watch] SSE event received:", payload);
           if (payload && typeof payload.file === "string" && payload.file.endsWith(".d.ts")) {
+            console.log("[runtime-watch] Ignoring .d.ts file change");
             return;
           }
         } catch (error) {
           // Ignore invalid payloads
         }
 
+        console.log("[runtime-watch] File change detected, scheduling refresh");
         scheduleRefresh();
       };
 

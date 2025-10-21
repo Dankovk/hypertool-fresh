@@ -141,6 +141,7 @@ function injectControlsLibrary(files: FileMap): ScriptDescriptor | null {
     }
 
     const distCode = readFileSync(distPath, "utf8");
+    console.log(`[boilerplate] Loaded controls bundle: ${distCode.length} bytes, hash: ${distCode.substring(0, 50)}`);
     files[CONTROLS_BUNDLE_PATH] = distCode;
 
     const globalsCode = `
@@ -176,6 +177,7 @@ function injectFrameLibrary(files: FileMap): ScriptDescriptor[] {
     }
 
     const distCode = readFileSync(distPath, "utf8");
+    console.log(`[boilerplate] Loaded frame bundle: ${distCode.length} bytes, hash: ${distCode.substring(0, 50)}`);
     files[FRAME_BUNDLE_PATH] = distCode;
 
     const globalsCode = `
