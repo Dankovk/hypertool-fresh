@@ -9,7 +9,12 @@ import {
   handleControlChange,
 } from './sketch';
 
-type HyperFrameWindow = Window & {
+type HyperRuntimeWindow = Window & {
+  hyperRuntime?: {
+    frame?: {
+      startP5Sketch?: (options: any) => Promise<any>;
+    };
+  };
   hyperFrame?: {
     p5?: {
       start?: (options: any) => Promise<any>;
@@ -29,14 +34,21 @@ function waitForStarter(maxAttempts = 600): Promise<(options: any) => Promise<an
     function tick() {
       attempts += 1;
 
-      const hyperFrame = (window as HyperFrameWindow).hyperFrame;
-      if (hyperFrame && hyperFrame.p5 && typeof hyperFrame.p5.start === 'function') {
-        resolve(hyperFrame.p5.start);
+      const runtimeWindow = window as HyperRuntimeWindow;
+      const runtimeStart = runtimeWindow.hyperRuntime?.frame?.startP5Sketch;
+      if (typeof runtimeStart === 'function') {
+        resolve(runtimeStart);
+        return;
+      }
+
+      const legacyStart = runtimeWindow.hyperFrame?.p5?.start;
+      if (typeof legacyStart === 'function') {
+        resolve(legacyStart);
         return;
       }
 
       if (attempts >= maxAttempts) {
-        reject(new Error('Timed out waiting for HyperFrame p5 starter'));
+        reject(new Error('Timed out waiting for Hyper Runtime p5 starter'));
         return;
       }
 

@@ -1,6 +1,6 @@
 # Еволюція архітектури після коміту 8cc9cdb7
 
-> Суть змін – прісети стали **фіч-модулями**, які працюють поверх двох спільних рантаймів: **HyperFrame** (життєвий цикл p5) та **@hypertool/controls** (UI + стилізація).
+> Суть змін – прісети стали **фіч-модулями**, які працюють поверх спільного рантайму **Hyper Runtime** (життєвий цикл p5/Three + UI контролі).
 
 ## 1. Навіщо ми зламали попередню схему
 
@@ -12,21 +12,19 @@
 
 ## 2. Нова модель
 
-1. **HyperFrame** (`hyper-frame/src/index.ts`)
-   - Сам завантажує p5 з CDN, чекає поки піднімуться контролли і лише тоді викликає хендлери з пресету.
-   - Експортує глобальний `window.hyperFrame.p5.start/run/mount`.
+1. **Hyper Runtime** (`hyper-runtime/src/index.ts`)
+   - Автоматично завантажує p5 з CDN, чекає поки піднімуться контролі та лише тоді викликає хендлери з пресету.
+   - Експортує глобальний `window.hyperRuntime`, а також зворотно сумісні `window.hyperFrame` та `window.hypertoolControls`.
+   - Читає `controlDefinitions`, малює Tweakpane з темою Studio та повертає зміни у ваш скетч.
    - Підклеюється до файлової мапи автоматично (`ensureSystemFiles`).
 
-2. **@hypertool/controls**
-   - Читає `controlDefinitions`, малює Tweakpane з темою Studio, передає івенти назад у HyperFrame.
-
-3. **Контракт пресету**
+2. **Контракт пресету**
    - Лише `sketch.ts` містить бізнес-логіку: `controlDefinitions`, `setup`, `draw`, `handleControlChange`, тощо.
-   - `main.tsx` – це виклик `hyperFrame.p5.start(...)` та очікування стартера.
+   - `main.tsx` – це виклик `hyperRuntime.frame.startP5Sketch(...)` (або сумісний `hyperFrame.p5.start(...)`).
    - Старі пресети переїхали в `boilerplate-presets/__non-migrated__` і чекають міграції.
 
 4. **AI‑флоу**
-   - Нові промпти (`src/config/prompts.ts`) описують HyperFrame, тому модель не намагається тягнути p5/Tweakpane самостійно.
+   - Нові промпти (`src/config/prompts.ts`) описують Hyper Runtime (`window.hyperRuntime` / `window.hyperFrame`), тому модель не намагається тягнути p5/Tweakpane самостійно.
    - `/api/ai` показує моделі лише юзерські файли, але відповіді знову зʼєднує з системними збірками.
    - Патчі нормалізують шляхи, ігнорують `__hypertool__/` та логують причини помилок.
 
@@ -42,22 +40,22 @@
 
 - Модель отримує тільки `/sketch.ts`, `/main.tsx`, тощо. Системні файли автоматично повертаються у відповідь, щоб Sandpack не падав.
 - У патчах завжди використовуємо шляхи з префіксом `/` (`/sketch.ts`).
-- Якщо AI знову тягне `new p5(...)` або `new Pane(...)`, краще перегенерувати відповідь  і правити system prompt – промпт розрахований на HyperFrame.
+- Якщо AI знову тягне `new p5(...)` або `new Pane(...)`, краще перегенерувати відповідь  і правити system prompt – промпт розрахований на Hyper Runtime.
 
 ## 5. План міграції для старих пресетів
 
 1. Перенести стару версію в `__non-migrated__` як резерв.
 2. Створити `sketch.ts` та винести туди весь фіч-код.
-3. Залишити у `main.tsx` тільки старт через HyperFrame.
+3. Залишити у `main.tsx` тільки старт через Hyper Runtime.
 4. Перевірити роботу AI (full + patch).
 5. Видалити старий React/p5/Tweakpane код після успішної міграції.
 
 ## 6. Ключові файли
 
-- `hyper-frame/src/index.ts` – рантайм, тут додаємо платформенні можливості.
-- `controls-lib/src/HypertoolControls.ts` – тема та логіка контролів.
+- `hyper-runtime/src/frame/index.ts` – рантайм, тут додаємо платформенні можливості для p5/Three та контролів.
+- `hyper-runtime/src/controls/HypertoolControls.ts` – тема та логіка контролів.
 - `src/lib/boilerplate.ts` – інʼєкція системних скриптів та переписування `index.html`.
 - `src/app/api/ai/route.ts` – формування промптів і післяобробка відповідей.
 - `boilerplate-presets/circle/sketch.ts` – зразок нового патерну.
 
-**Головна думка:** фічи живуть у `sketch.ts`, усі обгортки – сервісна зона HyperFrame.
+**Головна думка:** фічи живуть у `sketch.ts`, усі обгортки – сервісна зона Hyper Runtime.
