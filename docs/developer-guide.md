@@ -1,101 +1,57 @@
-# Hypertool Studio – Updated Development Approach
+# Hypertool Studio – Universal HyperFrame Guide
 
-This note captures the architectural shift we made after commit `21a7514` and how every future change should be structured.
+This document captures the current expectations for presets that run inside the Studio iframe. The legacy p5/Three wrappers have been replaced by a single **universal HyperFrame sandbox** that works for any visual runtime (canvas, SVG, WebGL, WebGPU, DOM, etc.).
 
-## 1. HyperFrame First Mentality
+## 1. Core Mental Model
 
-- **HyperFrame owns bootstrapping.** Presets no longer import `p5`, `react`, or Tweakpane directly. Entry points should call `window.hyperFrame.p5.start({ ... })`. Everything else (script injection, readiness polling, control wiring) lives inside HyperFrame.
-- **`sketch.ts` contains the feature logic only.** Controls are defined through `controlDefinitions`, lifecycle handlers (`setup`, `draw`, etc.), and optional helpers like `handleControlChange`.
-- **Never touch `__hypertool__/…` files.** These bundles are regenerated automatically. When inspecting file maps, expect HyperFrame/controls bundles to appear there.
+- **HyperFrame owns the iframe environment.** It mirrors Studio CSS, injects the shared controls API, and exposes an export widget that captures PNG snapshots or WebM recordings.
+- **Every preset boots via `window.hyperFrame.createSandbox`.** Pass optional `dependencies`, `controls`, `exportWidget`, and a `setup(context)` function. The `context` exposes:
+  - `mount`: DOM element where your experience should render.
+  - `params`: live control values.
+  - `controls`: handle returned by the controls bridge (if controls were defined).
+  - `exports`: helpers for configuring capture behaviour.
+  - `environment`: `{ window, document, onResize(), addCleanup() }` utilities.
+- **File layout is flexible.** You can organise code however the preset needs (React entry point, vanilla modules, shader files, etc.). HyperFrame no longer enforces a `sketch.ts`/`main.tsx` split.
 
-## 2. Controls Strategy
+## 2. Controls & Parameters
 
-- Use `controlDefinitions` exclusively for describing parameters. HyperFrame translates that into UI (via `hypertoolControls`) and into runtime context.
-- Control change hooks belong in `handleControlChange`. Use it to start/stop loops, change behaviour, or sync state.
-- Any new preset should export the same surface (`controlDefinitions`, `setup`, `draw`, etc.) so AI interactions stay consistent.
+- Describe parameters with `controlDefinitions` (number, boolean, select, color, string) and pass them to `createSandbox({ controls: { definitions, options } })`.
+- Respond to updates inside your rendering logic by reading `context.params`. If you need notifications, provide `controls: { onChange(change, context) { … } }` or use whatever state system you prefer.
+- Never import or patch the Tweakpane bundle directly. HyperFrame bridges controls through `window.hypertoolControls` automatically.
 
-## 3. When Adding or Editing Presets
+## 3. Export Widget
 
-1. Create/update `sketch.ts` with pure feature code.
-2. Ensure `main.tsx` simply invokes `hyperFrame.p5.start({ ... })`. If the preset needs special readiness steps, wrap the call but don’t reintroduce direct p5/Tweakpane setup.
-3. Test inside Sandpack – you should see HyperFrame load p5 automatically and controls appear without additional imports.
+- The sandbox always creates an export widget. Call `context.exports.useDefaultCanvasCapture()` (enabled by default) to let HyperFrame capture the first `<canvas>` inside the mount node.
+- Override capture behaviour by registering handlers:
+  ```ts
+  context.exports.registerImageCapture(async () => canvasRef); // Canvas, Blob, data URL, or Promise
+  context.exports.registerVideoCapture({
+    requestStream: () => canvasRef.captureStream(60),
+    mimeType: 'video/webm;codecs=vp9',
+  });
+  ```
+- Update filenames with `context.exports.setFilename('my-visual')` or hide the widget using `context.exports.setVisible(false)` if you provide a custom UI.
 
-## 4. AI Workflow Expectations
+## 4. Dependencies & Styling
 
-- The AI service now filters out `__hypertool__/…` assets before building prompts but reattaches them when returning responses. When expecting AI patches, specify file paths relative to the project root (e.g. `/sketch.ts`).
-- System prompts assume the HyperFrame pattern. AI responses should not reintroduce manual p5/Tweakpane wiring; if they do, adjust the prompt rather than accepting the change.
-- When applying patches manually, run `npm run typecheck` to surface lingering TypeScript issues (some legacy warnings still exist).
+- Use `dependencies: [{ type: 'script' | 'style', url, integrity?, crossOrigin?, attributes? }]` to load external assets before `setup` runs.
+- Because CSS is mirrored from the parent document, the sandbox inherits Tailwind tokens, fonts, and theme variables. You can still inject additional styles if needed.
 
-## 5. Future Enhancements
+## 5. Cleanup & Lifecycle
 
-- We can extract reusable control helpers (e.g., generating star/noise presets) into shared modules inside HyperFrame.
-- Investigate reducing iframe noise by tightening message filtering. Current listeners log every iframe message for diagnostics.
+- Return a disposer from `setup(context)` or register cleanups via `context.environment.addCleanup(() => …)`.
+- Use `context.environment.onResize(() => …)` to react to iframe resizes without managing listeners manually.
 
-## TL;DR
+## 6. Authoring Workflow for New Presets
 
-Think of presets as **feature modules**. Every wrapper (loading scripts, controls, messaging) belongs to HyperFrame. Keep feature code in `sketch.ts`, call `hyperFrame.p5.start`, and let the platform handle everything else.
+1. Create any project structure you need (React, Three.js, Pixi, WebGPU, etc.).
+2. Define `controlDefinitions` if the experience exposes knobs.
+3. Call `window.hyperFrame.createSandbox({ ... })` from your entry module.
+4. Inside `setup(context)`, mount your renderer, read `context.params`, and wire export overrides as desired.
+5. Never edit `__hypertool__/…` bundles—`src/lib/boilerplate.ts` injects them automatically when building file maps.
 
+## 7. AI Prompt Alignment
 
-1. **HyperFrame Runtime** (`hyper-runtime/src/frame/index.ts`)
-    - Owns loading p5 from CDN, waiting for controls, patching lifecycle events, and calling your handlers.
-    - Exposed globally via `window.hyperFrame.p5.start`, `run`, and `mount`.
-    - Injected automatically when boilerplate files are loaded (see `ensureSystemFiles`).
+System prompts (see `src/config/prompts.ts`) now describe this universal sandbox. AI responses must not reference the old `window.hyperFrame.p5`/`three` helpers. When reviewing patches, reject any change that reintroduces hard-coded framework bootstrappers.
 
-2. **@hypertool/runtime/controls** (`hyper-runtime/src/controls`)
-    - Translates `controlDefinitions` into a styled Tweakpane experience consistent with Studio.
-    - Handles change events and exposes helpers that HyperFrame consumes.
-
-3. **Preset Contract**
-    - Each preset exports its creative logic from `sketch.ts`: `controlDefinitions`, `setup`, `draw`, optional `handleControlChange`, etc.
-    - `main.tsx` is tiny: wait for `hyperFrame.p5.start` and pass the sketch in. No other framework code belongs here.
-    - Legacy presets have been parked in `boilerplate-presets/__non-migrated__` until they are updated to the new contract.
-
-4. **AI Workflow Awareness**
-    - Prompts (see `src/config/prompts.ts`) now describe this architecture so AI replies stay inside the platform boundaries.
-    - `/api/ai` filters out `__hypertool__/…` files before building prompts, but reattaches them in responses to keep Sandpack stable.
-    - Patch application normalises file paths, ignores internal bundles, and logs missing-path diagnostics.
-
-## 3. How to Work on Presets Now
-
-1. **Start in `sketch.ts`.** Define parameters and handlers. Keep it pure TypeScript/JavaScript—no DOM queries, no script tags.
-2. **Use `controlDefinitions`.** It’s the single source of truth for tweakable parameters. HyperFrame will update both UI and runtime state automatically.
-3. **Bootstrap with HyperFrame.** In `main.tsx`:
-
-   ```ts
-   waitForStarter()
-     .then((start) => start({
-       controlDefinitions,
-       handlers: { setup, draw, keyPressed, mousePressed },
-       controls: { title: 'Circle Controls', onChange: handleControlChange },
-       mount: { containerClassName: 'circle' },
-     }))
-     .catch((error) => console.error('[preset] Failed to initialise', error));
-   ```
-
-4. **No direct edits in `__hypertool__/`.** Those bundles are regenerated; if you need new runtime behaviour, extend HyperFrame or the controls package.
-
-5. **Testing Workflow.** Run `npm run dev` (once the port conflict is cleared) and load the preset. You should see HyperFrame scripts in the network tab and `hyperFrame.p5.start` on `window` before sketches run.
-
-## 4. AI & Patching Expectations
-
-- AI receives only user files (`/sketch.ts`, `/main.tsx`, etc.) but the response is merged with the preserved bundles via `ensureSystemFiles`.
-- Paths in patches must include the leading slash (e.g. `/sketch.ts`). The patch layer normalises this, but following the convention avoids warnings.
-- System prompts tell AI not to import p5/Tweakpane manually; if a response reintroduces that, prefer regenerating the answer instead of hand-merging.
-
-## 5. Migration Checklist for Remaining Presets
-
-1. Move legacy preset under `__non-migrated__` out of the way.
-2. Create `sketch.ts` with controls + handlers.
-3. Replace any custom bootstrap with the HyperFrame `start` call.
-4. Verify AI interactions still work (patch + full modes).
-5. Remove legacy glue (React wrappers, iframe message handling) once all presets are migrated.
-
-## 6. Key Files to Know
-
-- `hyper-runtime/src/frame/index.ts`: HyperFrame runtime; add new capabilities here.
-- `hyper-runtime/src/controls/HypertoolControls.ts`: Styled Tweakpane wrapper.
-- `src/lib/boilerplate.ts`: Injects runtime bundles and rewrites `index.html`.
-- `src/app/api/ai/route.ts`: Shapes AI prompts and merges responses.
-- `boilerplate-presets/circle/sketch.ts`: Example reference implementation of the new pattern.
-
-With these pieces, the mental model is simple: **feature logic lives in `sketch.ts`; everything else is a platform service.**
+With this model, HyperFrame becomes a thin but universal runtime shell: it handles controls, CSS, exports, and dependency loading while giving presets freedom to structure their creative code however they like.

@@ -14,13 +14,12 @@ interface PresetInfo {
   description: string;
 }
 
-const DEFAULT_RELATIVE_PATH = "boilerplate-presets/three.js";
+const DEFAULT_RELATIVE_PATH = "boilerplate-presets/universal";
 const PRESETS_RELATIVE_PATH = "boilerplate-presets";
 const FALLBACK_RELATIVE_PATHS = [
-  "./boilerplate-presets/three.js",
-  "../boilerplate-presets/circle",
-  "../../boilerplate-presets/circle",
-    "../../boilerplate-presets/three.js",
+  "./boilerplate-presets/universal",
+  "../boilerplate-presets/universal",
+  "../../boilerplate-presets/universal",
   "./boilerplate-presets",
   "../boilerplate-presets",
   "../../boilerplate-presets",
@@ -106,7 +105,6 @@ export function listAvailablePresets(): PresetInfo[] {
           const packageJson = JSON.parse(readFileSync(packageJsonPath, "utf8"));
           name = packageJson.name || entry.name;
           description = packageJson.description || "";
-          console.log(packageJson)
         } catch (e) {
           // Ignore invalid package.json
         }
@@ -181,21 +179,16 @@ function injectFrameLibrary(files: FileMap): ScriptDescriptor[] {
     files[FRAME_BUNDLE_PATH] = distCode;
 
     const globalsCode = `
-import { mountP5Sketch, runP5Sketch, startP5Sketch } from "./index.js";
+import { createSandbox, ensureDependencies, mirrorCss, runtime } from "./index.js";
 
 if (typeof window !== "undefined") {
   const existing = window.hyperFrame || {};
-  const p5 = Object.assign({}, existing.p5 || {}, {
-    mount: mountP5Sketch,
-    run: runP5Sketch,
-    start: startP5Sketch,
-  });
-
   window.hyperFrame = Object.assign({}, existing, {
-    mountP5Sketch,
-    runP5Sketch,
-    startP5Sketch,
-    p5,
+    version: "universal",
+    runtime,
+    createSandbox,
+    ensureDependencies,
+    mirrorCss,
   });
 }
 `.trimStart();
