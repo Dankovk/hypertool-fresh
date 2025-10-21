@@ -458,9 +458,6 @@ export const PreviewPanel = memo(({ files, onDownload }: PreviewPanelProps)=> {
     };
   }, [containerReady]);
 
-  // Track last synced files to prevent unnecessary re-syncs
-  const lastSyncedFilesHashRef = useRef<string | null>(null);
-
   useEffect(() => {
     if (!containerReady || !containerRef.current) {
       return;
@@ -473,16 +470,7 @@ export const PreviewPanel = memo(({ files, onDownload }: PreviewPanelProps)=> {
       return;
     }
 
-    // Create a hash of file contents to detect actual changes
-    const filesHash = JSON.stringify(Object.keys(files).sort()) +
-                      JSON.stringify(Object.values(files).map(v => v.substring(0, 100)));
-
-    // Only sync if files actually changed
-    if (lastSyncedFilesHashRef.current === filesHash) {
-      return;
-    }
-
-    lastSyncedFilesHashRef.current = filesHash;
+    console.log("[PreviewPanel] Files prop changed, syncing to WebContainer");
     queueSync(files, { forceInstall: lastPackageJsonRef.current === null });
   }, [containerReady, files, queueSync]);
 

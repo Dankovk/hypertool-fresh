@@ -1,0 +1,44 @@
+{
+  "name": "@hypertool/runtime",
+  "version": "0.1.0",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./controls": {
+      "types": "./dist/controls/index.d.ts",
+      "import": "./dist/controls/index.js"
+    },
+    "./frame": {
+      "types": "./dist/frame/index.d.ts",
+      "import": "./dist/frame/index.js"
+    }
+  },
+  "scripts": {
+    "build": "bun run build:bundles && bun run build:types",
+    "build:bundles": "bun build src/index.ts src/controls/index.ts src/frame/index.ts --outdir dist --target browser --format esm --minify --sourcemap=external",
+    "build:types": "tsc --project tsconfig.json --emitDeclarationOnly",
+    "dev": "bun build src/index.ts src/controls/index.ts src/frame/index.ts --outdir dist --target browser --format esm --sourcemap=external --watch"
+  },
+  "peerDependencies": {
+    "p5": "^1.9.0",
+    "three": "^0.160.0",
+    "tweakpane": "^4.0.5"
+  },
+  "devDependencies": {
+    "@types/p5": "^1.6.3",
+    "@types/three": "^0.160.0",
+    "@types/bun": "latest",
+    "p5": "^1.9.0",
+    "three": "^0.160.0",
+    "tweakpane": "^4.0.5",
+    "typescript": "^5.6.2"
+  }
+}
