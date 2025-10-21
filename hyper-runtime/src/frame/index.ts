@@ -1,3 +1,34 @@
+import {
+  createControlPanel as createControlPanelInternal,
+  type ControlChangeContext,
+  type ControlDefinitions,
+  type ControlPosition,
+  type HypertoolControlsOptions,
+  type ParameterValues,
+} from "../controls";
+
+type ControlsApi = {
+  createControlPanel: typeof createControlPanelInternal;
+};
+
+const FALLBACK_CONTROLS_API: ControlsApi = {
+  createControlPanel: createControlPanelInternal,
+};
+
+export type {
+  ControlDefinitions,
+  ControlDefinition,
+  NumberControlDefinition,
+  ColorControlDefinition,
+  BooleanControlDefinition,
+  StringControlDefinition,
+  SelectControlDefinition,
+  ControlPosition,
+  ParameterValues,
+  ControlChangeContext,
+  HypertoolControlsOptions,
+} from "../controls";
+
 export type P5Instance = any;
 
 export type P5Handler = (instance: P5Instance, ...args: any[]) => void;
@@ -45,13 +76,13 @@ type P5Constructor = new (sketch: (p5: P5Instance) => void, node?: HTMLElement) 
 
 function getP5Constructor(): P5Constructor {
   if (typeof window === 'undefined') {
-    throw new Error('[hyper-frame] window is not available');
+    throw new Error('[hyper-runtime] window is not available');
   }
 
   const ctor = (window as any).p5;
 
   if (typeof ctor !== 'function') {
-    throw new Error('[hyper-frame] p5 constructor not found on window. Ensure p5 is loaded before hyper-frame.');
+    throw new Error('[hyper-runtime] p5 constructor not found on window. Ensure p5 is loaded before hyper-frame.');
   }
 
   return ctor as P5Constructor;
@@ -145,7 +176,7 @@ function resolveContainer(options: MountOptions): { element: HTMLElement; create
       node.classList.add(className);
       return { element: node, createdInternally: false };
     }
-    console.warn(`[hyper-frame] Could not find container for selector "${target}", creating one instead.`);
+    console.warn(`[hyper-runtime] Could not find container for selector "${target}", creating one instead.`);
   }
 
   const container = document.createElement('div');
@@ -153,51 +184,6 @@ function resolveContainer(options: MountOptions): { element: HTMLElement; create
   document.body.appendChild(container);
   return { element: container, createdInternally: true };
 }
-
-export type ControlType = 'number' | 'color' | 'boolean' | 'string' | 'select';
-
-export interface BaseControlDefinition {
-  label?: string;
-  value: any;
-}
-
-export interface NumberControlDefinition extends BaseControlDefinition {
-  type: 'number';
-  value: number;
-  min?: number;
-  max?: number;
-  step?: number;
-}
-
-export interface ColorControlDefinition extends BaseControlDefinition {
-  type: 'color';
-  value: string;
-}
-
-export interface BooleanControlDefinition extends BaseControlDefinition {
-  type: 'boolean';
-  value: boolean;
-}
-
-export interface StringControlDefinition extends BaseControlDefinition {
-  type: 'string';
-  value: string;
-}
-
-export interface SelectControlDefinition extends BaseControlDefinition {
-  type: 'select';
-  value: string | number;
-  options: Record<string, string | number> | Array<string | number>;
-}
-
-export type ControlDefinition =
-  | NumberControlDefinition
-  | ColorControlDefinition
-  | BooleanControlDefinition
-  | StringControlDefinition
-  | SelectControlDefinition;
-
-export type ControlDefinitions = Record<string, ControlDefinition>;
 
 export interface ControlChangePayload {
   key: string;
@@ -217,7 +203,7 @@ export type P5SketchHandlers = Record<string, P5SketchHandler | undefined>;
 
 export interface ControlPanelOptions {
   title?: string;
-  position?: string;
+  position?: ControlPosition;
   expanded?: boolean;
   container?: HTMLElement | string | null;
   onChange?: (change: ControlChangePayload, context: P5SketchContext) => void;
@@ -239,19 +225,41 @@ export interface RunP5SketchResult {
   getInstance(): P5Instance | null;
 }
 
-function getHypertoolControls(): any {
+function getHypertoolControls(): ControlsApi {
   if (typeof window === 'undefined') {
-    throw new Error('[hyper-frame] window is not available');
+    return FALLBACK_CONTROLS_API;
   }
+
   const hyperWindow = window as unknown as {
-    hypertoolControls?: any;
+    hypertoolControls?: ControlsApi;
+    hyperRuntime?: { controls?: ControlsApi };
   };
 
-  if (!hyperWindow.hypertoolControls) {
-    throw new Error('[hyper-frame] hypertool controls are not available on window');
+  if (hyperWindow.hyperRuntime?.controls?.createControlPanel) {
+    return hyperWindow.hyperRuntime.controls;
   }
 
-  return hyperWindow.hypertoolControls;
+  if (hyperWindow.hypertoolControls?.createControlPanel) {
+    return hyperWindow.hypertoolControls;
+  }
+
+  return FALLBACK_CONTROLS_API;
+}
+
+function areControlsReady(): boolean {
+  if (typeof window === 'undefined') {
+    return true;
+  }
+
+  const hyperWindow = window as unknown as {
+    hypertoolControls?: ControlsApi;
+    hyperRuntime?: { controls?: ControlsApi };
+  };
+
+  return Boolean(
+    hyperWindow.hyperRuntime?.controls?.createControlPanel ||
+      hyperWindow.hypertoolControls?.createControlPanel
+  );
 }
 
 function wrapHandlers(
@@ -274,7 +282,7 @@ function wrapHandlers(
 }
 
 /**
- * High level helper that wires up controls-lib and p5 mounting in one call.
+ * High level helper that wires up the bundled controls and p5 mounting in one call.
  */
 export function runP5Sketch(options: RunP5SketchOptions): RunP5SketchResult {
   const controlsApi = getHypertoolControls();
@@ -359,7 +367,7 @@ function waitForCondition(condition: () => boolean, maxAttempts: number, label: 
       }
 
       if (attempts >= maxAttempts) {
-        reject(new Error(`[hyper-frame] Timed out waiting for ${label}`));
+        reject(new Error(`[hyper-runtime] Timed out waiting for ${label}`));
         return;
       }
 
@@ -375,7 +383,7 @@ const P5_SCRIPT_SELECTOR = 'script[data-hypertool="p5"]';
 
 function ensureP5Script(url: string, maxAttempts: number): Promise<void> {
   if (typeof window === 'undefined') {
-    return Promise.reject(new Error('[hyper-frame] window is not available'));
+    return Promise.reject(new Error('[hyper-runtime] window is not available'));
   }
 
   if (typeof (window as any).p5 === 'function') {
@@ -406,7 +414,7 @@ function ensureP5Script(url: string, maxAttempts: number): Promise<void> {
       .catch(fail);
 
     function handleScriptError() {
-      fail(new Error(`[hyper-frame] Failed to load p5 script from ${url}`));
+      fail(new Error(`[hyper-runtime] Failed to load p5 script from ${url}`));
     }
 
     const existing = document.querySelector<HTMLScriptElement>(P5_SCRIPT_SELECTOR);
@@ -425,14 +433,11 @@ function ensureP5Script(url: string, maxAttempts: number): Promise<void> {
 }
 
 function ensureControlsReady(maxAttempts: number): Promise<void> {
-  return waitForCondition(function condition() {
-    try {
-      getHypertoolControls();
-      return true;
-    } catch (error) {
-      return false;
-    }
-  }, maxAttempts, 'hypertool controls');
+  return waitForCondition(
+    () => areControlsReady(),
+    maxAttempts,
+    'hypertool controls'
+  );
 }
 
 export interface StartP5SketchOptions extends RunP5SketchOptions {
@@ -450,7 +455,7 @@ export interface StartP5SketchOptions extends RunP5SketchOptions {
  */
 export async function startP5Sketch(options: StartP5SketchOptions): Promise<RunP5SketchResult> {
   if (typeof window === 'undefined') {
-    throw new Error('[hyper-frame] window is not available');
+    throw new Error('[hyper-runtime] window is not available');
   }
 
   const readinessOptions = options.readiness || {};
@@ -536,13 +541,13 @@ export interface MountThreeResult {
 
 function getThreeConstructors(): any {
   if (typeof window === 'undefined') {
-    throw new Error('[hyper-frame] window is not available');
+    throw new Error('[hyper-runtime] window is not available');
   }
 
   const THREE = (window as any).THREE;
 
   if (typeof THREE !== 'object') {
-    throw new Error('[hyper-frame] THREE not found on window. Make sure to import and expose Three.js on window in your sketch.');
+    throw new Error('[hyper-runtime] THREE not found on window. Make sure to import and expose Three.js on window in your sketch.');
   }
 
   return THREE;
@@ -614,7 +619,7 @@ export function mountThreeSketch(handlers: ThreeLifecycleHandlers, options?: Mou
     if (OrbitControls) {
       orbitControls = new OrbitControls(camera, renderer.domElement);
     } else {
-      console.warn('[hyper-frame] OrbitControls not found. Make sure to import and expose it on window.');
+      console.warn('[hyper-runtime] OrbitControls not found. Make sure to import and expose it on window.');
     }
   }
 
@@ -734,7 +739,7 @@ export interface RunThreeSketchResult {
 }
 
 /**
- * High level helper that wires up controls-lib and Three.js mounting in one call.
+ * High level helper that wires up the bundled controls and Three.js mounting in one call.
  */
 export function runThreeSketch(options: RunThreeSketchOptions): RunThreeSketchResult {
   const controlsApi = getHypertoolControls();
@@ -837,7 +842,7 @@ export interface StartThreeSketchOptions extends RunThreeSketchOptions {
  */
 export async function startThreeSketch(options: StartThreeSketchOptions): Promise<RunThreeSketchResult> {
   if (typeof window === 'undefined') {
-    throw new Error('[hyper-frame] window is not available');
+    throw new Error('[hyper-runtime] window is not available');
   }
 
   const readinessOptions = options.readiness || {};

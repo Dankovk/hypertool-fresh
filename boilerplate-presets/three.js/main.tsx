@@ -2,15 +2,15 @@
 import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 
-// Expose Three.js and OrbitControls on window for hyper-frame
+// Expose Three.js and OrbitControls on window for Hyper Runtime
 (window as any).THREE = THREE;
 (window as any).OrbitControls = OrbitControls;
 
-// Import hyper-frame and sketch
-import { startThreeSketch } from "./__hypertool__/frame/index.js";
+// Import Hyper Runtime and sketch
+import { startThreeSketch } from "./__hypertool__/runtime/index.js";
 import { controlDefinitions, sketchConfig, setup, animate, resize, dispose } from "./sketch.js";
 
-// Start the Three.js sketch with hyper-frame
+// Start the Three.js sketch with Hyper Runtime
 startThreeSketch({
     ...sketchConfig,
     handlers: {
@@ -48,7 +48,7 @@ startThreeSketch({
           ${error.message}
         </p>
         <p style="font-size: 14px; opacity: 0.8;">
-          Make sure Three.js and the hyper-frame library are properly loaded.
+          Make sure Three.js and the Hyper Runtime library are properly loaded.
         </p>
       </div>
     </div>

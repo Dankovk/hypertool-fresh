@@ -2,7 +2,7 @@ import type {
   ThreeContext,
   ThreeSketchContext,
   StartThreeSketchOptions,
-} from "./__hypertool__/frame/index.js";
+} from "./__hypertool__/runtime/index.js";
 
 // Define control parameters
 export const controlDefinitions = {
@@ -250,7 +250,7 @@ export function animate(three: ThreeContext, context: ThreeSketchContext) {
  * Resize function - called when window is resized
  */
 export function resize(three: ThreeContext, context: ThreeSketchContext) {
-  // The hyper-frame library handles camera and renderer resize automatically
+  // The Hyper Runtime library handles camera and renderer resize automatically
   // Update grain overlay size
   if (grainCanvas) {
     grainCanvas.width = window.innerWidth;

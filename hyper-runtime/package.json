@@ -1,5 +1,5 @@
 {
-  "name": "@hypertool/frame",
+  "name": "@hypertool/runtime",
   "version": "0.1.0",
   "type": "module",
   "main": "./dist/index.js",
@@ -10,17 +10,21 @@
   "scripts": {
     "build": "bun run build:lib && bun run build:types",
     "build:lib": "bun build src/index.ts --outdir dist --target browser --format esm --minify --sourcemap=external",
-    "build:types": "tsc --emitDeclarationOnly --declaration --outDir dist"
+    "build:types": "tsc --emitDeclarationOnly --declaration --outDir dist",
+    "dev": "bun build src/index.ts --outdir dist --target browser --format esm --sourcemap=external --watch"
   },
   "peerDependencies": {
     "p5": "^1.9.0",
-    "three": "^0.160.0"
+    "three": "^0.160.0",
+    "tweakpane": "^4.0.5"
   },
   "devDependencies": {
     "@types/p5": "^1.6.3",
     "@types/three": "^0.160.0",
+    "@types/bun": "latest",
     "p5": "^1.9.0",
     "three": "^0.160.0",
+    "tweakpane": "^4.0.5",
     "typescript": "^5.6.2"
   }
 }

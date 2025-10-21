@@ -1,5 +1,5 @@
 "use client";
-import { useCallback, useEffect, useMemo } from "react";
+import { useCallback, useEffect, useMemo, useRef } from "react";
 import { toast } from "sonner";
 import { ChatPanel } from "@/components/Chat/ChatPanel";
 import { SettingsPanel } from "@/components/Settings/SettingsPanel";
@@ -17,6 +17,8 @@ export default function HomePage() {
   // Zustand stores
   const files = useFilesStore((state) => state.files);
   const setFiles = useFilesStore((state) => state.setFiles);
+  const updateFile = useFilesStore((state) => state.updateFile);
+  const addFile = useFilesStore((state) => state.addFile);
   const showVersionHistory = useUIStore((state) => state.showVersionHistory);
   const setShowVersionHistory = useUIStore((state) => state.setShowVersionHistory);
   const showPresets = useUIStore((state) => state.showPresets);
@@ -27,6 +29,51 @@ export default function HomePage() {
   const { codeVersions, clearVersions } = useCodeVersions();
   const chat = useAIChat();
   const clearMessages = useChatStore((state) => state.clearMessages);
+
+  const runtimeFilesRef = useRef(files);
+
+  useEffect(() => {
+    runtimeFilesRef.current = files;
+  }, [files]);
+
+  useEffect(() => {
+    if (typeof window === "undefined" || process.env.NODE_ENV !== "development") {
+      return;
+    }
+
+    const source = new EventSource("/api/runtime-updates");
+
+    const handleMessage = (event: MessageEvent) => {
+      try {
+        const payload = JSON.parse(event.data ?? "{}");
+        if (!payload || typeof payload !== "object" || !payload.files) {
+          return;
+        }
+
+        const entries = Object.entries(payload.files as Record<string, string>);
+        for (const [path, content] of entries) {
+          if (runtimeFilesRef.current[path] !== undefined) {
+            updateFile(path, content);
+          } else {
+            addFile(path, content);
+          }
+        }
+      } catch (error) {
+        console.error("[runtime-updates] Failed to apply update", error);
+      }
+    };
+
+    source.addEventListener("message", handleMessage);
+    source.addEventListener("error", () => {
+      // Errors are expected during reloads; keep silent but log for debugging.
+      console.debug("[runtime-updates] SSE connection error");
+    });
+
+    return () => {
+      source.removeEventListener("message", handleMessage);
+      source.close();
+    };
+  }, [addFile, updateFile]);
 
   // Load initial boilerplate (only once on mount)
   useEffect(() => {

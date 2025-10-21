@@ -125,86 +125,106 @@ export function listAvailablePresets(): PresetInfo[] {
   return presets;
 }
 
-const CONTROLS_DIST_RELATIVE_PATH = "controls-lib/dist/index.js";
-const CONTROLS_BUNDLE_PATH = "/__hypertool__/controls/index.js";
-const CONTROLS_GLOBALS_PATH = "/__hypertool__/controls/globals.js";
-const FRAME_DIST_RELATIVE_PATH = "hyper-frame/dist/index.js";
-const FRAME_BUNDLE_PATH = "/__hypertool__/frame/index.js";
-const FRAME_GLOBALS_PATH = "/__hypertool__/frame/globals.js";
+const RUNTIME_DIST_RELATIVE_PATH = "hyper-runtime/dist/index.js";
+const RUNTIME_BUNDLE_PATH = "/__hypertool__/runtime/index.js";
+const RUNTIME_GLOBALS_PATH = "/__hypertool__/runtime/globals.js";
+const LEGACY_CONTROLS_MODULE_PATH = "/__hypertool__/controls/index.js";
+const LEGACY_FRAME_MODULE_PATH = "/__hypertool__/frame/index.js";
+const LEGACY_CONTROLS_GLOBALS_PATH = "/__hypertool__/controls/globals.js";
+const LEGACY_FRAME_GLOBALS_PATH = "/__hypertool__/frame/globals.js";
 
-function injectControlsLibrary(files: FileMap): ScriptDescriptor | null {
+const RUNTIME_REEXPORT_CODE = 'export * from "../runtime/index.js";\n';
+const LEGACY_GLOBAL_FORWARD_CODE = 'import "../runtime/globals.js";\n';
+
+function createRuntimeGlobals(): string {
+  return `
+import * as runtime from "./index.js";
+
+if (typeof window !== "undefined") {
+  const existingRuntime = window.hyperRuntime || {};
+  const existingFrame = window.hyperFrame || {};
+  const existingControls = window.hypertoolControls || {};
+
+  const controls = {
+    createControls: runtime.createControls,
+    createControlPanel: runtime.createControlPanel,
+    HypertoolControls: runtime.HypertoolControls,
+    injectThemeVariables: runtime.injectThemeVariables,
+    studioTheme: runtime.studioTheme,
+  };
+
+  const p5 = {
+    mount: runtime.mountP5Sketch,
+    run: runtime.runP5Sketch,
+    start: runtime.startP5Sketch,
+  };
+
+  const three = {
+    mount: runtime.mountThreeSketch,
+    run: runtime.runThreeSketch,
+    start: runtime.startThreeSketch,
+  };
+
+  window.hyperRuntime = Object.assign({}, existingRuntime, runtime, {
+    controls: Object.assign({}, existingRuntime.controls || {}, controls),
+    frame: Object.assign({}, existingRuntime.frame || {}, {
+      mountP5Sketch: runtime.mountP5Sketch,
+      runP5Sketch: runtime.runP5Sketch,
+      startP5Sketch: runtime.startP5Sketch,
+      mountThreeSketch: runtime.mountThreeSketch,
+      runThreeSketch: runtime.runThreeSketch,
+      startThreeSketch: runtime.startThreeSketch,
+    }),
+  });
+
+  window.hypertoolControls = Object.assign({}, existingControls, controls);
+
+  window.hyperFrame = Object.assign({}, existingFrame, {
+    mountP5Sketch: runtime.mountP5Sketch,
+    runP5Sketch: runtime.runP5Sketch,
+    startP5Sketch: runtime.startP5Sketch,
+    mountThreeSketch: runtime.mountThreeSketch,
+    runThreeSketch: runtime.runThreeSketch,
+    startThreeSketch: runtime.startThreeSketch,
+    p5: Object.assign({}, existingFrame.p5 || {}, p5),
+    three: Object.assign({}, existingFrame.three || {}, three),
+  });
+}
+`.trimStart();
+}
+
+export function loadRuntimeVirtualFiles(): FileMap | null {
   try {
-    const distPath = resolve(process.cwd(), CONTROLS_DIST_RELATIVE_PATH);
+    const distPath = resolve(process.cwd(), RUNTIME_DIST_RELATIVE_PATH);
     if (!existsSync(distPath)) {
-      console.warn(`[boilerplate] Controls dist not found at ${distPath}`);
+      console.warn(`[boilerplate] Runtime dist not found at ${distPath}`);
       return null;
     }
 
     const distCode = readFileSync(distPath, "utf8");
-    files[CONTROLS_BUNDLE_PATH] = distCode;
 
-    const globalsCode = `
-import { createControls, createControlPanel, HypertoolControls, injectThemeVariables, studioTheme } from "./index.js";
-
-if (typeof window !== "undefined") {
-  window.hypertoolControls = {
-    createControls,
-    createControlPanel,
-    HypertoolControls,
-    injectThemeVariables,
-    studioTheme,
-  };
-}
-`.trimStart();
-
-    files[CONTROLS_GLOBALS_PATH] = globalsCode;
-    return { src: "./__hypertool__/controls/globals.js", module: true };
+    return {
+      [RUNTIME_BUNDLE_PATH]: distCode,
+      [RUNTIME_GLOBALS_PATH]: createRuntimeGlobals(),
+      [LEGACY_CONTROLS_MODULE_PATH]: RUNTIME_REEXPORT_CODE,
+      [LEGACY_FRAME_MODULE_PATH]: RUNTIME_REEXPORT_CODE,
+      [LEGACY_CONTROLS_GLOBALS_PATH]: LEGACY_GLOBAL_FORWARD_CODE,
+      [LEGACY_FRAME_GLOBALS_PATH]: LEGACY_GLOBAL_FORWARD_CODE,
+    } satisfies FileMap;
   } catch (error) {
-    console.error("[boilerplate] Failed to inject controls library:", error);
+    console.error("[boilerplate] Failed to build runtime files:", error);
     return null;
   }
 }
 
-function injectFrameLibrary(files: FileMap): ScriptDescriptor[] {
-  const scripts: ScriptDescriptor[] = [];
-
-  try {
-    const distPath = resolve(process.cwd(), FRAME_DIST_RELATIVE_PATH);
-    if (!existsSync(distPath)) {
-      console.warn(`[boilerplate] Frame dist not found at ${distPath}`);
-      return scripts;
-    }
-
-    const distCode = readFileSync(distPath, "utf8");
-    files[FRAME_BUNDLE_PATH] = distCode;
-
-    const globalsCode = `
-import { mountP5Sketch, runP5Sketch, startP5Sketch } from "./index.js";
-
-if (typeof window !== "undefined") {
-  const existing = window.hyperFrame || {};
-  const p5 = Object.assign({}, existing.p5 || {}, {
-    mount: mountP5Sketch,
-    run: runP5Sketch,
-    start: startP5Sketch,
-  });
-
-  window.hyperFrame = Object.assign({}, existing, {
-    mountP5Sketch,
-    runP5Sketch,
-    startP5Sketch,
-    p5,
-  });
-}
-`.trimStart();
-
-    files[FRAME_GLOBALS_PATH] = globalsCode;
-    scripts.push({ src: "./__hypertool__/frame/globals.js", module: true });
-  } catch (error) {
-    console.error("[boilerplate] Failed to inject frame library:", error);
+function injectRuntimeLibrary(files: FileMap): ScriptDescriptor | null {
+  const runtimeFiles = loadRuntimeVirtualFiles();
+  if (!runtimeFiles) {
+    return null;
   }
 
-  return scripts;
+  Object.assign(files, runtimeFiles);
+  return { src: "./__hypertool__/runtime/globals.js", module: true };
 }
 
 function injectLibraryScripts(html: string, scriptSources: ScriptDescriptor[]): string {
@@ -240,14 +260,9 @@ export function ensureSystemFiles(original: FileMap): FileMap {
   const files = { ...original };
   const scriptSources: ScriptDescriptor[] = [];
 
-  const frameScripts = injectFrameLibrary(files);
-  if (frameScripts.length > 0) {
-    scriptSources.push(...frameScripts);
-  }
-
-  const controlsScript = injectControlsLibrary(files);
-  if (controlsScript) {
-    scriptSources.push(controlsScript);
+  const runtimeScript = injectRuntimeLibrary(files);
+  if (runtimeScript) {
+    scriptSources.push(runtimeScript);
   }
 
   if (files["/index.html"] && scriptSources.length > 0) {
