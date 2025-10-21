@@ -1,3 +1,1029 @@
-var E=Object.defineProperty;var B=(e,t)=>{for(var r in t)E(e,r,{get:t[r],enumerable:!0,configurable:!0,set:(n)=>t[r]=()=>n})};var M={};B(M,{runtime:()=>d,mirrorCss:()=>x,ensureDependencies:()=>C,createSandbox:()=>b,configureRuntime:()=>R,attachToWindow:()=>w});var p=new Set(["STYLE","LINK"]);class m{source;target;observer=null;nodeMap=new WeakMap;active=!1;constructor(e={}){this.source=e.sourceDocument??(typeof window!=="undefined"?window.parent?.document??null:null),this.target=e.targetDocument??(typeof document!=="undefined"?document:null),this.active=Boolean(e.mirror??!0)}start(){if(!this.active)return;if(!this.source||!this.target){console.warn("[hyper-frame] Unable to mirror CSS – missing source or target document.");return}this.cleanupPreviousClones(),this.syncAll(),this.attachObserver()}stop(){this.observer?.disconnect(),this.observer=null,this.nodeMap=new WeakMap,this.cleanupPreviousClones()}cleanupPreviousClones(){if(!this.target)return;this.target.querySelectorAll('[data-hyper-frame-clone="true"]').forEach((e)=>e.parentNode?.removeChild(e))}syncAll(){if(!this.source||!this.target)return;let e=this.source.head;Array.from(e.children).filter((r)=>p.has(r.nodeName)).forEach((r)=>{let n=this.cloneNode(r);if(!n)return;this.target?.head.appendChild(n),this.nodeMap.set(r,n)})}attachObserver(){if(!this.source||!this.target)return;if(this.observer)return;this.observer=new MutationObserver((e)=>{e.forEach((t)=>{switch(t.type){case"childList":this.handleChildListMutation(t);break;case"characterData":this.handleCharacterDataMutation(t);break;case"attributes":this.handleAttributeMutation(t);break}})}),this.observer.observe(this.source.head,{childList:!0,subtree:!0,characterData:!0,attributes:!0})}handleChildListMutation(e){if(!this.target)return;e.removedNodes.forEach((t)=>{let r=this.nodeMap.get(t);if(r&&r.parentNode)r.parentNode.removeChild(r),this.nodeMap.delete(t)}),e.addedNodes.forEach((t)=>{if(!(t instanceof HTMLElement))return;if(!p.has(t.nodeName))return;let r=this.cloneNode(t);if(!r)return;let n=e.nextSibling?this.nodeMap.get(e.nextSibling):null;if(n&&n.parentNode)n.parentNode.insertBefore(r,n);else this.target?.head.appendChild(r);this.nodeMap.set(t,r)})}handleCharacterDataMutation(e){let r=e.target.parentNode;if(!r)return;let n=this.nodeMap.get(r);if(!n)return;n.textContent=r.textContent}handleAttributeMutation(e){let t=e.target,r=this.nodeMap.get(t);if(!r||!(r instanceof Element))return;if(e.attributeName){let n=t.getAttribute(e.attributeName);if(n===null)r.removeAttribute(e.attributeName);else r.setAttribute(e.attributeName,n)}}cloneNode(e){if(!(e instanceof HTMLElement))return null;if(!p.has(e.nodeName))return null;let t=e.cloneNode(!0);return t.setAttribute("data-hyper-frame-clone","true"),t}}class f{controlsApi;constructor(){this.controlsApi=this.resolveControlsApi()}resolveControlsApi(){if(typeof window==="undefined")throw new Error("[hyper-frame] window is not available");let e=window;if(!e.hypertoolControls)throw new Error("[hyper-frame] hypertool controls are not available on window");return e.hypertoolControls}init(e){let t=e.options||{};return this.controlsApi.createControlPanel(e.definitions,{title:t.title,position:t.position,expanded:t.expanded,container:t.container,onChange:(n,o)=>{let i={key:o.key,value:o.value,event:o.event};if(e.onControlChange?.(i),typeof t.onChange==="function")t.onChange(i,e.context)}})}}class h{container;position;filename;root=null;imageButton=null;videoButton=null;statusLabel=null;statusTimeout=null;userImageCapture=null;userVideoCapture=null;defaultCanvasCaptureEnabled=!1;recording=!1;recorder=null;recordedChunks=[];constructor(e){this.container=e.container,this.position=e.position,this.filename=e.filename??"hyperframe-export",this.mount()}mount(){if(typeof document==="undefined")return;let e=document.createElement("div");e.className="hyper-frame-export-widget",e.dataset.hyperFrame="export-widget",Object.assign(e.style,{position:"fixed",display:"flex",flexDirection:"column",gap:"0.25rem",padding:"0.5rem 0.75rem",borderRadius:"0.75rem",background:"rgba(15, 23, 42, 0.85)",color:"#f8fafc",fontFamily:"Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont",fontSize:"12px",lineHeight:"16px",boxShadow:"0 20px 40px rgba(15, 23, 42, 0.3)",zIndex:"2147483646",pointerEvents:"auto",backdropFilter:"blur(8px)"});let t=document.createElement("div");t.style.display="flex",t.style.flexDirection="row",t.style.alignItems="center",t.style.justifyContent="space-between",t.style.gap="0.5rem";let r=document.createElement("button");r.type="button",r.textContent="Capture PNG",r.style.flex="1 1 auto",r.style.padding="0.35rem 0.6rem",r.style.border="0",r.style.borderRadius="0.5rem",r.style.cursor="pointer",r.style.background="rgba(94, 234, 212, 0.2)",r.style.color="#5eead4",r.style.fontWeight="600";let n=document.createElement("button");n.type="button",n.textContent="Record Video",n.style.flex="1 1 auto",n.style.padding="0.35rem 0.6rem",n.style.border="0",n.style.borderRadius="0.5rem",n.style.cursor="pointer",n.style.background="rgba(129, 140, 248, 0.2)",n.style.color="#a5b4fc",n.style.fontWeight="600",r.addEventListener("click",()=>this.handleImageCapture(),{passive:!0}),n.addEventListener("click",()=>this.toggleRecording(),{passive:!0});let o=document.createElement("span");o.style.display="block",o.style.color="#e2e8f0",o.style.opacity="0.8",o.style.minHeight="16px",t.appendChild(r),t.appendChild(n),e.appendChild(t),e.appendChild(o),this.root=e,this.imageButton=r,this.videoButton=n,this.statusLabel=o,this.applyPosition(),document.body.appendChild(e),this.updateButtonStates()}applyPosition(){if(!this.root)return;let e=this.position??"bottom-right",r={"bottom-right":{bottom:"1rem",right:"1rem",top:"",left:""},"bottom-left":{bottom:"1rem",left:"1rem",top:"",right:""},"top-right":{top:"1rem",right:"1rem",bottom:"",left:""},"top-left":{top:"1rem",left:"1rem",bottom:"",right:""}}[e];Object.assign(this.root.style,r)}setStatus(e,t="default"){if(!this.statusLabel)return;if(this.statusTimeout)window.clearTimeout(this.statusTimeout),this.statusTimeout=null;switch(this.statusLabel.textContent=e,t){case"error":this.statusLabel.style.color="#fca5a5";break;case"success":this.statusLabel.style.color="#bbf7d0";break;default:this.statusLabel.style.color="#e2e8f0"}if(e)this.statusTimeout=window.setTimeout(()=>{if(this.statusLabel)this.statusLabel.textContent="",this.statusLabel.style.color="#e2e8f0";this.statusTimeout=null},4000)}updateButtonStates(){if(this.imageButton)this.imageButton.disabled=!this.getActiveImageCapture(),this.imageButton.style.opacity=this.imageButton.disabled?"0.6":"1";if(this.videoButton){let e=Boolean(this.getActiveVideoCapture());this.videoButton.disabled=!e,this.videoButton.style.opacity=e?"1":"0.6"}}normalizeImageCapture(e){if(!e)return null;if(typeof e==="function")return{capture:e};return{capture:e.capture,filename:e.filename,mimeType:e.mimeType}}normalizeVideoCapture(e){if(!e)return null;return{requestStream:e.requestStream,filename:e.filename,mimeType:e.mimeType,bitsPerSecond:e.bitsPerSecond,timeSlice:e.timeSlice}}getActiveImageCapture(){if(this.userImageCapture)return this.userImageCapture;if(this.defaultCanvasCaptureEnabled)return{capture:()=>this.captureCanvasSnapshot(),filename:void 0,mimeType:"image/png"};return null}getActiveVideoCapture(){if(this.userVideoCapture)return this.userVideoCapture;if(this.defaultCanvasCaptureEnabled)return{requestStream:()=>this.captureCanvasStream(),filename:void 0,mimeType:"video/webm;codecs=vp9"};return null}async captureCanvasSnapshot(){let e=this.container.querySelector("canvas");if(!(e instanceof HTMLCanvasElement))throw new Error("No canvas element available for capture.");return new Promise((t,r)=>{e.toBlob((n)=>{if(n)t(n);else r(new Error("Canvas capture returned an empty blob."))})})}async captureCanvasStream(){let e=this.container.querySelector("canvas");if(!(e instanceof HTMLCanvasElement))throw new Error("No canvas element available for recording.");if(typeof e.captureStream!=="function")throw new Error("Canvas captureStream API is not supported in this browser.");return e.captureStream(60)}async handleImageCapture(){let e=this.getActiveImageCapture();if(!e){this.setStatus("No capture handler available","error");return}try{this.setBusy(!0,"image");let t=await e.capture(),r=await this.resolveCaptureResult(t,e.mimeType??"image/png");if(r){let n=e.filename??`${this.filename}.png`;this.downloadBlob(r,n),this.setStatus("PNG exported","success")}}catch(t){console.error("[hyper-frame] Failed to capture image",t),this.setStatus(t.message||"Failed to capture image","error")}finally{this.setBusy(!1,"image")}}async toggleRecording(){if(this.recording){this.stopRecording();return}let e=this.getActiveVideoCapture();if(!e){this.setStatus("No recorder available","error");return}if(typeof MediaRecorder==="undefined"){this.setStatus("MediaRecorder is not supported in this browser","error");return}try{let t=await e.requestStream();if(!t)throw new Error("Recording stream is not available");this.recordedChunks=[];let r=new MediaRecorder(t,{mimeType:e.mimeType,videoBitsPerSecond:e.bitsPerSecond});r.addEventListener("dataavailable",(n)=>{if(n.data?.size)this.recordedChunks.push(n.data)}),r.addEventListener("stop",()=>{let n=new Blob(this.recordedChunks,{type:e.mimeType??"video/webm"}),o=e.filename??`${this.filename}.webm`;this.downloadBlob(n,o),this.setStatus("Recording saved","success"),t.getTracks().forEach((i)=>i.stop()),this.recording=!1,this.updateRecordingUi()}),r.start(e.timeSlice),this.recorder=r,this.recording=!0,this.setStatus("Recording in progress…"),this.updateRecordingUi()}catch(t){console.error("[hyper-frame] Failed to start recording",t),this.setStatus(t.message||"Failed to record video","error"),this.recording=!1,this.recorder=null,this.updateRecordingUi()}}stopRecording(){if(!this.recorder)return;this.setStatus("Finishing recording…"),this.recorder.stop(),this.recorder=null,this.recording=!1,this.updateRecordingUi()}updateRecordingUi(){if(!this.videoButton)return;this.videoButton.textContent=this.recording?"Stop Recording":"Record Video",this.videoButton.style.background=this.recording?"rgba(248, 113, 113, 0.25)":"rgba(129, 140, 248, 0.2)",this.videoButton.style.color=this.recording?"#fecaca":"#a5b4fc"}async resolveCaptureResult(e,t){if(!e)return null;if(e instanceof Blob)return e;if(typeof e==="string"){if(e.startsWith("data:"))return await(await fetch(e)).blob();return await(await fetch(e)).blob()}if(e instanceof HTMLCanvasElement)return await new Promise((r,n)=>{e.toBlob((o)=>{if(o)r(o);else n(new Error("Canvas export failed."))},t)});if(typeof OffscreenCanvas!=="undefined"&&e instanceof OffscreenCanvas)return await e.convertToBlob({type:t});return null}downloadBlob(e,t){if(typeof window==="undefined")return;let r=URL.createObjectURL(e),n=document.createElement("a");n.href=r,n.download=t,n.rel="noopener",n.style.display="none",document.body.appendChild(n),n.click(),document.body.removeChild(n),URL.revokeObjectURL(r)}setBusy(e,t){let r=t==="image"?this.imageButton:this.videoButton;if(!r)return;r.disabled=e,r.style.opacity=e?"0.6":"1"}setFilename(e){this.filename=e}setVisible(e){if(!this.root)return;this.root.style.display=e?"flex":"none"}registerImageCapture(e){this.userImageCapture=this.normalizeImageCapture(e),this.updateButtonStates()}registerVideoCapture(e){this.userVideoCapture=this.normalizeVideoCapture(e),this.updateButtonStates()}useDefaultCanvasCapture(e=!0){this.defaultCanvasCaptureEnabled=e,this.updateButtonStates()}getApi(){return{registerImageCapture:(e)=>this.registerImageCapture(e),registerVideoCapture:(e)=>this.registerVideoCapture(e),setFilename:(e)=>this.setFilename(e),setVisible:(e)=>this.setVisible(e),useDefaultCanvasCapture:(e)=>this.useDefaultCanvasCapture(e),destroy:()=>this.destroy()}}destroy(){if(this.statusTimeout)window.clearTimeout(this.statusTimeout),this.statusTimeout=null;if(this.root?.parentNode)this.root.parentNode.removeChild(this.root);this.root=null,this.imageButton=null,this.videoButton=null,this.statusLabel=null,this.recorder=null,this.recording=!1,this.recordedChunks=[]}}class g{pending=new Map;ensure(e){let t=this.createKey(e);if(this.pending.has(t))return this.pending.get(t);let r=this.load(e);return this.pending.set(t,r),r}async ensureAll(e=[]){for(let t of e)await this.ensure(t)}createKey(e){return`${e.type}:${e.url}`}load(e){switch(e.type){case"script":return this.injectScript(e);case"style":return this.injectStyle(e);default:return Promise.reject(new Error(`[hyper-frame] Unsupported dependency type: ${e.type}`))}}injectScript(e){if(typeof document==="undefined")return Promise.reject(new Error("[hyper-frame] document is not available"));if(Array.from(document.querySelectorAll("script")).find((r)=>r.src===e.url))return Promise.resolve();return new Promise((r,n)=>{let o=document.createElement("script");if(o.src=e.url,o.async=!0,o.dataset.hyperFrame="external",e.integrity)o.integrity=e.integrity;if(e.crossOrigin)o.crossOrigin=e.crossOrigin;if(e.attributes)Object.entries(e.attributes).forEach(([i,a])=>{o.setAttribute(i,a)});o.addEventListener("load",()=>r(),{once:!0}),o.addEventListener("error",()=>n(new Error(`[hyper-frame] Failed to load script ${e.url}`)),{once:!0}),document.head.appendChild(o)})}injectStyle(e){if(typeof document==="undefined")return Promise.reject(new Error("[hyper-frame] document is not available"));if(Array.from(document.querySelectorAll('link[rel="stylesheet"]')).find((r)=>r.href===e.url))return Promise.resolve();return new Promise((r,n)=>{let o=document.createElement("link");if(o.rel="stylesheet",o.href=e.url,o.dataset.hyperFrame="external",e.attributes)Object.entries(e.attributes).forEach(([i,a])=>{o.setAttribute(i,a)});o.addEventListener("load",()=>r(),{once:!0}),o.addEventListener("error",()=>n(new Error(`[hyper-frame] Failed to load stylesheet ${e.url}`)),{once:!0}),document.head.appendChild(o)})}}function y(e={}){let t=e.documentRef??document;if(!t)throw new Error("[hyper-frame] document is not available");let r=e.containerClassName||"hypertool-sketch",n=e.target;if(n instanceof HTMLElement)return n.classList.add(r),{element:n,createdInternally:!1};if(typeof n==="string"&&n.trim().length>0){let i=t.querySelector(n);if(i)return i.classList.add(r),{element:i,createdInternally:!1};console.warn(`[hyper-frame] Could not find container for selector "${n}", creating one instead.`)}let o=t.createElement("div");return o.classList.add(r),t.body.appendChild(o),{element:o,createdInternally:!0}}function v(e){while(e.length>0){let t=e.pop();if(t)try{t()}catch(r){console.error("[hyper-frame] cleanup failed",r)}}}class u{dependencyManager=new g;cssBridge=null;config;constructor(e={}){this.config=e}async ensureDependencies(e=[]){if(!e.length)return;await this.dependencyManager.ensureAll(e)}mirrorCss(){if(this.cssBridge)return;this.cssBridge=new m({mirror:this.config.mirrorCss!==!1}),this.cssBridge.start()}async createSandbox(e){if(e.dependencies?.length)await this.ensureDependencies(e.dependencies);if(this.config.mirrorCss!==!1&&e.mirrorCss!==!1)this.mirrorCss();let t=this.createMount(e.mount),r=[],n=(l)=>{if(typeof l==="function")r.push(l)},o=new h({container:t.container,position:e.exportWidget?.position,filename:e.exportWidget?.filename});if(e.exportWidget?.enabled===!1)o.setVisible(!1);if(e.exportWidget?.useCanvasCapture!==!1)o.useDefaultCanvasCapture(!0);let i=this.createEnvironment(n),a={mount:t.container,params:{},controls:null,exports:o.getApi(),runtime:this,environment:i},s=null;if(e.controls?.definitions)s=new f().init({definitions:e.controls.definitions,options:e.controls.options,context:a,onControlChange:(S)=>{e.controls?.onChange?.(S,a)}}),a.controls=s,a.params=s?.params??{},n(()=>{if(!s)return;if(typeof s.destroy==="function")s.destroy();else if(typeof s.dispose==="function")s.dispose()});n(()=>o.destroy()),n(()=>t.destroy());let c;try{c=await e.setup(a)}catch(l){throw console.error("[hyper-frame] sandbox setup failed",l),v(r),l}if(typeof c==="function")n(()=>{try{c?.()}catch(l){console.error("[hyper-frame] teardown failed",l)}});return{container:t.container,controls:s,params:a.params,destroy:()=>{v(r)}}}createEnvironment(e){if(typeof window==="undefined"||typeof document==="undefined")throw new Error("[hyper-frame] window or document is not available");return{window,document,addCleanup:(t)=>{if(typeof t==="function")e(t)},onResize:(t,r)=>{window.addEventListener("resize",t,r);let n=()=>window.removeEventListener("resize",t,r);return e(n),n}}}createMount(e){let t=e,r=y({target:t?.target,containerClassName:t?.containerClassName});if(typeof t?.onReady==="function")t.onReady({container:r.element});return{container:r.element,destroy:()=>{if(r.createdInternally)r.element.remove()}}}}var H={mirrorCss:!0},d=new u(H);function R(e){return new u(e)}function b(e){return d.createSandbox(e)}function C(e){return d.ensureDependencies(e??[])}function x(){d.mirrorCss()}function w(){if(typeof window==="undefined")return;let e=window,t=e.hyperFrame||{},r={version:"universal",runtime:d,createSandbox:b,ensureDependencies:C,mirrorCss:x};e.hyperFrame={...t,...r}}w();export{d as runtime,x as mirrorCss,C as ensureDependencies,b as createSandbox,R as configureRuntime,w as attachToWindow};
+var __defProp = Object.defineProperty;
+var __export = (target, all) => {
+  for (var name in all)
+    __defProp(target, name, {
+      get: all[name],
+      enumerable: true,
+      configurable: true,
+      set: (newValue) => all[name] = () => newValue
+    });
+};
 
-//# debugId=5A47506EB398AD5164756E2164756E21
+// src/frame/index.ts
+var exports_frame = {};
+__export(exports_frame, {
+  runtime: () => runtime,
+  mirrorCss: () => mirrorCss,
+  ensureDependencies: () => ensureDependencies,
+  createSandbox: () => createSandbox,
+  configureRuntime: () => configureRuntime,
+  attachToWindow: () => attachToWindow
+});
+
+// src/frame/cssBridge.ts
+var CLONE_ATTRIBUTE = "data-hyper-frame-clone";
+var SUPPORTED_NODE_NAMES = new Set(["STYLE", "LINK"]);
+var CSS_SYNC_MESSAGE_TYPE = "hyper-frame:css-sync";
+
+class CssBridge {
+  source;
+  target;
+  observer = null;
+  nodeMap = new WeakMap;
+  active = false;
+  messageListener = null;
+  usePostMessage = false;
+  cssNodesById = new Map;
+  constructor(options = {}) {
+    let sourceDoc = null;
+    if (options.sourceDocument) {
+      sourceDoc = options.sourceDocument;
+    } else if (typeof window !== "undefined") {
+      try {
+        sourceDoc = window.parent?.document ?? null;
+      } catch (error) {
+        console.debug("[hyper-frame] Using postMessage for CSS sync (cross-origin)");
+        this.usePostMessage = true;
+        sourceDoc = null;
+      }
+    }
+    this.source = sourceDoc;
+    this.target = options.targetDocument ?? (typeof document !== "undefined" ? document : null);
+    this.active = Boolean(options.mirror ?? true);
+  }
+  start() {
+    if (!this.active)
+      return;
+    if (this.usePostMessage) {
+      this.startPostMessageMode();
+    } else if (this.source && this.target) {
+      this.cleanupPreviousClones();
+      this.syncAll();
+      this.attachObserver();
+    } else {
+      console.warn("[hyper-frame] Unable to mirror CSS – missing source or target document.");
+    }
+  }
+  stop() {
+    this.observer?.disconnect();
+    this.observer = null;
+    this.nodeMap = new WeakMap;
+    this.cleanupPreviousClones();
+    if (this.messageListener && typeof window !== "undefined") {
+      window.removeEventListener("message", this.messageListener);
+      this.messageListener = null;
+    }
+    this.cssNodesById.clear();
+  }
+  startPostMessageMode() {
+    if (!this.target || typeof window === "undefined")
+      return;
+    this.cleanupPreviousClones();
+    this.messageListener = (event) => {
+      if (!event.data || event.data.type !== CSS_SYNC_MESSAGE_TYPE)
+        return;
+      this.handleCssMessage(event.data);
+    };
+    window.addEventListener("message", this.messageListener);
+    console.debug("[hyper-frame] CSS postMessage receiver ready");
+  }
+  handleCssMessage(message) {
+    if (!this.target)
+      return;
+    switch (message.action) {
+      case "init":
+        this.cleanupPreviousClones();
+        this.cssNodesById.clear();
+        break;
+      case "add":
+        if (message.id && message.tagName) {
+          this.addCssNode(message.id, message.tagName, message.attributes, message.textContent);
+        }
+        break;
+      case "remove":
+        if (message.id) {
+          this.removeCssNode(message.id);
+        }
+        break;
+      case "update":
+        if (message.id) {
+          this.updateCssNode(message.id, message.attributes, message.textContent);
+        }
+        break;
+    }
+  }
+  addCssNode(id, tagName, attributes, textContent) {
+    if (!this.target)
+      return;
+    if (this.cssNodesById.has(id))
+      return;
+    const element = document.createElement(tagName);
+    element.setAttribute(CLONE_ATTRIBUTE, "true");
+    element.setAttribute("data-css-id", id);
+    if (attributes) {
+      for (const [key, value] of Object.entries(attributes)) {
+        element.setAttribute(key, value);
+      }
+    }
+    if (textContent) {
+      element.textContent = textContent;
+    }
+    this.target.head.appendChild(element);
+    this.cssNodesById.set(id, element);
+  }
+  removeCssNode(id) {
+    const element = this.cssNodesById.get(id);
+    if (element && element.parentNode) {
+      element.parentNode.removeChild(element);
+      this.cssNodesById.delete(id);
+    }
+  }
+  updateCssNode(id, attributes, textContent) {
+    const element = this.cssNodesById.get(id);
+    if (!element)
+      return;
+    if (attributes) {
+      for (const attr of Array.from(element.attributes)) {
+        if (!attr.name.startsWith("data-")) {
+          element.removeAttribute(attr.name);
+        }
+      }
+      for (const [key, value] of Object.entries(attributes)) {
+        element.setAttribute(key, value);
+      }
+    }
+    if (textContent !== undefined) {
+      element.textContent = textContent;
+    }
+  }
+  cleanupPreviousClones() {
+    if (!this.target)
+      return;
+    this.target.querySelectorAll(`[${CLONE_ATTRIBUTE}="true"]`).forEach((node) => node.parentNode?.removeChild(node));
+  }
+  syncAll() {
+    if (!this.source || !this.target)
+      return;
+    const head = this.source.head;
+    const nodes = Array.from(head.children).filter((node) => SUPPORTED_NODE_NAMES.has(node.nodeName));
+    nodes.forEach((node) => {
+      const clone = this.cloneNode(node);
+      if (!clone)
+        return;
+      this.target?.head.appendChild(clone);
+      this.nodeMap.set(node, clone);
+    });
+  }
+  attachObserver() {
+    if (!this.source || !this.target)
+      return;
+    if (this.observer)
+      return;
+    this.observer = new MutationObserver((mutations) => {
+      mutations.forEach((mutation) => {
+        switch (mutation.type) {
+          case "childList":
+            this.handleChildListMutation(mutation);
+            break;
+          case "characterData":
+            this.handleCharacterDataMutation(mutation);
+            break;
+          case "attributes":
+            this.handleAttributeMutation(mutation);
+            break;
+        }
+      });
+    });
+    this.observer.observe(this.source.head, {
+      childList: true,
+      subtree: true,
+      characterData: true,
+      attributes: true
+    });
+  }
+  handleChildListMutation(mutation) {
+    if (!this.target)
+      return;
+    mutation.removedNodes.forEach((node) => {
+      const mapped = this.nodeMap.get(node);
+      if (mapped && mapped.parentNode) {
+        mapped.parentNode.removeChild(mapped);
+        this.nodeMap.delete(node);
+      }
+    });
+    mutation.addedNodes.forEach((node) => {
+      if (!(node instanceof HTMLElement))
+        return;
+      if (!SUPPORTED_NODE_NAMES.has(node.nodeName))
+        return;
+      const clone = this.cloneNode(node);
+      if (!clone)
+        return;
+      const reference = mutation.nextSibling ? this.nodeMap.get(mutation.nextSibling) : null;
+      if (reference && reference.parentNode) {
+        reference.parentNode.insertBefore(clone, reference);
+      } else {
+        this.target?.head.appendChild(clone);
+      }
+      this.nodeMap.set(node, clone);
+    });
+  }
+  handleCharacterDataMutation(mutation) {
+    const targetNode = mutation.target;
+    const parent = targetNode.parentNode;
+    if (!parent)
+      return;
+    const mappedParent = this.nodeMap.get(parent);
+    if (!mappedParent)
+      return;
+    mappedParent.textContent = parent.textContent;
+  }
+  handleAttributeMutation(mutation) {
+    const target = mutation.target;
+    const mapped = this.nodeMap.get(target);
+    if (!mapped || !(mapped instanceof Element))
+      return;
+    if (mutation.attributeName) {
+      const value = target.getAttribute(mutation.attributeName);
+      if (value === null) {
+        mapped.removeAttribute(mutation.attributeName);
+      } else {
+        mapped.setAttribute(mutation.attributeName, value);
+      }
+    }
+  }
+  cloneNode(node) {
+    if (!(node instanceof HTMLElement))
+      return null;
+    if (!SUPPORTED_NODE_NAMES.has(node.nodeName))
+      return null;
+    const clone = node.cloneNode(true);
+    clone.setAttribute(CLONE_ATTRIBUTE, "true");
+    return clone;
+  }
+}
+
+// src/frame/controlsBridge.ts
+class ControlsBridge {
+  controlsApi;
+  constructor() {
+    this.controlsApi = this.resolveControlsApi();
+  }
+  resolveControlsApi() {
+    if (typeof window === "undefined") {
+      throw new Error("[hyper-frame] window is not available");
+    }
+    const hyperWindow = window;
+    if (!hyperWindow.hypertoolControls) {
+      throw new Error("[hyper-frame] hypertool controls are not available on window");
+    }
+    return hyperWindow.hypertoolControls;
+  }
+  init(options) {
+    const panelOptions = options.options || {};
+    const controls = this.controlsApi.createControlPanel(options.definitions, {
+      title: panelOptions.title,
+      position: panelOptions.position,
+      expanded: panelOptions.expanded,
+      container: panelOptions.container,
+      onChange: (params, changeContext) => {
+        const change = {
+          key: changeContext.key,
+          value: changeContext.value,
+          event: changeContext.event
+        };
+        options.onControlChange?.(change);
+        if (typeof panelOptions.onChange === "function") {
+          panelOptions.onChange(change, options.context);
+        }
+      }
+    });
+    return controls;
+  }
+}
+
+// src/frame/exportBridge.ts
+class ExportBridge {
+  container;
+  position;
+  filename;
+  root = null;
+  imageButton = null;
+  videoButton = null;
+  statusLabel = null;
+  statusTimeout = null;
+  userImageCapture = null;
+  userVideoCapture = null;
+  defaultCanvasCaptureEnabled = false;
+  recording = false;
+  recorder = null;
+  recordedChunks = [];
+  constructor(options) {
+    this.container = options.container;
+    this.position = options.position;
+    this.filename = options.filename ?? "hyperframe-export";
+    this.mount();
+  }
+  mount() {
+    if (typeof document === "undefined") {
+      return;
+    }
+    const root = document.createElement("div");
+    root.className = "hyper-frame-export-widget";
+    root.dataset.hyperFrame = "export-widget";
+    Object.assign(root.style, {
+      position: "fixed",
+      display: "flex",
+      flexDirection: "column",
+      gap: "0.25rem",
+      padding: "0.5rem 0.75rem",
+      borderRadius: "0.75rem",
+      color: "#f8fafc",
+      fontFamily: "Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont",
+      fontSize: "12px",
+      lineHeight: "16px",
+      boxShadow: "0 20px 40px rgba(15, 23, 42, 0.3)",
+      zIndex: "2147483646",
+      pointerEvents: "auto",
+      backdropFilter: "blur(8px)"
+    });
+    const controls = document.createElement("div");
+    controls.style.display = "flex";
+    controls.style.flexDirection = "row";
+    controls.style.alignItems = "center";
+    controls.style.justifyContent = "space-between";
+    controls.style.gap = "0.5rem";
+    const imageButton = document.createElement("button");
+    imageButton.type = "button";
+    imageButton.textContent = "Capture PNG";
+    imageButton.style.flex = "1 1 auto";
+    imageButton.style.padding = "0.35rem 0.6rem";
+    imageButton.style.border = "0";
+    imageButton.style.borderRadius = "0.5rem";
+    imageButton.style.cursor = "pointer";
+    imageButton.style.background = "rgba(94, 234, 212, 0.2)";
+    imageButton.style.color = "#5eead4";
+    imageButton.style.fontWeight = "600";
+    const videoButton = document.createElement("button");
+    videoButton.type = "button";
+    videoButton.textContent = "Record Video";
+    videoButton.style.flex = "1 1 auto";
+    videoButton.style.padding = "0.35rem 0.6rem";
+    videoButton.style.border = "0";
+    videoButton.style.borderRadius = "0.5rem";
+    videoButton.style.cursor = "pointer";
+    videoButton.style.background = "rgba(129, 140, 248, 0.2)";
+    videoButton.style.color = "#a5b4fc";
+    videoButton.style.fontWeight = "600";
+    imageButton.addEventListener("click", () => this.handleImageCapture(), { passive: true });
+    videoButton.addEventListener("click", () => this.toggleRecording(), { passive: true });
+    const status = document.createElement("span");
+    status.style.display = "block";
+    status.style.color = "#e2e8f0";
+    status.style.opacity = "0.8";
+    status.style.minHeight = "16px";
+    controls.appendChild(imageButton);
+    controls.appendChild(videoButton);
+    root.appendChild(controls);
+    root.appendChild(status);
+    this.root = root;
+    this.imageButton = imageButton;
+    this.videoButton = videoButton;
+    this.statusLabel = status;
+    this.applyPosition();
+    document.body.appendChild(root);
+    this.updateButtonStates();
+  }
+  applyPosition() {
+    if (!this.root)
+      return;
+    const position = this.position ?? "top-left";
+    const offsets = {
+      "bottom-right": { bottom: "1rem", right: "1rem", top: "", left: "" },
+      "bottom-left": { bottom: "1rem", left: "1rem", top: "", right: "" },
+      "top-right": { top: "1rem", right: "1rem", bottom: "", left: "" },
+      "top-left": { top: "1rem", left: "1rem", bottom: "", right: "" }
+    };
+    const styles = offsets[position];
+    Object.assign(this.root.style, styles);
+  }
+  setStatus(message, tone = "default") {
+    if (!this.statusLabel)
+      return;
+    if (this.statusTimeout) {
+      window.clearTimeout(this.statusTimeout);
+      this.statusTimeout = null;
+    }
+    this.statusLabel.textContent = message;
+    switch (tone) {
+      case "error":
+        this.statusLabel.style.color = "#fca5a5";
+        break;
+      case "success":
+        this.statusLabel.style.color = "#bbf7d0";
+        break;
+      default:
+        this.statusLabel.style.color = "#e2e8f0";
+    }
+    if (message) {
+      this.statusTimeout = window.setTimeout(() => {
+        if (this.statusLabel) {
+          this.statusLabel.textContent = "";
+          this.statusLabel.style.color = "#e2e8f0";
+        }
+        this.statusTimeout = null;
+      }, 4000);
+    }
+  }
+  updateButtonStates() {
+    if (this.imageButton) {
+      this.imageButton.disabled = !this.getActiveImageCapture();
+      this.imageButton.style.opacity = this.imageButton.disabled ? "0.6" : "1";
+    }
+    if (this.videoButton) {
+      const hasVideo = Boolean(this.getActiveVideoCapture());
+      this.videoButton.disabled = !hasVideo;
+      this.videoButton.style.opacity = hasVideo ? "1" : "0.6";
+    }
+  }
+  normalizeImageCapture(handler) {
+    if (!handler)
+      return null;
+    if (typeof handler === "function") {
+      return { capture: handler };
+    }
+    return {
+      capture: handler.capture,
+      filename: handler.filename,
+      mimeType: handler.mimeType
+    };
+  }
+  normalizeVideoCapture(handler) {
+    if (!handler)
+      return null;
+    return {
+      requestStream: handler.requestStream,
+      filename: handler.filename,
+      mimeType: handler.mimeType,
+      bitsPerSecond: handler.bitsPerSecond,
+      timeSlice: handler.timeSlice
+    };
+  }
+  getActiveImageCapture() {
+    if (this.userImageCapture) {
+      return this.userImageCapture;
+    }
+    if (this.defaultCanvasCaptureEnabled) {
+      return {
+        capture: () => this.captureCanvasSnapshot(),
+        filename: undefined,
+        mimeType: "image/png"
+      };
+    }
+    return null;
+  }
+  getActiveVideoCapture() {
+    if (this.userVideoCapture) {
+      return this.userVideoCapture;
+    }
+    if (this.defaultCanvasCaptureEnabled) {
+      return {
+        requestStream: () => this.captureCanvasStream(),
+        filename: undefined,
+        mimeType: "video/webm;codecs=vp9"
+      };
+    }
+    return null;
+  }
+  async captureCanvasSnapshot() {
+    const canvas = this.container.querySelector("canvas");
+    if (!(canvas instanceof HTMLCanvasElement)) {
+      throw new Error("No canvas element available for capture.");
+    }
+    return new Promise((resolve, reject) => {
+      canvas.toBlob((blob) => {
+        if (blob) {
+          resolve(blob);
+        } else {
+          reject(new Error("Canvas capture returned an empty blob."));
+        }
+      });
+    });
+  }
+  async captureCanvasStream() {
+    const canvas = this.container.querySelector("canvas");
+    if (!(canvas instanceof HTMLCanvasElement)) {
+      throw new Error("No canvas element available for recording.");
+    }
+    if (typeof canvas.captureStream !== "function") {
+      throw new Error("Canvas captureStream API is not supported in this browser.");
+    }
+    return canvas.captureStream(60);
+  }
+  async handleImageCapture() {
+    const handler = this.getActiveImageCapture();
+    if (!handler) {
+      this.setStatus("No capture handler available", "error");
+      return;
+    }
+    try {
+      this.setBusy(true, "image");
+      const result = await handler.capture();
+      const blob = await this.resolveCaptureResult(result, handler.mimeType ?? "image/png");
+      if (blob) {
+        const filename = handler.filename ?? `${this.filename}.png`;
+        this.downloadBlob(blob, filename);
+        this.setStatus("PNG exported", "success");
+      }
+    } catch (error) {
+      console.error("[hyper-frame] Failed to capture image", error);
+      this.setStatus(error.message || "Failed to capture image", "error");
+    } finally {
+      this.setBusy(false, "image");
+    }
+  }
+  async toggleRecording() {
+    if (this.recording) {
+      this.stopRecording();
+      return;
+    }
+    const handler = this.getActiveVideoCapture();
+    if (!handler) {
+      this.setStatus("No recorder available", "error");
+      return;
+    }
+    if (typeof MediaRecorder === "undefined") {
+      this.setStatus("MediaRecorder is not supported in this browser", "error");
+      return;
+    }
+    try {
+      const stream = await handler.requestStream();
+      if (!stream) {
+        throw new Error("Recording stream is not available");
+      }
+      this.recordedChunks = [];
+      const recorder = new MediaRecorder(stream, {
+        mimeType: handler.mimeType,
+        videoBitsPerSecond: handler.bitsPerSecond
+      });
+      recorder.addEventListener("dataavailable", (event) => {
+        if (event.data?.size) {
+          this.recordedChunks.push(event.data);
+        }
+      });
+      recorder.addEventListener("stop", () => {
+        const blob = new Blob(this.recordedChunks, { type: handler.mimeType ?? "video/webm" });
+        const filename = handler.filename ?? `${this.filename}.webm`;
+        this.downloadBlob(blob, filename);
+        this.setStatus("Recording saved", "success");
+        stream.getTracks().forEach((track) => track.stop());
+        this.recording = false;
+        this.updateRecordingUi();
+      });
+      recorder.start(handler.timeSlice);
+      this.recorder = recorder;
+      this.recording = true;
+      this.setStatus("Recording in progress…");
+      this.updateRecordingUi();
+    } catch (error) {
+      console.error("[hyper-frame] Failed to start recording", error);
+      this.setStatus(error.message || "Failed to record video", "error");
+      this.recording = false;
+      this.recorder = null;
+      this.updateRecordingUi();
+    }
+  }
+  stopRecording() {
+    if (!this.recorder) {
+      return;
+    }
+    this.setStatus("Finishing recording…");
+    this.recorder.stop();
+    this.recorder = null;
+    this.recording = false;
+    this.updateRecordingUi();
+  }
+  updateRecordingUi() {
+    if (!this.videoButton)
+      return;
+    this.videoButton.textContent = this.recording ? "Stop Recording" : "Record Video";
+    this.videoButton.style.background = this.recording ? "rgba(248, 113, 113, 0.25)" : "rgba(129, 140, 248, 0.2)";
+    this.videoButton.style.color = this.recording ? "#fecaca" : "#a5b4fc";
+  }
+  async resolveCaptureResult(result, mimeType) {
+    if (!result) {
+      return null;
+    }
+    if (result instanceof Blob) {
+      return result;
+    }
+    if (typeof result === "string") {
+      if (result.startsWith("data:")) {
+        const response2 = await fetch(result);
+        return await response2.blob();
+      }
+      const response = await fetch(result);
+      return await response.blob();
+    }
+    if (result instanceof HTMLCanvasElement) {
+      return await new Promise((resolve, reject) => {
+        result.toBlob((blob) => {
+          if (blob) {
+            resolve(blob);
+          } else {
+            reject(new Error("Canvas export failed."));
+          }
+        }, mimeType);
+      });
+    }
+    if (typeof OffscreenCanvas !== "undefined" && result instanceof OffscreenCanvas) {
+      const blob = await result.convertToBlob({ type: mimeType });
+      return blob;
+    }
+    return null;
+  }
+  downloadBlob(blob, filename) {
+    if (typeof window === "undefined") {
+      return;
+    }
+    const url = URL.createObjectURL(blob);
+    const anchor = document.createElement("a");
+    anchor.href = url;
+    anchor.download = filename;
+    anchor.rel = "noopener";
+    anchor.style.display = "none";
+    document.body.appendChild(anchor);
+    anchor.click();
+    document.body.removeChild(anchor);
+    URL.revokeObjectURL(url);
+  }
+  setBusy(busy, mode) {
+    const button = mode === "image" ? this.imageButton : this.videoButton;
+    if (!button)
+      return;
+    button.disabled = busy;
+    button.style.opacity = busy ? "0.6" : "1";
+  }
+  setFilename(filename) {
+    this.filename = filename;
+  }
+  setVisible(visible) {
+    if (!this.root)
+      return;
+    this.root.style.display = visible ? "flex" : "none";
+  }
+  registerImageCapture(handler) {
+    this.userImageCapture = this.normalizeImageCapture(handler);
+    this.updateButtonStates();
+  }
+  registerVideoCapture(handler) {
+    this.userVideoCapture = this.normalizeVideoCapture(handler);
+    this.updateButtonStates();
+  }
+  useDefaultCanvasCapture(enable = true) {
+    this.defaultCanvasCaptureEnabled = enable;
+    this.updateButtonStates();
+  }
+  getApi() {
+    return {
+      registerImageCapture: (handler) => this.registerImageCapture(handler),
+      registerVideoCapture: (handler) => this.registerVideoCapture(handler),
+      setFilename: (filename) => this.setFilename(filename),
+      setVisible: (visible) => this.setVisible(visible),
+      useDefaultCanvasCapture: (enable) => this.useDefaultCanvasCapture(enable),
+      destroy: () => this.destroy()
+    };
+  }
+  destroy() {
+    if (this.statusTimeout) {
+      window.clearTimeout(this.statusTimeout);
+      this.statusTimeout = null;
+    }
+    if (this.root?.parentNode) {
+      this.root.parentNode.removeChild(this.root);
+    }
+    this.root = null;
+    this.imageButton = null;
+    this.videoButton = null;
+    this.statusLabel = null;
+    this.recorder = null;
+    this.recording = false;
+    this.recordedChunks = [];
+  }
+}
+
+// src/frame/dependencyManager.ts
+class DependencyManager {
+  pending = new Map;
+  ensure(dependency) {
+    const key = this.createKey(dependency);
+    if (this.pending.has(key)) {
+      return this.pending.get(key);
+    }
+    const task = this.load(dependency);
+    this.pending.set(key, task);
+    return task;
+  }
+  async ensureAll(dependencies = []) {
+    for (const dependency of dependencies) {
+      await this.ensure(dependency);
+    }
+  }
+  createKey(dependency) {
+    return `${dependency.type}:${dependency.url}`;
+  }
+  load(dependency) {
+    switch (dependency.type) {
+      case "script":
+        return this.injectScript(dependency);
+      case "style":
+        return this.injectStyle(dependency);
+      default:
+        return Promise.reject(new Error(`[hyper-frame] Unsupported dependency type: ${dependency.type}`));
+    }
+  }
+  injectScript(dependency) {
+    if (typeof document === "undefined") {
+      return Promise.reject(new Error("[hyper-frame] document is not available"));
+    }
+    const existing = Array.from(document.querySelectorAll("script")).find((script) => script.src === dependency.url);
+    if (existing) {
+      return Promise.resolve();
+    }
+    return new Promise((resolve, reject) => {
+      const script = document.createElement("script");
+      script.src = dependency.url;
+      script.async = true;
+      script.dataset.hyperFrame = "external";
+      if (dependency.integrity) {
+        script.integrity = dependency.integrity;
+      }
+      if (dependency.crossOrigin) {
+        script.crossOrigin = dependency.crossOrigin;
+      }
+      if (dependency.attributes) {
+        Object.entries(dependency.attributes).forEach(([key, value]) => {
+          script.setAttribute(key, value);
+        });
+      }
+      script.addEventListener("load", () => resolve(), { once: true });
+      script.addEventListener("error", () => reject(new Error(`[hyper-frame] Failed to load script ${dependency.url}`)), {
+        once: true
+      });
+      document.head.appendChild(script);
+    });
+  }
+  injectStyle(dependency) {
+    if (typeof document === "undefined") {
+      return Promise.reject(new Error("[hyper-frame] document is not available"));
+    }
+    const existing = Array.from(document.querySelectorAll('link[rel="stylesheet"]')).find((link) => link.href === dependency.url);
+    if (existing) {
+      return Promise.resolve();
+    }
+    return new Promise((resolve, reject) => {
+      const link = document.createElement("link");
+      link.rel = "stylesheet";
+      link.href = dependency.url;
+      link.dataset.hyperFrame = "external";
+      if (dependency.attributes) {
+        Object.entries(dependency.attributes).forEach(([key, value]) => {
+          link.setAttribute(key, value);
+        });
+      }
+      link.addEventListener("load", () => resolve(), { once: true });
+      link.addEventListener("error", () => reject(new Error(`[hyper-frame] Failed to load stylesheet ${dependency.url}`)), {
+        once: true
+      });
+      document.head.appendChild(link);
+    });
+  }
+}
+
+// src/frame/utils/dom.ts
+function resolveContainer(options = {}) {
+  const doc = options.documentRef ?? document;
+  if (!doc) {
+    throw new Error("[hyper-frame] document is not available");
+  }
+  const className = options.containerClassName || "hypertool-sketch";
+  const target = options.target;
+  if (target instanceof HTMLElement) {
+    target.classList.add(className);
+    return { element: target, createdInternally: false };
+  }
+  if (typeof target === "string" && target.trim().length > 0) {
+    const node = doc.querySelector(target);
+    if (node) {
+      node.classList.add(className);
+      return { element: node, createdInternally: false };
+    }
+    console.warn(`[hyper-frame] Could not find container for selector "${target}", creating one instead.`);
+  }
+  const container = doc.createElement("div");
+  container.classList.add(className);
+  doc.body.appendChild(container);
+  return { element: container, createdInternally: true };
+}
+
+// src/frame/runtime.ts
+function runCleanups(cleanups) {
+  while (cleanups.length > 0) {
+    const cleanup = cleanups.pop();
+    if (cleanup) {
+      try {
+        cleanup();
+      } catch (error) {
+        console.error("[hyper-frame] cleanup failed", error);
+      }
+    }
+  }
+}
+
+class HyperFrameRuntime {
+  dependencyManager = new DependencyManager;
+  cssBridge = null;
+  config;
+  constructor(config = {}) {
+    this.config = config;
+  }
+  async ensureDependencies(dependencies = []) {
+    if (!dependencies.length) {
+      return;
+    }
+    await this.dependencyManager.ensureAll(dependencies);
+  }
+  mirrorCss() {
+    if (this.cssBridge) {
+      return;
+    }
+    this.cssBridge = new CssBridge({ mirror: this.config.mirrorCss !== false });
+    this.cssBridge.start();
+  }
+  async createSandbox(options) {
+    if (options.dependencies?.length) {
+      await this.ensureDependencies(options.dependencies);
+    }
+    if (this.config.mirrorCss !== false && options.mirrorCss !== false) {
+      this.mirrorCss();
+    }
+    const mount = this.createMount(options.mount);
+    const cleanups = [];
+    const pushCleanup = (cleanup) => {
+      if (typeof cleanup === "function") {
+        cleanups.push(cleanup);
+      }
+    };
+    const exportBridge = new ExportBridge({
+      container: mount.container,
+      position: options.exportWidget?.position,
+      filename: options.exportWidget?.filename
+    });
+    if (options.exportWidget?.enabled === false) {
+      exportBridge.setVisible(false);
+    }
+    if (options.exportWidget?.useCanvasCapture !== false) {
+      exportBridge.useDefaultCanvasCapture(true);
+    }
+    const environment = this.createEnvironment(pushCleanup);
+    const context = {
+      mount: mount.container,
+      params: {},
+      controls: null,
+      exports: exportBridge.getApi(),
+      runtime: this,
+      environment
+    };
+    let controlsHandle = null;
+    if (options.controls?.definitions) {
+      const controlsBridge = new ControlsBridge;
+      controlsHandle = controlsBridge.init({
+        definitions: options.controls.definitions,
+        options: options.controls.options,
+        context,
+        onControlChange: (change) => {
+          options.controls?.onChange?.(change, context);
+        }
+      });
+      context.controls = controlsHandle;
+      context.params = controlsHandle?.params ?? {};
+      pushCleanup(() => {
+        if (!controlsHandle)
+          return;
+        if (typeof controlsHandle.destroy === "function") {
+          controlsHandle.destroy();
+        } else if (typeof controlsHandle.dispose === "function") {
+          controlsHandle.dispose();
+        }
+      });
+    }
+    pushCleanup(() => exportBridge.destroy());
+    pushCleanup(() => mount.destroy());
+    let setupCleanup;
+    try {
+      setupCleanup = await options.setup(context);
+    } catch (error) {
+      console.error("[hyper-frame] sandbox setup failed", error);
+      runCleanups(cleanups);
+      throw error;
+    }
+    if (typeof setupCleanup === "function") {
+      pushCleanup(() => {
+        try {
+          setupCleanup?.();
+        } catch (error) {
+          console.error("[hyper-frame] teardown failed", error);
+        }
+      });
+    }
+    const handle = {
+      container: mount.container,
+      controls: controlsHandle,
+      params: context.params,
+      destroy: () => {
+        runCleanups(cleanups);
+      }
+    };
+    return handle;
+  }
+  createEnvironment(pushCleanup) {
+    if (typeof window === "undefined" || typeof document === "undefined") {
+      throw new Error("[hyper-frame] window or document is not available");
+    }
+    return {
+      window,
+      document,
+      addCleanup: (cleanup) => {
+        if (typeof cleanup === "function") {
+          pushCleanup(cleanup);
+        }
+      },
+      onResize: (handler, options) => {
+        window.addEventListener("resize", handler, options);
+        const dispose = () => window.removeEventListener("resize", handler, options);
+        pushCleanup(dispose);
+        return dispose;
+      }
+    };
+  }
+  createMount(options) {
+    const baseOptions = options;
+    const resolved = resolveContainer({
+      target: baseOptions?.target,
+      containerClassName: baseOptions?.containerClassName
+    });
+    if (typeof baseOptions?.onReady === "function") {
+      baseOptions.onReady({ container: resolved.element });
+    }
+    return {
+      container: resolved.element,
+      destroy: () => {
+        if (resolved.createdInternally) {
+          resolved.element.remove();
+        }
+      }
+    };
+  }
+}
+
+// src/frame/index.ts
+var defaultConfig = { mirrorCss: true };
+var runtime = new HyperFrameRuntime(defaultConfig);
+function configureRuntime(config) {
+  return new HyperFrameRuntime(config);
+}
+function createSandbox(options) {
+  return runtime.createSandbox(options);
+}
+function ensureDependencies(options) {
+  return runtime.ensureDependencies(options ?? []);
+}
+function mirrorCss() {
+  runtime.mirrorCss();
+}
+function attachToWindow() {
+  if (typeof window === "undefined") {
+    return;
+  }
+  const hyperWindow = window;
+  const existing = hyperWindow.hyperFrame || {};
+  const api = {
+    version: "universal",
+    runtime,
+    createSandbox,
+    ensureDependencies,
+    mirrorCss
+  };
+  hyperWindow.hyperFrame = { ...existing, ...api };
+}
+attachToWindow();
+export {
+  runtime,
+  mirrorCss,
+  ensureDependencies,
+  createSandbox,
+  configureRuntime,
+  attachToWindow
+};
+
+//# debugId=5531DE839D5ABFE664756E2164756E21

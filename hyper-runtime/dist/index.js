@@ -1,14 +1,7675 @@
-var p1=Object.defineProperty;var qh=(H,h)=>{for(var D in h)p1(H,D,{get:h[D],enumerable:!0,configurable:!0,set:(q)=>h[D]=()=>q})};var t1={};qh(t1,{studioTheme:()=>xH,injectThemeVariables:()=>bH,createControls:()=>g0,createControlPanel:()=>p0,HypertoolControls:()=>DH});/*! Tweakpane 4.0.5 (c) 2016 cocopon, licensed under the MIT license. */function R(H){return H}function O(H){return H===null||H===void 0}function M0(H){return H!==null&&typeof H==="object"}function F0(H){return H!==null&&typeof H==="object"}function c1(H,h){if(H.length!==h.length)return!1;for(let D=0;D<H.length;D++)if(H[D]!==h[D])return!1;return!0}function HH(H,h){return Array.from(new Set([...Object.keys(H),...Object.keys(h)])).reduce((q,W)=>{let J=H[W],Q=h[W];return F0(J)&&F0(Q)?Object.assign(Object.assign({},q),{[W]:HH(J,Q)}):Object.assign(Object.assign({},q),{[W]:W in h?Q:J})},{})}function B0(H){if(!M0(H))return!1;return"target"in H}var l1={alreadydisposed:()=>"View has been already disposed",invalidparams:(H)=>`Invalid parameters for '${H.name}'`,nomatchingcontroller:(H)=>`No matching controller for '${H.key}'`,nomatchingview:(H)=>`No matching view for '${JSON.stringify(H.params)}'`,notbindable:()=>"Value is not bindable",notcompatible:(H)=>`Not compatible with  plugin '${H.id}'`,propertynotfound:(H)=>`Property '${H.name}' not found`,shouldneverhappen:()=>"This error should never happen"};class y{static alreadyDisposed(){return new y({type:"alreadydisposed"})}static notBindable(){return new y({type:"notbindable"})}static notCompatible(H,h){return new y({type:"notcompatible",context:{id:`${H}.${h}`}})}static propertyNotFound(H){return new y({type:"propertynotfound",context:{name:H}})}static shouldNeverHappen(){return new y({type:"shouldneverhappen"})}constructor(H){var h;this.message=(h=l1[H.type](R(H.context)))!==null&&h!==void 0?h:"Unexpected error",this.name=this.constructor.name,this.stack=new Error(this.message).stack,this.type=H.type}toString(){return this.message}}class mH{constructor(H,h){this.obj_=H,this.key=h}static isBindable(H){if(H===null)return!1;if(typeof H!=="object"&&typeof H!=="function")return!1;return!0}read(){return this.obj_[this.key]}write(H){this.obj_[this.key]=H}writeProperty(H,h){let D=this.read();if(!mH.isBindable(D))throw y.notBindable();if(!(H in D))throw y.propertyNotFound(H);D[H]=h}}class ${constructor(){this.observers_={}}on(H,h,D){var q;let W=this.observers_[H];if(!W)W=this.observers_[H]=[];return W.push({handler:h,key:(q=D===null||D===void 0?void 0:D.key)!==null&&q!==void 0?q:h}),this}off(H,h){let D=this.observers_[H];if(D)this.observers_[H]=D.filter((q)=>{return q.key!==h});return this}emit(H,h){let D=this.observers_[H];if(!D)return;D.forEach((q)=>{q.handler(h)})}}class Th{constructor(H,h){var D;this.constraint_=h===null||h===void 0?void 0:h.constraint,this.equals_=(D=h===null||h===void 0?void 0:h.equals)!==null&&D!==void 0?D:(q,W)=>q===W,this.emitter=new $,this.rawValue_=H}get constraint(){return this.constraint_}get rawValue(){return this.rawValue_}set rawValue(H){this.setRawValue(H,{forceEmit:!1,last:!0})}setRawValue(H,h){let D=h!==null&&h!==void 0?h:{forceEmit:!1,last:!0},q=this.constraint_?this.constraint_.constrain(H):H,W=this.rawValue_;if(!!this.equals_(W,q)&&!D.forceEmit)return;this.emitter.emit("beforechange",{sender:this}),this.rawValue_=q,this.emitter.emit("change",{options:D,previousRawValue:W,rawValue:q,sender:this})}}class kh{constructor(H){this.emitter=new $,this.value_=H}get rawValue(){return this.value_}set rawValue(H){this.setRawValue(H,{forceEmit:!1,last:!0})}setRawValue(H,h){let D=h!==null&&h!==void 0?h:{forceEmit:!1,last:!0},q=this.value_;if(q===H&&!D.forceEmit)return;this.emitter.emit("beforechange",{sender:this}),this.value_=H,this.emitter.emit("change",{options:D,previousRawValue:q,rawValue:this.value_,sender:this})}}class Ph{constructor(H){this.emitter=new $,this.onValueBeforeChange_=this.onValueBeforeChange_.bind(this),this.onValueChange_=this.onValueChange_.bind(this),this.value_=H,this.value_.emitter.on("beforechange",this.onValueBeforeChange_),this.value_.emitter.on("change",this.onValueChange_)}get rawValue(){return this.value_.rawValue}onValueBeforeChange_(H){this.emitter.emit("beforechange",Object.assign(Object.assign({},H),{sender:this}))}onValueChange_(H){this.emitter.emit("change",Object.assign(Object.assign({},H),{sender:this}))}}function w(H,h){let D=h===null||h===void 0?void 0:h.constraint,q=h===null||h===void 0?void 0:h.equals;if(!D&&!q)return new kh(H);return new Th(H,h)}function r1(H){return[new Ph(H),(h,D)=>{H.setRawValue(h,D)}]}class Y{constructor(H){this.emitter=new $,this.valMap_=H;for(let h in this.valMap_)this.valMap_[h].emitter.on("change",()=>{this.emitter.emit("change",{key:h,sender:this})})}static createCore(H){return Object.keys(H).reduce((D,q)=>{return Object.assign(D,{[q]:w(H[q])})},{})}static fromObject(H){let h=this.createCore(H);return new Y(h)}get(H){return this.valMap_[H].rawValue}set(H,h){this.valMap_[H].rawValue=h}value(H){return this.valMap_[H]}}class XH{constructor(H){this.values=Y.fromObject({max:H.max,min:H.min})}constrain(H){let h=this.values.get("max"),D=this.values.get("min");return Math.min(Math.max(H,D),h)}}class Ch{constructor(H){this.values=Y.fromObject({max:H.max,min:H.min})}constrain(H){let h=this.values.get("max"),D=this.values.get("min"),q=H;if(!O(D))q=Math.max(q,D);if(!O(h))q=Math.min(q,h);return q}}class Vh{constructor(H,h=0){this.step=H,this.origin=h}constrain(H){let h=this.origin%this.step,D=Math.round((H-h)/this.step);return h+D*this.step}}class Eh{constructor(H){this.text=H}evaluate(){return Number(this.text)}toString(){return this.text}}var o1={"**":(H,h)=>Math.pow(H,h),"*":(H,h)=>H*h,"/":(H,h)=>H/h,"%":(H,h)=>H%h,"+":(H,h)=>H+h,"-":(H,h)=>H-h,"<<":(H,h)=>H<<h,">>":(H,h)=>H>>h,">>>":(H,h)=>H>>>h,"&":(H,h)=>H&h,"^":(H,h)=>H^h,"|":(H,h)=>H|h};class _h{constructor(H,h,D){this.left=h,this.operator=H,this.right=D}evaluate(){let H=o1[this.operator];if(!H)throw new Error(`unexpected binary operator: '${this.operator}`);return H(this.left.evaluate(),this.right.evaluate())}toString(){return["b(",this.left.toString(),this.operator,this.right.toString(),")"].join(" ")}}var a1={"+":(H)=>H,"-":(H)=>-H,"~":(H)=>~H};class xh{constructor(H,h){this.operator=H,this.expression=h}evaluate(){let H=a1[this.operator];if(!H)throw new Error(`unexpected unary operator: '${this.operator}`);return H(this.expression.evaluate())}toString(){return["u(",this.operator,this.expression.toString(),")"].join(" ")}}function A0(H){return(h,D)=>{for(let q=0;q<H.length;q++){let W=H[q](h,D);if(W!=="")return W}return""}}function BH(H,h){var D;let q=H.substr(h).match(/^\s+/);return(D=q&&q[0])!==null&&D!==void 0?D:""}function e1(H,h){let D=H.substr(h,1);return D.match(/^[1-9]$/)?D:""}function AH(H,h){var D;let q=H.substr(h).match(/^[0-9]+/);return(D=q&&q[0])!==null&&D!==void 0?D:""}function H8(H,h){let D=AH(H,h);if(D!=="")return D;let q=H.substr(h,1);if(h+=1,q!=="-"&&q!=="+")return"";let W=AH(H,h);if(W==="")return"";return q+W}function j0(H,h){let D=H.substr(h,1);if(h+=1,D.toLowerCase()!=="e")return"";let q=H8(H,h);if(q==="")return"";return D+q}function bh(H,h){let D=H.substr(h,1);if(D==="0")return D;let q=e1(H,h);if(h+=q.length,q==="")return"";return q+AH(H,h)}function h8(H,h){let D=bh(H,h);if(h+=D.length,D==="")return"";let q=H.substr(h,1);if(h+=q.length,q!==".")return"";let W=AH(H,h);return h+=W.length,D+q+W+j0(H,h)}function D8(H,h){let D=H.substr(h,1);if(h+=D.length,D!==".")return"";let q=AH(H,h);if(h+=q.length,q==="")return"";return D+q+j0(H,h)}function q8(H,h){let D=bh(H,h);if(h+=D.length,D==="")return"";return D+j0(H,h)}var W8=A0([h8,D8,q8]);function J8(H,h){var D;let q=H.substr(h).match(/^[01]+/);return(D=q&&q[0])!==null&&D!==void 0?D:""}function Q8(H,h){let D=H.substr(h,2);if(h+=D.length,D.toLowerCase()!=="0b")return"";let q=J8(H,h);if(q==="")return"";return D+q}function U8(H,h){var D;let q=H.substr(h).match(/^[0-7]+/);return(D=q&&q[0])!==null&&D!==void 0?D:""}function X8(H,h){let D=H.substr(h,2);if(h+=D.length,D.toLowerCase()!=="0o")return"";let q=U8(H,h);if(q==="")return"";return D+q}function z8(H,h){var D;let q=H.substr(h).match(/^[0-9a-f]+/i);return(D=q&&q[0])!==null&&D!==void 0?D:""}function Z8(H,h){let D=H.substr(h,2);if(h+=D.length,D.toLowerCase()!=="0x")return"";let q=z8(H,h);if(q==="")return"";return D+q}var Y8=A0([Q8,X8,Z8]),G8=A0([Y8,W8]);function K8(H,h){let D=G8(H,h);if(h+=D.length,D==="")return null;return{evaluable:new Eh(D),cursor:h}}function F8(H,h){let D=H.substr(h,1);if(h+=D.length,D!=="(")return null;let q=dh(H,h);if(!q)return null;h=q.cursor,h+=BH(H,h).length;let W=H.substr(h,1);if(h+=W.length,W!==")")return null;return{evaluable:q.evaluable,cursor:h}}function L8(H,h){var D;return(D=K8(H,h))!==null&&D!==void 0?D:F8(H,h)}function fh(H,h){let D=L8(H,h);if(D)return D;let q=H.substr(h,1);if(h+=q.length,q!=="+"&&q!=="-"&&q!=="~")return null;let W=fh(H,h);if(!W)return null;return h=W.cursor,{cursor:h,evaluable:new xh(q,W.evaluable)}}function O8(H,h,D){D+=BH(h,D).length;let q=H.filter((W)=>h.startsWith(W,D))[0];if(!q)return null;return D+=q.length,D+=BH(h,D).length,{cursor:D,operator:q}}function w8(H,h){return(D,q)=>{let W=H(D,q);if(!W)return null;q=W.cursor;let J=W.evaluable;for(;;){let Q=O8(h,D,q);if(!Q)break;q=Q.cursor;let U=H(D,q);if(!U)return null;q=U.cursor,J=new _h(Q.operator,J,U.evaluable)}return J?{cursor:q,evaluable:J}:null}}var S8=[["**"],["*","/","%"],["+","-"],["<<",">>>",">>"],["&"],["^"],["|"]].reduce((H,h)=>{return w8(H,h)},fh);function dh(H,h){return h+=BH(H,h).length,S8(H,h)}function y8(H){let h=dh(H,0);if(!h)return null;if(h.cursor+BH(H,h.cursor).length!==H.length)return null;return h.evaluable}function u(H){var h;let D=y8(H);return(h=D===null||D===void 0?void 0:D.evaluate())!==null&&h!==void 0?h:null}function uh(H){if(typeof H==="number")return H;if(typeof H==="string"){let h=u(H);if(!O(h))return h}return 0}function $8(H){return String(H)}function j(H){return(h)=>{return h.toFixed(Math.max(Math.min(H,20),0))}}function L(H,h,D,q,W){let J=(H-h)/(D-h);return q+J*(W-q)}function Wh(H){return String(H.toFixed(10)).split(".")[1].replace(/0+$/,"").length}function I(H,h,D){return Math.min(Math.max(H,h),D)}function vh(H,h){return(H%h+h)%h}function I8(H,h){return!O(H.step)?Wh(H.step):Math.max(Wh(h),2)}function mh(H){var h;return(h=H.step)!==null&&h!==void 0?h:1}function th(H,h){var D;let q=Math.abs((D=H.step)!==null&&D!==void 0?D:h);return q===0?0.1:Math.pow(10,Math.floor(Math.log10(q))-1)}function ih(H,h){if(!O(H.step))return new Vh(H.step,h);return null}function sh(H){if(!O(H.max)&&!O(H.min))return new XH({max:H.max,min:H.min});if(!O(H.max)||!O(H.min))return new Ch({max:H.max,min:H.min});return null}function nh(H,h){var D,q,W;return{formatter:(D=H.format)!==null&&D!==void 0?D:j(I8(H,h)),keyScale:(q=H.keyScale)!==null&&q!==void 0?q:mh(H),pointerScale:(W=H.pointerScale)!==null&&W!==void 0?W:th(H,h)}}function gh(H){return{format:H.optional.function,keyScale:H.optional.number,max:H.optional.number,min:H.optional.number,pointerScale:H.optional.number,step:H.optional.number}}function R0(H){return{constraint:H.constraint,textProps:Y.fromObject(nh(H.params,H.initialValue))}}class c{constructor(H){this.controller=H}get element(){return this.controller.view.element}get disabled(){return this.controller.viewProps.get("disabled")}set disabled(H){this.controller.viewProps.set("disabled",H)}get hidden(){return this.controller.viewProps.get("hidden")}set hidden(H){this.controller.viewProps.set("hidden",H)}dispose(){this.controller.viewProps.set("disposed",!0)}importState(H){return this.controller.importState(H)}exportState(){return this.controller.exportState()}}class TH{constructor(H){this.target=H}}class zH extends TH{constructor(H,h,D){super(H);this.value=h,this.last=D!==null&&D!==void 0?D:!0}}class ph extends TH{constructor(H,h){super(H);this.expanded=h}}class ch extends TH{constructor(H,h){super(H);this.index=h}}class lh extends TH{constructor(H,h){super(H);this.native=h}}class JH extends c{constructor(H){super(H);this.onValueChange_=this.onValueChange_.bind(this),this.emitter_=new $,this.controller.value.emitter.on("change",this.onValueChange_)}get label(){return this.controller.labelController.props.get("label")}set label(H){this.controller.labelController.props.set("label",H)}get key(){return this.controller.value.binding.target.key}get tag(){return this.controller.tag}set tag(H){this.controller.tag=H}on(H,h){let D=h.bind(this);return this.emitter_.on(H,(q)=>{D(q)},{key:h}),this}off(H,h){return this.emitter_.off(H,h),this}refresh(){this.controller.value.fetch()}onValueChange_(H){let h=this.controller.value;this.emitter_.emit("change",new zH(this,R(h.binding.target.read()),H.options.last))}}class rh{constructor(H,h){this.onValueBeforeChange_=this.onValueBeforeChange_.bind(this),this.onValueChange_=this.onValueChange_.bind(this),this.binding=h,this.value_=H,this.value_.emitter.on("beforechange",this.onValueBeforeChange_),this.value_.emitter.on("change",this.onValueChange_),this.emitter=new $}get rawValue(){return this.value_.rawValue}set rawValue(H){this.value_.rawValue=H}setRawValue(H,h){this.value_.setRawValue(H,h)}fetch(){this.value_.rawValue=this.binding.read()}push(){this.binding.write(this.value_.rawValue)}onValueBeforeChange_(H){this.emitter.emit("beforechange",Object.assign(Object.assign({},H),{sender:this}))}onValueChange_(H){this.push(),this.emitter.emit("change",Object.assign(Object.assign({},H),{sender:this}))}}function M8(H){if(!("binding"in H))return!1;let h=H.binding;return B0(h)&&"read"in h&&"write"in h}function B8(H,h){let q=Object.keys(h).reduce((W,J)=>{if(W===void 0)return;let Q=h[J],U=Q(H[J]);return U.succeeded?Object.assign(Object.assign({},W),{[J]:U.value}):void 0},{});return R(q)}function A8(H,h){return H.reduce((D,q)=>{if(D===void 0)return;let W=h(q);if(!W.succeeded||W.value===void 0)return;return[...D,W.value]},[])}function j8(H){if(H===null)return!1;return typeof H==="object"}function x(H){return(h)=>(D)=>{if(!h&&D===void 0)return{succeeded:!1,value:void 0};if(h&&D===void 0)return{succeeded:!0,value:void 0};let q=H(D);return q!==void 0?{succeeded:!0,value:q}:{succeeded:!1,value:void 0}}}function Jh(H){return{custom:(h)=>x(h)(H),boolean:x((h)=>typeof h==="boolean"?h:void 0)(H),number:x((h)=>typeof h==="number"?h:void 0)(H),string:x((h)=>typeof h==="string"?h:void 0)(H),function:x((h)=>typeof h==="function"?h:void 0)(H),constant:(h)=>x((D)=>D===h?h:void 0)(H),raw:x((h)=>h)(H),object:(h)=>x((D)=>{if(!j8(D))return;return B8(D,h)})(H),array:(h)=>x((D)=>{if(!Array.isArray(D))return;return A8(D,h)})(H)}}var L0={optional:Jh(!0),required:Jh(!1)};function S(H,h){let D=h(L0),q=L0.required.object(D)(H);return q.succeeded?q.value:void 0}function N(H,h,D,q){if(h&&!h(H))return!1;let W=S(H,D);return W?q(W):!1}function T(H,h){var D;return HH((D=H===null||H===void 0?void 0:H())!==null&&D!==void 0?D:{},h)}function o(H){return"value"in H}function oh(H){if(!M0(H)||!("binding"in H))return!1;let h=H.binding;return B0(h)}var C="http://www.w3.org/2000/svg";function tH(H){H.offsetHeight}function R8(H,h){let D=H.style.transition;H.style.transition="none",h(),H.style.transition=D}function N0(H){return H.ontouchstart!==void 0}function N8(){return globalThis}function T8(){return R(N8()).document}function k8(H){let h=H.ownerDocument.defaultView;if(!h)return null;return"document"in h?H.getContext("2d",{willReadFrequently:!0}):null}var P8={check:'<path d="M2 8l4 4l8 -8"/>',dropdown:'<path d="M5 7h6l-3 3 z"/>',p2dpad:'<path d="M8 4v8"/><path d="M4 8h8"/><circle cx="12" cy="12" r="1.2"/>'};function pH(H,h){let D=H.createElementNS(C,"svg");return D.innerHTML=P8[h],D}function ah(H,h,D){H.insertBefore(h,H.children[D])}function T0(H){if(H.parentElement)H.parentElement.removeChild(H)}function eh(H){while(H.children.length>0)H.removeChild(H.children[0])}function C8(H){while(H.childNodes.length>0)H.removeChild(H.childNodes[0])}function HD(H){if(H.relatedTarget)return R(H.relatedTarget);if("explicitOriginalTarget"in H)return H.explicitOriginalTarget;return null}function f(H,h){H.emitter.on("change",(D)=>{h(D.rawValue)}),h(H.rawValue)}function V(H,h,D){f(H.value(h),D)}var V8="tp";function K(H){return(D,q)=>{return[V8,"-",H,"v",D?`_${D}`:"",q?`-${q}`:""].join("")}}var yH=K("lbl");function E8(H,h){let D=H.createDocumentFragment();return h.split(`
-`).map((W)=>{return H.createTextNode(W)}).forEach((W,J)=>{if(J>0)D.appendChild(H.createElement("br"));D.appendChild(W)}),D}class k0{constructor(H,h){this.element=H.createElement("div"),this.element.classList.add(yH()),h.viewProps.bindClassModifiers(this.element);let D=H.createElement("div");D.classList.add(yH("l")),V(h.props,"label",(W)=>{if(O(W))this.element.classList.add(yH(void 0,"nol"));else this.element.classList.remove(yH(void 0,"nol")),C8(D),D.appendChild(E8(H,W))}),this.element.appendChild(D),this.labelElement=D;let q=H.createElement("div");q.classList.add(yH("v")),this.element.appendChild(q),this.valueElement=q}}class P0{constructor(H,h){this.props=h.props,this.valueController=h.valueController,this.viewProps=h.valueController.viewProps,this.view=new k0(H,{props:h.props,viewProps:this.viewProps}),this.view.valueElement.appendChild(this.valueController.view.element)}importProps(H){return N(H,null,(h)=>({label:h.optional.string}),(h)=>{return this.props.set("label",h.label),!0})}exportProps(){return T(null,{label:this.props.get("label")})}}function _8(){return["veryfirst","first","last","verylast"]}var Qh=K(""),Uh={veryfirst:"vfst",first:"fst",last:"lst",verylast:"vlst"};class kH{constructor(H){this.parent_=null,this.blade=H.blade,this.view=H.view,this.viewProps=H.viewProps;let h=this.view.element;this.blade.value("positions").emitter.on("change",()=>{_8().forEach((D)=>{h.classList.remove(Qh(void 0,Uh[D]))}),this.blade.get("positions").forEach((D)=>{h.classList.add(Qh(void 0,Uh[D]))})}),this.viewProps.handleDispose(()=>{T0(h)})}get parent(){return this.parent_}set parent(H){this.parent_=H,this.viewProps.set("parent",this.parent_?this.parent_.viewProps:null)}importState(H){return N(H,null,(h)=>({disabled:h.required.boolean,hidden:h.required.boolean}),(h)=>{return this.viewProps.importState(h),!0})}exportState(){return T(null,Object.assign({},this.viewProps.exportState()))}}class p extends kH{constructor(H,h){if(h.value!==h.valueController.value)throw y.shouldNeverHappen();let D=h.valueController.viewProps,q=new P0(H,{blade:h.blade,props:h.props,valueController:h.valueController});super(Object.assign(Object.assign({},h),{view:new k0(H,{props:h.props,viewProps:D}),viewProps:D}));this.labelController=q,this.value=h.value,this.valueController=h.valueController,this.view.valueElement.appendChild(this.valueController.view.element)}importState(H){return N(H,(h)=>{var D,q,W;return super.importState(h)&&this.labelController.importProps(h)&&((W=(q=(D=this.valueController).importProps)===null||q===void 0?void 0:q.call(D,H))!==null&&W!==void 0?W:!0)},(h)=>({value:h.optional.raw}),(h)=>{if(h.value)this.value.rawValue=h.value;return!0})}exportState(){var H,h,D;return T(()=>super.exportState(),Object.assign(Object.assign({value:this.value.rawValue},this.labelController.exportProps()),(D=(h=(H=this.valueController).exportProps)===null||h===void 0?void 0:h.call(H))!==null&&D!==void 0?D:{}))}}function Xh(H){let h=Object.assign({},H);return delete h.value,h}class C0 extends p{constructor(H,h){super(H,h);this.tag=h.tag}importState(H){return N(H,(h)=>super.importState(Xh(H)),(h)=>({tag:h.optional.string}),(h)=>{return this.tag=h.tag,!0})}exportState(){return T(()=>Xh(super.exportState()),{binding:{key:this.value.binding.target.key,value:this.value.binding.target.read()},tag:this.tag})}}function x8(H){return o(H)&&oh(H.value)}class hD extends C0{importState(H){return N(H,(h)=>super.importState(h),(h)=>({binding:h.required.object({value:h.required.raw})}),(h)=>{return this.value.binding.inject(h.binding.value),this.value.fetch(),!0})}}function b8(H){return o(H)&&M8(H.value)}function DD(H,h){while(H.length<h)H.push(void 0)}function f8(H){let h=[];return DD(h,H),h}function d8(H){let h=H.indexOf(void 0);return R(h<0?H:H.slice(0,h))}function u8(H,h){let D=[...d8(H),h];if(D.length>H.length)D.splice(0,D.length-H.length);else DD(D,H.length);return D}class qD{constructor(H){this.emitter=new $,this.onTick_=this.onTick_.bind(this),this.onValueBeforeChange_=this.onValueBeforeChange_.bind(this),this.onValueChange_=this.onValueChange_.bind(this),this.binding=H.binding,this.value_=w(f8(H.bufferSize)),this.value_.emitter.on("beforechange",this.onValueBeforeChange_),this.value_.emitter.on("change",this.onValueChange_),this.ticker=H.ticker,this.ticker.emitter.on("tick",this.onTick_),this.fetch()}get rawValue(){return this.value_.rawValue}set rawValue(H){this.value_.rawValue=H}setRawValue(H,h){this.value_.setRawValue(H,h)}fetch(){this.value_.rawValue=u8(this.value_.rawValue,this.binding.read())}onTick_(){this.fetch()}onValueBeforeChange_(H){this.emitter.emit("beforechange",Object.assign(Object.assign({},H),{sender:this}))}onValueChange_(H){this.emitter.emit("change",Object.assign(Object.assign({},H),{sender:this}))}}function v8(H){if(!("binding"in H))return!1;let h=H.binding;return B0(h)&&"read"in h&&!("write"in h)}class WD extends C0{exportState(){return T(()=>super.exportState(),{binding:{readonly:!0}})}}function m8(H){return o(H)&&v8(H.value)}class JD extends c{get label(){return this.controller.labelController.props.get("label")}set label(H){this.controller.labelController.props.set("label",H)}get title(){var H;return(H=this.controller.buttonController.props.get("title"))!==null&&H!==void 0?H:""}set title(H){this.controller.buttonController.props.set("title",H)}on(H,h){let D=h.bind(this);return this.controller.buttonController.emitter.on(H,(W)=>{D(new lh(this,W.nativeEvent))}),this}off(H,h){return this.controller.buttonController.emitter.off(H,h),this}}function t8(H,h,D){if(D)H.classList.add(h);else H.classList.remove(h)}function ZH(H,h){return(D)=>{t8(H,h,D)}}function V0(H,h){f(H,(D)=>{h.textContent=D!==null&&D!==void 0?D:""})}var Q0=K("btn");class QD{constructor(H,h){this.element=H.createElement("div"),this.element.classList.add(Q0()),h.viewProps.bindClassModifiers(this.element);let D=H.createElement("button");D.classList.add(Q0("b")),h.viewProps.bindDisabled(D),this.element.appendChild(D),this.buttonElement=D;let q=H.createElement("div");q.classList.add(Q0("t")),V0(h.props.value("title"),q),this.buttonElement.appendChild(q)}}class UD{constructor(H,h){this.emitter=new $,this.onClick_=this.onClick_.bind(this),this.props=h.props,this.viewProps=h.viewProps,this.view=new QD(H,{props:this.props,viewProps:this.viewProps}),this.view.buttonElement.addEventListener("click",this.onClick_)}importProps(H){return N(H,null,(h)=>({title:h.optional.string}),(h)=>{return this.props.set("title",h.title),!0})}exportProps(){return T(null,{title:this.props.get("title")})}onClick_(H){this.emitter.emit("click",{nativeEvent:H,sender:this})}}class O0 extends kH{constructor(H,h){let D=new UD(H,{props:h.buttonProps,viewProps:h.viewProps}),q=new P0(H,{blade:h.blade,props:h.labelProps,valueController:D});super({blade:h.blade,view:q.view,viewProps:h.viewProps});this.buttonController=D,this.labelController=q}importState(H){return N(H,(h)=>super.importState(h)&&this.buttonController.importProps(h)&&this.labelController.importProps(h),()=>({}),()=>!0)}exportState(){return T(()=>super.exportState(),Object.assign(Object.assign({},this.buttonController.exportProps()),this.labelController.exportProps()))}}class E0{constructor(H){let[h,D]=H.split("-"),q=h.split(".");this.major=parseInt(q[0],10),this.minor=parseInt(q[1],10),this.patch=parseInt(q[2],10),this.prerelease=D!==null&&D!==void 0?D:null}toString(){let H=[this.major,this.minor,this.patch].join(".");return this.prerelease!==null?[H,this.prerelease].join("-"):H}}var YH=new E0("2.0.5");function B(H){return Object.assign({core:YH},H)}var i8=B({id:"button",type:"blade",accept(H){let h=S(H,(D)=>({title:D.required.string,view:D.required.constant("button"),label:D.optional.string}));return h?{params:h}:null},controller(H){return new O0(H.document,{blade:H.blade,buttonProps:Y.fromObject({title:H.params.title}),labelProps:Y.fromObject({label:H.params.label}),viewProps:H.viewProps})},api(H){if(H.controller instanceof O0)return new JD(H.controller);return null}});function s8(H,h){return H.addBlade(Object.assign(Object.assign({},h),{view:"button"}))}function n8(H,h){return H.addBlade(Object.assign(Object.assign({},h),{view:"folder"}))}function g8(H,h){return H.addBlade(Object.assign(Object.assign({},h),{view:"tab"}))}function p8(H){if(!M0(H))return!1;return"refresh"in H&&typeof H.refresh==="function"}function c8(H,h){if(!mH.isBindable(H))throw y.notBindable();return new mH(H,h)}class XD{constructor(H,h){this.onRackValueChange_=this.onRackValueChange_.bind(this),this.controller_=H,this.emitter_=new $,this.pool_=h,this.controller_.rack.emitter.on("valuechange",this.onRackValueChange_)}get children(){return this.controller_.rack.children.map((H)=>this.pool_.createApi(H))}addBinding(H,h,D){let q=D!==null&&D!==void 0?D:{},W=this.controller_.element.ownerDocument,J=this.pool_.createBinding(W,c8(H,h),q),Q=this.pool_.createBindingApi(J);return this.add(Q,q.index)}addFolder(H){return n8(this,H)}addButton(H){return s8(this,H)}addTab(H){return g8(this,H)}add(H,h){let D=H.controller;return this.controller_.rack.add(D,h),H}remove(H){this.controller_.rack.remove(H.controller)}addBlade(H){let h=this.controller_.element.ownerDocument,D=this.pool_.createBlade(h,H),q=this.pool_.createApi(D);return this.add(q,H.index)}on(H,h){let D=h.bind(this);return this.emitter_.on(H,(q)=>{D(q)},{key:h}),this}off(H,h){return this.emitter_.off(H,h),this}refresh(){this.children.forEach((H)=>{if(p8(H))H.refresh()})}onRackValueChange_(H){let h=H.bladeController,D=this.pool_.createApi(h),q=oh(h.value)?h.value.binding:null;this.emitter_.emit("change",new zH(D,q?q.target.read():h.value.rawValue,H.options.last))}}class cH extends c{constructor(H,h){super(H);this.rackApi_=new XD(H.rackController,h)}refresh(){this.rackApi_.refresh()}}class lH extends kH{constructor(H){super({blade:H.blade,view:H.view,viewProps:H.rackController.viewProps});this.rackController=H.rackController}importState(H){return N(H,(h)=>super.importState(h),(h)=>({children:h.required.array(h.required.raw)}),(h)=>{return this.rackController.rack.children.every((D,q)=>{return D.importState(h.children[q])})})}exportState(){return T(()=>super.exportState(),{children:this.rackController.rack.children.map((H)=>H.exportState())})}}function w0(H){return"rackController"in H}class zD{constructor(H){this.emitter=new $,this.items_=[],this.cache_=new Set,this.onSubListAdd_=this.onSubListAdd_.bind(this),this.onSubListRemove_=this.onSubListRemove_.bind(this),this.extract_=H}get items(){return this.items_}allItems(){return Array.from(this.cache_)}find(H){for(let h of this.allItems())if(H(h))return h;return null}includes(H){return this.cache_.has(H)}add(H,h){if(this.includes(H))throw y.shouldNeverHappen();let D=h!==void 0?h:this.items_.length;this.items_.splice(D,0,H),this.cache_.add(H);let q=this.extract_(H);if(q)q.emitter.on("add",this.onSubListAdd_),q.emitter.on("remove",this.onSubListRemove_),q.allItems().forEach((W)=>{this.cache_.add(W)});this.emitter.emit("add",{index:D,item:H,root:this,target:this})}remove(H){let h=this.items_.indexOf(H);if(h<0)return;this.items_.splice(h,1),this.cache_.delete(H);let D=this.extract_(H);if(D)D.allItems().forEach((q)=>{this.cache_.delete(q)}),D.emitter.off("add",this.onSubListAdd_),D.emitter.off("remove",this.onSubListRemove_);this.emitter.emit("remove",{index:h,item:H,root:this,target:this})}onSubListAdd_(H){this.cache_.add(H.item),this.emitter.emit("add",{index:H.index,item:H.item,root:this,target:H.target})}onSubListRemove_(H){this.cache_.delete(H.item),this.emitter.emit("remove",{index:H.index,item:H.item,root:this,target:H.target})}}function l8(H,h){for(let D=0;D<H.length;D++){let q=H[D];if(o(q)&&q.value===h)return q}return null}function r8(H){return w0(H)?H.rackController.rack.bcSet_:null}class ZD{constructor(H){var h,D;this.emitter=new $,this.onBladePositionsChange_=this.onBladePositionsChange_.bind(this),this.onSetAdd_=this.onSetAdd_.bind(this),this.onSetRemove_=this.onSetRemove_.bind(this),this.onChildDispose_=this.onChildDispose_.bind(this),this.onChildPositionsChange_=this.onChildPositionsChange_.bind(this),this.onChildValueChange_=this.onChildValueChange_.bind(this),this.onChildViewPropsChange_=this.onChildViewPropsChange_.bind(this),this.onRackLayout_=this.onRackLayout_.bind(this),this.onRackValueChange_=this.onRackValueChange_.bind(this),this.blade_=(h=H.blade)!==null&&h!==void 0?h:null,(D=this.blade_)===null||D===void 0||D.value("positions").emitter.on("change",this.onBladePositionsChange_),this.viewProps=H.viewProps,this.bcSet_=new zD(r8),this.bcSet_.emitter.on("add",this.onSetAdd_),this.bcSet_.emitter.on("remove",this.onSetRemove_)}get children(){return this.bcSet_.items}add(H,h){var D;(D=H.parent)===null||D===void 0||D.remove(H),H.parent=this,this.bcSet_.add(H,h)}remove(H){H.parent=null,this.bcSet_.remove(H)}find(H){return this.bcSet_.allItems().filter(H)}onSetAdd_(H){this.updatePositions_();let h=H.target===H.root;if(this.emitter.emit("add",{bladeController:H.item,index:H.index,root:h,sender:this}),!h)return;let D=H.item;if(D.viewProps.emitter.on("change",this.onChildViewPropsChange_),D.blade.value("positions").emitter.on("change",this.onChildPositionsChange_),D.viewProps.handleDispose(this.onChildDispose_),o(D))D.value.emitter.on("change",this.onChildValueChange_);else if(w0(D)){let q=D.rackController.rack;if(q){let W=q.emitter;W.on("layout",this.onRackLayout_),W.on("valuechange",this.onRackValueChange_)}}}onSetRemove_(H){this.updatePositions_();let h=H.target===H.root;if(this.emitter.emit("remove",{bladeController:H.item,root:h,sender:this}),!h)return;let D=H.item;if(o(D))D.value.emitter.off("change",this.onChildValueChange_);else if(w0(D)){let q=D.rackController.rack;if(q){let W=q.emitter;W.off("layout",this.onRackLayout_),W.off("valuechange",this.onRackValueChange_)}}}updatePositions_(){let H=this.bcSet_.items.filter((q)=>!q.viewProps.get("hidden")),h=H[0],D=H[H.length-1];this.bcSet_.items.forEach((q)=>{let W=[];if(q===h){if(W.push("first"),!this.blade_||this.blade_.get("positions").includes("veryfirst"))W.push("veryfirst")}if(q===D){if(W.push("last"),!this.blade_||this.blade_.get("positions").includes("verylast"))W.push("verylast")}q.blade.set("positions",W)})}onChildPositionsChange_(){this.updatePositions_(),this.emitter.emit("layout",{sender:this})}onChildViewPropsChange_(H){this.updatePositions_(),this.emitter.emit("layout",{sender:this})}onChildDispose_(){this.bcSet_.items.filter((h)=>{return h.viewProps.get("disposed")}).forEach((h)=>{this.bcSet_.remove(h)})}onChildValueChange_(H){let h=l8(this.find(o),H.sender);if(!h)throw y.alreadyDisposed();this.emitter.emit("valuechange",{bladeController:h,options:H.options,sender:this})}onRackLayout_(H){this.updatePositions_(),this.emitter.emit("layout",{sender:this})}onRackValueChange_(H){this.emitter.emit("valuechange",{bladeController:H.bladeController,options:H.options,sender:this})}onBladePositionsChange_(){this.updatePositions_()}}class rH{constructor(H){this.onRackAdd_=this.onRackAdd_.bind(this),this.onRackRemove_=this.onRackRemove_.bind(this),this.element=H.element,this.viewProps=H.viewProps;let h=new ZD({blade:H.root?void 0:H.blade,viewProps:H.viewProps});h.emitter.on("add",this.onRackAdd_),h.emitter.on("remove",this.onRackRemove_),this.rack=h,this.viewProps.handleDispose(()=>{for(let D=this.rack.children.length-1;D>=0;D--)this.rack.children[D].viewProps.set("disposed",!0)})}onRackAdd_(H){if(!H.root)return;ah(this.element,H.bladeController.view.element,H.index)}onRackRemove_(H){if(!H.root)return;T0(H.bladeController.view.element)}}function GH(){return new Y({positions:w([],{equals:c1})})}class PH extends Y{constructor(H){super(H)}static create(H){let h={completed:!0,expanded:H,expandedHeight:null,shouldFixHeight:!1,temporaryExpanded:null},D=Y.createCore(h);return new PH(D)}get styleExpanded(){var H;return(H=this.get("temporaryExpanded"))!==null&&H!==void 0?H:this.get("expanded")}get styleHeight(){if(!this.styleExpanded)return"0";let H=this.get("expandedHeight");if(this.get("shouldFixHeight")&&!O(H))return`${H}px`;return"auto"}bindExpandedClass(H,h){let D=()=>{if(this.styleExpanded)H.classList.add(h);else H.classList.remove(h)};V(this,"expanded",D),V(this,"temporaryExpanded",D)}cleanUpTransition(){this.set("shouldFixHeight",!1),this.set("expandedHeight",null),this.set("completed",!0)}}function o8(H,h){let D=0;return R8(h,()=>{H.set("expandedHeight",null),H.set("temporaryExpanded",!0),tH(h),D=h.clientHeight,H.set("temporaryExpanded",null),tH(h)}),D}function zh(H,h){h.style.height=H.styleHeight}function _0(H,h){H.value("expanded").emitter.on("beforechange",()=>{if(H.set("completed",!1),O(H.get("expandedHeight"))){let D=o8(H,h);if(D>0)H.set("expandedHeight",D)}H.set("shouldFixHeight",!0),tH(h)}),H.emitter.on("change",()=>{zh(H,h)}),zh(H,h),h.addEventListener("transitionend",(D)=>{if(D.propertyName!=="height")return;H.cleanUpTransition()})}class x0 extends cH{constructor(H,h){super(H,h);this.emitter_=new $,this.controller.foldable.value("expanded").emitter.on("change",(D)=>{this.emitter_.emit("fold",new ph(this,D.sender.rawValue))}),this.rackApi_.on("change",(D)=>{this.emitter_.emit("change",D)})}get expanded(){return this.controller.foldable.get("expanded")}set expanded(H){this.controller.foldable.set("expanded",H)}get title(){return this.controller.props.get("title")}set title(H){this.controller.props.set("title",H)}get children(){return this.rackApi_.children}addBinding(H,h,D){return this.rackApi_.addBinding(H,h,D)}addFolder(H){return this.rackApi_.addFolder(H)}addButton(H){return this.rackApi_.addButton(H)}addTab(H){return this.rackApi_.addTab(H)}add(H,h){return this.rackApi_.add(H,h)}remove(H){this.rackApi_.remove(H)}addBlade(H){return this.rackApi_.addBlade(H)}on(H,h){let D=h.bind(this);return this.emitter_.on(H,(q)=>{D(q)},{key:h}),this}off(H,h){return this.emitter_.off(H,h),this}}var YD=K("cnt");class GD{constructor(H,h){var D;this.className_=K((D=h.viewName)!==null&&D!==void 0?D:"fld"),this.element=H.createElement("div"),this.element.classList.add(this.className_(),YD()),h.viewProps.bindClassModifiers(this.element),this.foldable_=h.foldable,this.foldable_.bindExpandedClass(this.element,this.className_(void 0,"expanded")),V(this.foldable_,"completed",ZH(this.element,this.className_(void 0,"cpl")));let q=H.createElement("button");q.classList.add(this.className_("b")),V(h.props,"title",(Z)=>{if(O(Z))this.element.classList.add(this.className_(void 0,"not"));else this.element.classList.remove(this.className_(void 0,"not"))}),h.viewProps.bindDisabled(q),this.element.appendChild(q),this.buttonElement=q;let W=H.createElement("div");W.classList.add(this.className_("i")),this.element.appendChild(W);let J=H.createElement("div");J.classList.add(this.className_("t")),V0(h.props.value("title"),J),this.buttonElement.appendChild(J),this.titleElement=J;let Q=H.createElement("div");Q.classList.add(this.className_("m")),this.buttonElement.appendChild(Q);let U=H.createElement("div");U.classList.add(this.className_("c")),this.element.appendChild(U),this.containerElement=U}}class iH extends lH{constructor(H,h){var D;let q=PH.create((D=h.expanded)!==null&&D!==void 0?D:!0),W=new GD(H,{foldable:q,props:h.props,viewName:h.root?"rot":void 0,viewProps:h.viewProps});super(Object.assign(Object.assign({},h),{rackController:new rH({blade:h.blade,element:W.containerElement,root:h.root,viewProps:h.viewProps}),view:W}));this.onTitleClick_=this.onTitleClick_.bind(this),this.props=h.props,this.foldable=q,_0(this.foldable,this.view.containerElement),this.rackController.rack.emitter.on("add",()=>{this.foldable.cleanUpTransition()}),this.rackController.rack.emitter.on("remove",()=>{this.foldable.cleanUpTransition()}),this.view.buttonElement.addEventListener("click",this.onTitleClick_)}get document(){return this.view.element.ownerDocument}importState(H){return N(H,(h)=>super.importState(h),(h)=>({expanded:h.required.boolean,title:h.optional.string}),(h)=>{return this.foldable.set("expanded",h.expanded),this.props.set("title",h.title),!0})}exportState(){return T(()=>super.exportState(),{expanded:this.foldable.get("expanded"),title:this.props.get("title")})}onTitleClick_(){this.foldable.set("expanded",!this.foldable.get("expanded"))}}var a8=B({id:"folder",type:"blade",accept(H){let h=S(H,(D)=>({title:D.required.string,view:D.required.constant("folder"),expanded:D.optional.boolean}));return h?{params:h}:null},controller(H){return new iH(H.document,{blade:H.blade,expanded:H.params.expanded,props:Y.fromObject({title:H.params.title}),viewProps:H.viewProps})},api(H){if(!(H.controller instanceof iH))return null;return new x0(H.controller,H.pool)}}),e8=K("");function Zh(H,h){return ZH(H,e8(void 0,h))}class t extends Y{constructor(H){var h;super(H);this.onDisabledChange_=this.onDisabledChange_.bind(this),this.onParentChange_=this.onParentChange_.bind(this),this.onParentGlobalDisabledChange_=this.onParentGlobalDisabledChange_.bind(this),[this.globalDisabled_,this.setGlobalDisabled_]=r1(w(this.getGlobalDisabled_())),this.value("disabled").emitter.on("change",this.onDisabledChange_),this.value("parent").emitter.on("change",this.onParentChange_),(h=this.get("parent"))===null||h===void 0||h.globalDisabled.emitter.on("change",this.onParentGlobalDisabledChange_)}static create(H){var h,D,q;let W=H!==null&&H!==void 0?H:{};return new t(Y.createCore({disabled:(h=W.disabled)!==null&&h!==void 0?h:!1,disposed:!1,hidden:(D=W.hidden)!==null&&D!==void 0?D:!1,parent:(q=W.parent)!==null&&q!==void 0?q:null}))}get globalDisabled(){return this.globalDisabled_}bindClassModifiers(H){f(this.globalDisabled_,Zh(H,"disabled")),V(this,"hidden",Zh(H,"hidden"))}bindDisabled(H){f(this.globalDisabled_,(h)=>{H.disabled=h})}bindTabIndex(H){f(this.globalDisabled_,(h)=>{H.tabIndex=h?-1:0})}handleDispose(H){this.value("disposed").emitter.on("change",(h)=>{if(h)H()})}importState(H){this.set("disabled",H.disabled),this.set("hidden",H.hidden)}exportState(){return{disabled:this.get("disabled"),hidden:this.get("hidden")}}getGlobalDisabled_(){let H=this.get("parent");return(H?H.globalDisabled.rawValue:!1)||this.get("disabled")}updateGlobalDisabled_(){this.setGlobalDisabled_(this.getGlobalDisabled_())}onDisabledChange_(){this.updateGlobalDisabled_()}onParentGlobalDisabledChange_(){this.updateGlobalDisabled_()}onParentChange_(H){var h;let D=H.previousRawValue;D===null||D===void 0||D.globalDisabled.emitter.off("change",this.onParentGlobalDisabledChange_),(h=this.get("parent"))===null||h===void 0||h.globalDisabled.emitter.on("change",this.onParentGlobalDisabledChange_),this.updateGlobalDisabled_()}}var Yh=K("tbp");class KD{constructor(H,h){this.element=H.createElement("div"),this.element.classList.add(Yh()),h.viewProps.bindClassModifiers(this.element);let D=H.createElement("div");D.classList.add(Yh("c")),this.element.appendChild(D),this.containerElement=D}}var $H=K("tbi");class FD{constructor(H,h){this.element=H.createElement("div"),this.element.classList.add($H()),h.viewProps.bindClassModifiers(this.element),V(h.props,"selected",(W)=>{if(W)this.element.classList.add($H(void 0,"sel"));else this.element.classList.remove($H(void 0,"sel"))});let D=H.createElement("button");D.classList.add($H("b")),h.viewProps.bindDisabled(D),this.element.appendChild(D),this.buttonElement=D;let q=H.createElement("div");q.classList.add($H("t")),V0(h.props.value("title"),q),this.buttonElement.appendChild(q),this.titleElement=q}}class LD{constructor(H,h){this.emitter=new $,this.onClick_=this.onClick_.bind(this),this.props=h.props,this.viewProps=h.viewProps,this.view=new FD(H,{props:h.props,viewProps:h.viewProps}),this.view.buttonElement.addEventListener("click",this.onClick_)}onClick_(){this.emitter.emit("click",{sender:this})}}class sH extends lH{constructor(H,h){let D=new KD(H,{viewProps:h.viewProps});super(Object.assign(Object.assign({},h),{rackController:new rH({blade:h.blade,element:D.containerElement,viewProps:h.viewProps}),view:D}));this.onItemClick_=this.onItemClick_.bind(this),this.ic_=new LD(H,{props:h.itemProps,viewProps:t.create()}),this.ic_.emitter.on("click",this.onItemClick_),this.props=h.props,V(this.props,"selected",(q)=>{this.itemController.props.set("selected",q),this.viewProps.set("hidden",!q)})}get itemController(){return this.ic_}importState(H){return N(H,(h)=>super.importState(h),(h)=>({selected:h.required.boolean,title:h.required.string}),(h)=>{return this.ic_.props.set("selected",h.selected),this.ic_.props.set("title",h.title),!0})}exportState(){return T(()=>super.exportState(),{selected:this.ic_.props.get("selected"),title:this.ic_.props.get("title")})}onItemClick_(){this.props.set("selected",!0)}}class OD extends cH{constructor(H,h){super(H,h);this.emitter_=new $,this.onSelect_=this.onSelect_.bind(this),this.pool_=h,this.rackApi_.on("change",(D)=>{this.emitter_.emit("change",D)}),this.controller.tab.selectedIndex.emitter.on("change",this.onSelect_)}get pages(){return this.rackApi_.children}addPage(H){let h=this.controller.view.element.ownerDocument,D=new sH(h,{blade:GH(),itemProps:Y.fromObject({selected:!1,title:H.title}),props:Y.fromObject({selected:!1}),viewProps:t.create()}),q=this.pool_.createApi(D);return this.rackApi_.add(q,H.index)}removePage(H){this.rackApi_.remove(this.rackApi_.children[H])}on(H,h){let D=h.bind(this);return this.emitter_.on(H,(q)=>{D(q)},{key:h}),this}off(H,h){return this.emitter_.off(H,h),this}onSelect_(H){this.emitter_.emit("select",new ch(this,H.rawValue))}}class wD extends cH{get title(){var H;return(H=this.controller.itemController.props.get("title"))!==null&&H!==void 0?H:""}set title(H){this.controller.itemController.props.set("title",H)}get selected(){return this.controller.props.get("selected")}set selected(H){this.controller.props.set("selected",H)}get children(){return this.rackApi_.children}addButton(H){return this.rackApi_.addButton(H)}addFolder(H){return this.rackApi_.addFolder(H)}addTab(H){return this.rackApi_.addTab(H)}add(H,h){this.rackApi_.add(H,h)}remove(H){this.rackApi_.remove(H)}addBinding(H,h,D){return this.rackApi_.addBinding(H,h,D)}addBlade(H){return this.rackApi_.addBlade(H)}}var Gh=-1;class SD{constructor(){this.onItemSelectedChange_=this.onItemSelectedChange_.bind(this),this.empty=w(!0),this.selectedIndex=w(Gh),this.items_=[]}add(H,h){let D=h!==null&&h!==void 0?h:this.items_.length;this.items_.splice(D,0,H),H.emitter.on("change",this.onItemSelectedChange_),this.keepSelection_()}remove(H){let h=this.items_.indexOf(H);if(h<0)return;this.items_.splice(h,1),H.emitter.off("change",this.onItemSelectedChange_),this.keepSelection_()}keepSelection_(){if(this.items_.length===0){this.selectedIndex.rawValue=Gh,this.empty.rawValue=!0;return}let H=this.items_.findIndex((h)=>h.rawValue);if(H<0)this.items_.forEach((h,D)=>{h.rawValue=D===0}),this.selectedIndex.rawValue=0;else this.items_.forEach((h,D)=>{h.rawValue=D===H}),this.selectedIndex.rawValue=H;this.empty.rawValue=!1}onItemSelectedChange_(H){if(H.rawValue){let h=this.items_.findIndex((D)=>D===H.sender);this.items_.forEach((D,q)=>{D.rawValue=q===h}),this.selectedIndex.rawValue=h}else this.keepSelection_()}}var IH=K("tab");class yD{constructor(H,h){this.element=H.createElement("div"),this.element.classList.add(IH(),YD()),h.viewProps.bindClassModifiers(this.element),f(h.empty,ZH(this.element,IH(void 0,"nop")));let D=H.createElement("div");D.classList.add(IH("t")),this.element.appendChild(D),this.itemsElement=D;let q=H.createElement("div");q.classList.add(IH("i")),this.element.appendChild(q);let W=H.createElement("div");W.classList.add(IH("c")),this.element.appendChild(W),this.contentsElement=W}}class S0 extends lH{constructor(H,h){let D=new SD,q=new yD(H,{empty:D.empty,viewProps:h.viewProps});super({blade:h.blade,rackController:new rH({blade:h.blade,element:q.contentsElement,viewProps:h.viewProps}),view:q});this.onRackAdd_=this.onRackAdd_.bind(this),this.onRackRemove_=this.onRackRemove_.bind(this);let W=this.rackController.rack;W.emitter.on("add",this.onRackAdd_),W.emitter.on("remove",this.onRackRemove_),this.tab=D}add(H,h){this.rackController.rack.add(H,h)}remove(H){this.rackController.rack.remove(this.rackController.rack.children[H])}onRackAdd_(H){if(!H.root)return;let h=H.bladeController;ah(this.view.itemsElement,h.itemController.view.element,H.index),h.itemController.viewProps.set("parent",this.viewProps),this.tab.add(h.props.value("selected"))}onRackRemove_(H){if(!H.root)return;let h=H.bladeController;T0(h.itemController.view.element),h.itemController.viewProps.set("parent",null),this.tab.remove(h.props.value("selected"))}}var $D=B({id:"tab",type:"blade",accept(H){let h=S(H,(D)=>({pages:D.required.array(D.required.object({title:D.required.string})),view:D.required.constant("tab")}));if(!h||h.pages.length===0)return null;return{params:h}},controller(H){let h=new S0(H.document,{blade:H.blade,viewProps:H.viewProps});return H.params.pages.forEach((D)=>{let q=new sH(H.document,{blade:GH(),itemProps:Y.fromObject({selected:!1,title:D.title}),props:Y.fromObject({selected:!1}),viewProps:t.create()});h.add(q)}),h},api(H){if(H.controller instanceof S0)return new OD(H.controller,H.pool);if(H.controller instanceof sH)return new wD(H.controller,H.pool);return null}});function Hq(H,h){let D=H.accept(h.params);if(!D)return null;let q=S(h.params,(W)=>({disabled:W.optional.boolean,hidden:W.optional.boolean}));return H.controller({blade:GH(),document:h.document,params:R(Object.assign(Object.assign({},D.params),{disabled:q===null||q===void 0?void 0:q.disabled,hidden:q===null||q===void 0?void 0:q.hidden})),viewProps:t.create({disabled:q===null||q===void 0?void 0:q.disabled,hidden:q===null||q===void 0?void 0:q.hidden})})}class oH extends JH{get options(){return this.controller.valueController.props.get("options")}set options(H){this.controller.valueController.props.set("options",H)}}class ID{constructor(){this.disabled=!1,this.emitter=new $}dispose(){}tick(){if(this.disabled)return;this.emitter.emit("tick",{sender:this})}}class MD{constructor(H,h){this.disabled_=!1,this.timerId_=null,this.onTick_=this.onTick_.bind(this),this.doc_=H,this.emitter=new $,this.interval_=h,this.setTimer_()}get disabled(){return this.disabled_}set disabled(H){if(this.disabled_=H,this.disabled_)this.clearTimer_();else this.setTimer_()}dispose(){this.clearTimer_()}clearTimer_(){if(this.timerId_===null)return;let H=this.doc_.defaultView;if(H)H.clearInterval(this.timerId_);this.timerId_=null}setTimer_(){if(this.clearTimer_(),this.interval_<=0)return;let H=this.doc_.defaultView;if(H)this.timerId_=H.setInterval(this.onTick_,this.interval_)}onTick_(){if(this.disabled_)return;this.emitter.emit("tick",{sender:this})}}class KH{constructor(H){this.constraints=H}constrain(H){return this.constraints.reduce((h,D)=>{return D.constrain(h)},H)}}function nH(H,h){if(H instanceof h)return H;if(H instanceof KH){let D=H.constraints.reduce((q,W)=>{if(q)return q;return W instanceof h?W:null},null);if(D)return D}return null}class FH{constructor(H){this.values=Y.fromObject({options:H})}constrain(H){let h=this.values.get("options");if(h.length===0)return H;return h.filter((q)=>{return q.value===H}).length>0?H:h[0].value}}function CH(H){var h;let D=L0;if(Array.isArray(H))return(h=S({items:H},(q)=>({items:q.required.array(q.required.object({text:q.required.string,value:q.required.raw}))})))===null||h===void 0?void 0:h.items;if(typeof H==="object")return D.required.raw(H).value;return}function b0(H){if(Array.isArray(H))return H;let h=[];return Object.keys(H).forEach((D)=>{h.push({text:D,value:H[D]})}),h}function f0(H){return!O(H)?new FH(b0(R(H))):null}var U0=K("lst");class BD{constructor(H,h){this.onValueChange_=this.onValueChange_.bind(this),this.props_=h.props,this.element=H.createElement("div"),this.element.classList.add(U0()),h.viewProps.bindClassModifiers(this.element);let D=H.createElement("select");D.classList.add(U0("s")),h.viewProps.bindDisabled(D),this.element.appendChild(D),this.selectElement=D;let q=H.createElement("div");q.classList.add(U0("m")),q.appendChild(pH(H,"dropdown")),this.element.appendChild(q),h.value.emitter.on("change",this.onValueChange_),this.value_=h.value,V(this.props_,"options",(W)=>{eh(this.selectElement),W.forEach((J)=>{let Q=H.createElement("option");Q.textContent=J.text,this.selectElement.appendChild(Q)}),this.update_()})}update_(){let H=this.props_.get("options").map((h)=>h.value);this.selectElement.selectedIndex=H.indexOf(this.value_.rawValue)}onValueChange_(){this.update_()}}class v{constructor(H,h){this.onSelectChange_=this.onSelectChange_.bind(this),this.props=h.props,this.value=h.value,this.viewProps=h.viewProps,this.view=new BD(H,{props:this.props,value:this.value,viewProps:this.viewProps}),this.view.selectElement.addEventListener("change",this.onSelectChange_)}onSelectChange_(H){let h=R(H.currentTarget);this.value.rawValue=this.props.get("options")[h.selectedIndex].value}importProps(H){return N(H,null,(h)=>({options:h.required.custom(CH)}),(h)=>{return this.props.set("options",b0(h.options)),!0})}exportProps(){return T(null,{options:this.props.get("options")})}}var Kh=K("pop");class AD{constructor(H,h){this.element=H.createElement("div"),this.element.classList.add(Kh()),h.viewProps.bindClassModifiers(this.element),f(h.shows,ZH(this.element,Kh(void 0,"v")))}}class d0{constructor(H,h){this.shows=w(!1),this.viewProps=h.viewProps,this.view=new AD(H,{shows:this.shows,viewProps:this.viewProps})}}var Fh=K("txt");class jD{constructor(H,h){this.onChange_=this.onChange_.bind(this),this.element=H.createElement("div"),this.element.classList.add(Fh()),h.viewProps.bindClassModifiers(this.element),this.props_=h.props,this.props_.emitter.on("change",this.onChange_);let D=H.createElement("input");D.classList.add(Fh("i")),D.type="text",h.viewProps.bindDisabled(D),this.element.appendChild(D),this.inputElement=D,h.value.emitter.on("change",this.onChange_),this.value_=h.value,this.refresh()}refresh(){let H=this.props_.get("formatter");this.inputElement.value=H(this.value_.rawValue)}onChange_(){this.refresh()}}class QH{constructor(H,h){this.onInputChange_=this.onInputChange_.bind(this),this.parser_=h.parser,this.props=h.props,this.value=h.value,this.viewProps=h.viewProps,this.view=new jD(H,{props:h.props,value:this.value,viewProps:this.viewProps}),this.view.inputElement.addEventListener("change",this.onInputChange_)}onInputChange_(H){let D=R(H.currentTarget).value,q=this.parser_(D);if(!O(q))this.value.rawValue=q;this.view.refresh()}}function hq(H){return String(H)}function RD(H){if(H==="false")return!1;return!!H}function Lh(H){return hq(H)}function Dq(H){return(h)=>{return H.reduce((D,q)=>{if(D!==null)return D;return q(h)},null)}}var qq=j(0);function gH(H){return qq(H)+"%"}function ND(H){return String(H)}function y0(H){return H}function LH({primary:H,secondary:h,forward:D,backward:q}){let W=!1;function J(Q){if(W)return;W=!0,Q(),W=!1}H.emitter.on("change",(Q)=>{J(()=>{h.setRawValue(D(H.rawValue,h.rawValue),Q.options)})}),h.emitter.on("change",(Q)=>{J(()=>{H.setRawValue(q(H.rawValue,h.rawValue),Q.options)}),J(()=>{h.setRawValue(D(H.rawValue,h.rawValue),Q.options)})}),J(()=>{h.setRawValue(D(H.rawValue,h.rawValue),{forceEmit:!1,last:!0})})}function A(H,h){let D=H*(h.altKey?0.1:1)*(h.shiftKey?10:1);if(h.upKey)return+D;else if(h.downKey)return-D;return 0}function jH(H){return{altKey:H.altKey,downKey:H.key==="ArrowDown",shiftKey:H.shiftKey,upKey:H.key==="ArrowUp"}}function m(H){return{altKey:H.altKey,downKey:H.key==="ArrowLeft",shiftKey:H.shiftKey,upKey:H.key==="ArrowRight"}}function Wq(H){return H==="ArrowUp"||H==="ArrowDown"}function TD(H){return Wq(H)||H==="ArrowLeft"||H==="ArrowRight"}function X0(H,h){var D,q;let W=h.ownerDocument.defaultView,J=h.getBoundingClientRect();return{x:H.pageX-(((D=W&&W.scrollX)!==null&&D!==void 0?D:0)+J.left),y:H.pageY-(((q=W&&W.scrollY)!==null&&q!==void 0?q:0)+J.top)}}class l{constructor(H){this.lastTouch_=null,this.onDocumentMouseMove_=this.onDocumentMouseMove_.bind(this),this.onDocumentMouseUp_=this.onDocumentMouseUp_.bind(this),this.onMouseDown_=this.onMouseDown_.bind(this),this.onTouchEnd_=this.onTouchEnd_.bind(this),this.onTouchMove_=this.onTouchMove_.bind(this),this.onTouchStart_=this.onTouchStart_.bind(this),this.elem_=H,this.emitter=new $,H.addEventListener("touchstart",this.onTouchStart_,{passive:!1}),H.addEventListener("touchmove",this.onTouchMove_,{passive:!0}),H.addEventListener("touchend",this.onTouchEnd_),H.addEventListener("mousedown",this.onMouseDown_)}computePosition_(H){let h=this.elem_.getBoundingClientRect();return{bounds:{width:h.width,height:h.height},point:H?{x:H.x,y:H.y}:null}}onMouseDown_(H){var h;H.preventDefault(),(h=H.currentTarget)===null||h===void 0||h.focus();let D=this.elem_.ownerDocument;D.addEventListener("mousemove",this.onDocumentMouseMove_),D.addEventListener("mouseup",this.onDocumentMouseUp_),this.emitter.emit("down",{altKey:H.altKey,data:this.computePosition_(X0(H,this.elem_)),sender:this,shiftKey:H.shiftKey})}onDocumentMouseMove_(H){this.emitter.emit("move",{altKey:H.altKey,data:this.computePosition_(X0(H,this.elem_)),sender:this,shiftKey:H.shiftKey})}onDocumentMouseUp_(H){let h=this.elem_.ownerDocument;h.removeEventListener("mousemove",this.onDocumentMouseMove_),h.removeEventListener("mouseup",this.onDocumentMouseUp_),this.emitter.emit("up",{altKey:H.altKey,data:this.computePosition_(X0(H,this.elem_)),sender:this,shiftKey:H.shiftKey})}onTouchStart_(H){H.preventDefault();let h=H.targetTouches.item(0),D=this.elem_.getBoundingClientRect();this.emitter.emit("down",{altKey:H.altKey,data:this.computePosition_(h?{x:h.clientX-D.left,y:h.clientY-D.top}:void 0),sender:this,shiftKey:H.shiftKey}),this.lastTouch_=h}onTouchMove_(H){let h=H.targetTouches.item(0),D=this.elem_.getBoundingClientRect();this.emitter.emit("move",{altKey:H.altKey,data:this.computePosition_(h?{x:h.clientX-D.left,y:h.clientY-D.top}:void 0),sender:this,shiftKey:H.shiftKey}),this.lastTouch_=h}onTouchEnd_(H){var h;let D=(h=H.targetTouches.item(0))!==null&&h!==void 0?h:this.lastTouch_,q=this.elem_.getBoundingClientRect();this.emitter.emit("up",{altKey:H.altKey,data:this.computePosition_(D?{x:D.clientX-q.left,y:D.clientY-q.top}:void 0),sender:this,shiftKey:H.shiftKey})}}var k=K("txt");class kD{constructor(H,h){if(this.onChange_=this.onChange_.bind(this),this.props_=h.props,this.props_.emitter.on("change",this.onChange_),this.element=H.createElement("div"),this.element.classList.add(k(),k(void 0,"num")),h.arrayPosition)this.element.classList.add(k(void 0,h.arrayPosition));h.viewProps.bindClassModifiers(this.element);let D=H.createElement("input");D.classList.add(k("i")),D.type="text",h.viewProps.bindDisabled(D),this.element.appendChild(D),this.inputElement=D,this.onDraggingChange_=this.onDraggingChange_.bind(this),this.dragging_=h.dragging,this.dragging_.emitter.on("change",this.onDraggingChange_),this.element.classList.add(k()),this.inputElement.classList.add(k("i"));let q=H.createElement("div");q.classList.add(k("k")),this.element.appendChild(q),this.knobElement=q;let W=H.createElementNS(C,"svg");W.classList.add(k("g")),this.knobElement.appendChild(W);let J=H.createElementNS(C,"path");J.classList.add(k("gb")),W.appendChild(J),this.guideBodyElem_=J;let Q=H.createElementNS(C,"path");Q.classList.add(k("gh")),W.appendChild(Q),this.guideHeadElem_=Q;let U=H.createElement("div");U.classList.add(K("tt")()),this.knobElement.appendChild(U),this.tooltipElem_=U,h.value.emitter.on("change",this.onChange_),this.value=h.value,this.refresh()}onDraggingChange_(H){if(H.rawValue===null){this.element.classList.remove(k(void 0,"drg"));return}this.element.classList.add(k(void 0,"drg"));let h=H.rawValue/this.props_.get("pointerScale"),D=h+(h>0?-1:h<0?1:0),q=I(-D,-4,4);this.guideHeadElem_.setAttributeNS(null,"d",[`M ${D+q},0 L${D},4 L${D+q},8`,`M ${h},-1 L${h},9`].join(" ")),this.guideBodyElem_.setAttributeNS(null,"d",`M 0,4 L${h},4`);let W=this.props_.get("formatter");this.tooltipElem_.textContent=W(this.value.rawValue),this.tooltipElem_.style.left=`${h}px`}refresh(){let H=this.props_.get("formatter");this.inputElement.value=H(this.value.rawValue)}onChange_(){this.refresh()}}class OH{constructor(H,h){var D;this.originRawValue_=0,this.onInputChange_=this.onInputChange_.bind(this),this.onInputKeyDown_=this.onInputKeyDown_.bind(this),this.onInputKeyUp_=this.onInputKeyUp_.bind(this),this.onPointerDown_=this.onPointerDown_.bind(this),this.onPointerMove_=this.onPointerMove_.bind(this),this.onPointerUp_=this.onPointerUp_.bind(this),this.parser_=h.parser,this.props=h.props,this.sliderProps_=(D=h.sliderProps)!==null&&D!==void 0?D:null,this.value=h.value,this.viewProps=h.viewProps,this.dragging_=w(null),this.view=new kD(H,{arrayPosition:h.arrayPosition,dragging:this.dragging_,props:this.props,value:this.value,viewProps:this.viewProps}),this.view.inputElement.addEventListener("change",this.onInputChange_),this.view.inputElement.addEventListener("keydown",this.onInputKeyDown_),this.view.inputElement.addEventListener("keyup",this.onInputKeyUp_);let q=new l(this.view.knobElement);q.emitter.on("down",this.onPointerDown_),q.emitter.on("move",this.onPointerMove_),q.emitter.on("up",this.onPointerUp_)}constrainValue_(H){var h,D;let q=(h=this.sliderProps_)===null||h===void 0?void 0:h.get("min"),W=(D=this.sliderProps_)===null||D===void 0?void 0:D.get("max"),J=H;if(q!==void 0)J=Math.max(J,q);if(W!==void 0)J=Math.min(J,W);return J}onInputChange_(H){let D=R(H.currentTarget).value,q=this.parser_(D);if(!O(q))this.value.rawValue=this.constrainValue_(q);this.view.refresh()}onInputKeyDown_(H){let h=A(this.props.get("keyScale"),jH(H));if(h===0)return;this.value.setRawValue(this.constrainValue_(this.value.rawValue+h),{forceEmit:!1,last:!1})}onInputKeyUp_(H){if(A(this.props.get("keyScale"),jH(H))===0)return;this.value.setRawValue(this.value.rawValue,{forceEmit:!0,last:!0})}onPointerDown_(){this.originRawValue_=this.value.rawValue,this.dragging_.rawValue=0}computeDraggingValue_(H){if(!H.point)return null;let h=H.point.x-H.bounds.width/2;return this.constrainValue_(this.originRawValue_+h*this.props.get("pointerScale"))}onPointerMove_(H){let h=this.computeDraggingValue_(H.data);if(h===null)return;this.value.setRawValue(h,{forceEmit:!1,last:!1}),this.dragging_.rawValue=this.value.rawValue-this.originRawValue_}onPointerUp_(H){let h=this.computeDraggingValue_(H.data);if(h===null)return;this.value.setRawValue(h,{forceEmit:!0,last:!0}),this.dragging_.rawValue=null}}var z0=K("sld");class PD{constructor(H,h){this.onChange_=this.onChange_.bind(this),this.props_=h.props,this.props_.emitter.on("change",this.onChange_),this.element=H.createElement("div"),this.element.classList.add(z0()),h.viewProps.bindClassModifiers(this.element);let D=H.createElement("div");D.classList.add(z0("t")),h.viewProps.bindTabIndex(D),this.element.appendChild(D),this.trackElement=D;let q=H.createElement("div");q.classList.add(z0("k")),this.trackElement.appendChild(q),this.knobElement=q,h.value.emitter.on("change",this.onChange_),this.value=h.value,this.update_()}update_(){let H=I(L(this.value.rawValue,this.props_.get("min"),this.props_.get("max"),0,100),0,100);this.knobElement.style.width=`${H}%`}onChange_(){this.update_()}}class CD{constructor(H,h){this.onKeyDown_=this.onKeyDown_.bind(this),this.onKeyUp_=this.onKeyUp_.bind(this),this.onPointerDownOrMove_=this.onPointerDownOrMove_.bind(this),this.onPointerUp_=this.onPointerUp_.bind(this),this.value=h.value,this.viewProps=h.viewProps,this.props=h.props,this.view=new PD(H,{props:this.props,value:this.value,viewProps:this.viewProps}),this.ptHandler_=new l(this.view.trackElement),this.ptHandler_.emitter.on("down",this.onPointerDownOrMove_),this.ptHandler_.emitter.on("move",this.onPointerDownOrMove_),this.ptHandler_.emitter.on("up",this.onPointerUp_),this.view.trackElement.addEventListener("keydown",this.onKeyDown_),this.view.trackElement.addEventListener("keyup",this.onKeyUp_)}handlePointerEvent_(H,h){if(!H.point)return;this.value.setRawValue(L(I(H.point.x,0,H.bounds.width),0,H.bounds.width,this.props.get("min"),this.props.get("max")),h)}onPointerDownOrMove_(H){this.handlePointerEvent_(H.data,{forceEmit:!1,last:!1})}onPointerUp_(H){this.handlePointerEvent_(H.data,{forceEmit:!0,last:!0})}onKeyDown_(H){let h=A(this.props.get("keyScale"),m(H));if(h===0)return;this.value.setRawValue(this.value.rawValue+h,{forceEmit:!1,last:!1})}onKeyUp_(H){if(A(this.props.get("keyScale"),m(H))===0)return;this.value.setRawValue(this.value.rawValue,{forceEmit:!0,last:!0})}}var Z0=K("sldtxt");class VD{constructor(H,h){this.element=H.createElement("div"),this.element.classList.add(Z0());let D=H.createElement("div");D.classList.add(Z0("s")),this.sliderView_=h.sliderView,D.appendChild(this.sliderView_.element),this.element.appendChild(D);let q=H.createElement("div");q.classList.add(Z0("t")),this.textView_=h.textView,q.appendChild(this.textView_.element),this.element.appendChild(q)}}class RH{constructor(H,h){this.value=h.value,this.viewProps=h.viewProps,this.sliderC_=new CD(H,{props:h.sliderProps,value:h.value,viewProps:this.viewProps}),this.textC_=new OH(H,{parser:h.parser,props:h.textProps,sliderProps:h.sliderProps,value:h.value,viewProps:h.viewProps}),this.view=new VD(H,{sliderView:this.sliderC_.view,textView:this.textC_.view})}get sliderController(){return this.sliderC_}get textController(){return this.textC_}importProps(H){return N(H,null,(h)=>({max:h.required.number,min:h.required.number}),(h)=>{let D=this.sliderC_.props;return D.set("max",h.max),D.set("min",h.min),!0})}exportProps(){let H=this.sliderC_.props;return T(null,{max:H.get("max"),min:H.get("min")})}}function ED(H){return{sliderProps:new Y({keyScale:H.keyScale,max:H.max,min:H.min}),textProps:new Y({formatter:w(H.formatter),keyScale:H.keyScale,pointerScale:w(H.pointerScale)})}}var Jq={containerUnitSize:"cnt-usz"};function _D(H){return`--${Jq[H]}`}function NH(H){return gh(H)}function g(H){if(!F0(H))return;return S(H,NH)}function b(H,h){if(!H)return;let D=[],q=ih(H,h);if(q)D.push(q);let W=sh(H);if(W)D.push(W);return new KH(D)}function Qq(H){if(!H)return!1;return H.major===YH.major}function xD(H){if(H==="inline"||H==="popup")return H;return}function VH(H,h){H.write(h)}var dH=K("ckb");class bD{constructor(H,h){this.onValueChange_=this.onValueChange_.bind(this),this.element=H.createElement("div"),this.element.classList.add(dH()),h.viewProps.bindClassModifiers(this.element);let D=H.createElement("label");D.classList.add(dH("l")),this.element.appendChild(D),this.labelElement=D;let q=H.createElement("input");q.classList.add(dH("i")),q.type="checkbox",this.labelElement.appendChild(q),this.inputElement=q,h.viewProps.bindDisabled(this.inputElement);let W=H.createElement("div");W.classList.add(dH("w")),this.labelElement.appendChild(W);let J=pH(H,"check");W.appendChild(J),h.value.emitter.on("change",this.onValueChange_),this.value=h.value,this.update_()}update_(){this.inputElement.checked=this.value.rawValue}onValueChange_(){this.update_()}}class fD{constructor(H,h){this.onInputChange_=this.onInputChange_.bind(this),this.onLabelMouseDown_=this.onLabelMouseDown_.bind(this),this.value=h.value,this.viewProps=h.viewProps,this.view=new bD(H,{value:this.value,viewProps:this.viewProps}),this.view.inputElement.addEventListener("change",this.onInputChange_),this.view.labelElement.addEventListener("mousedown",this.onLabelMouseDown_)}onInputChange_(H){let h=R(H.currentTarget);this.value.rawValue=h.checked,H.preventDefault(),H.stopPropagation()}onLabelMouseDown_(H){H.preventDefault()}}function Uq(H){let h=[],D=f0(H.options);if(D)h.push(D);return new KH(h)}var Xq=B({id:"input-bool",type:"input",accept:(H,h)=>{if(typeof H!=="boolean")return null;let D=S(h,(q)=>({options:q.optional.custom(CH),readonly:q.optional.constant(!1)}));return D?{initialValue:H,params:D}:null},binding:{reader:(H)=>RD,constraint:(H)=>Uq(H.params),writer:(H)=>VH},controller:(H)=>{let{document:h,value:D,constraint:q}=H,W=q&&nH(q,FH);if(W)return new v(h,{props:new Y({options:W.values.value("options")}),value:D,viewProps:H.viewProps});return new fD(h,{value:D,viewProps:H.viewProps})},api(H){if(typeof H.controller.value.rawValue!=="boolean")return null;if(H.controller.valueController instanceof v)return new oH(H.controller);return null}}),r=K("col");class dD{constructor(H,h){this.element=H.createElement("div"),this.element.classList.add(r()),h.foldable.bindExpandedClass(this.element,r(void 0,"expanded")),V(h.foldable,"completed",ZH(this.element,r(void 0,"cpl")));let D=H.createElement("div");D.classList.add(r("h")),this.element.appendChild(D);let q=H.createElement("div");q.classList.add(r("s")),D.appendChild(q),this.swatchElement=q;let W=H.createElement("div");if(W.classList.add(r("t")),D.appendChild(W),this.textElement=W,h.pickerLayout==="inline"){let J=H.createElement("div");J.classList.add(r("p")),this.element.appendChild(J),this.pickerElement=J}else this.pickerElement=null}}function zq(H,h,D){let q=I(H/255,0,1),W=I(h/255,0,1),J=I(D/255,0,1),Q=Math.max(q,W,J),U=Math.min(q,W,J),Z=Q-U,X=0,z=0,G=(U+Q)/2;if(Z!==0){if(z=Z/(1-Math.abs(Q+U-1)),q===Q)X=(W-J)/Z;else if(W===Q)X=2+(J-q)/Z;else X=4+(q-W)/Z;X=X/6+(X<0?1:0)}return[X*360,z*100,G*100]}function Zq(H,h,D){let q=(H%360+360)%360,W=I(h/100,0,1),J=I(D/100,0,1),Q=(1-Math.abs(2*J-1))*W,U=Q*(1-Math.abs(q/60%2-1)),Z=J-Q/2,X,z,G;if(q>=0&&q<60)[X,z,G]=[Q,U,0];else if(q>=60&&q<120)[X,z,G]=[U,Q,0];else if(q>=120&&q<180)[X,z,G]=[0,Q,U];else if(q>=180&&q<240)[X,z,G]=[0,U,Q];else if(q>=240&&q<300)[X,z,G]=[U,0,Q];else[X,z,G]=[Q,0,U];return[(X+Z)*255,(z+Z)*255,(G+Z)*255]}function Yq(H,h,D){let q=I(H/255,0,1),W=I(h/255,0,1),J=I(D/255,0,1),Q=Math.max(q,W,J),U=Math.min(q,W,J),Z=Q-U,X;if(Z===0)X=0;else if(Q===q)X=60*(((W-J)/Z%6+6)%6);else if(Q===W)X=60*((J-q)/Z+2);else X=60*((q-W)/Z+4);let z=Q===0?0:Z/Q,G=Q;return[X,z*100,G*100]}function uD(H,h,D){let q=vh(H,360),W=I(h/100,0,1),J=I(D/100,0,1),Q=J*W,U=Q*(1-Math.abs(q/60%2-1)),Z=J-Q,X,z,G;if(q>=0&&q<60)[X,z,G]=[Q,U,0];else if(q>=60&&q<120)[X,z,G]=[U,Q,0];else if(q>=120&&q<180)[X,z,G]=[0,Q,U];else if(q>=180&&q<240)[X,z,G]=[0,U,Q];else if(q>=240&&q<300)[X,z,G]=[U,0,Q];else[X,z,G]=[Q,0,U];return[(X+Z)*255,(z+Z)*255,(G+Z)*255]}function Gq(H,h,D){let q=D+h*(100-Math.abs(2*D-100))/200;return[H,q!==0?h*(100-Math.abs(2*D-100))/q:0,D+h*(100-Math.abs(2*D-100))/200]}function Kq(H,h,D){let q=100-Math.abs(D*(200-h)/100-100);return[H,q!==0?h*D/q:0,D*(200-h)/200]}function E(H){return[H[0],H[1],H[2]]}function aH(H,h){return[H[0],H[1],H[2],h]}var Fq={hsl:{hsl:(H,h,D)=>[H,h,D],hsv:Gq,rgb:Zq},hsv:{hsl:Kq,hsv:(H,h,D)=>[H,h,D],rgb:uD},rgb:{hsl:zq,hsv:Yq,rgb:(H,h,D)=>[H,h,D]}};function UH(H,h){return[h==="float"?1:H==="rgb"?255:360,h==="float"?1:H==="rgb"?255:100,h==="float"?1:H==="rgb"?255:100]}function Lq(H,h){return H===h?h:vh(H,h)}function vD(H,h,D){var q;let W=UH(h,D);return[h==="rgb"?I(H[0],0,W[0]):Lq(H[0],W[0]),I(H[1],0,W[1]),I(H[2],0,W[2]),I((q=H[3])!==null&&q!==void 0?q:1,0,1)]}function Oh(H,h,D,q){let W=UH(h,D),J=UH(h,q);return H.map((Q,U)=>Q/W[U]*J[U])}function mD(H,h,D){let q=Oh(H,h.mode,h.type,"int"),W=Fq[h.mode][D.mode](...q);return Oh(W,D.mode,"int",D.type)}class F{static black(){return new F([0,0,0],"rgb")}constructor(H,h){this.type="int",this.mode=h,this.comps_=vD(H,h,this.type)}getComponents(H){return aH(mD(E(this.comps_),{mode:this.mode,type:this.type},{mode:H!==null&&H!==void 0?H:this.mode,type:this.type}),this.comps_[3])}toRgbaObject(){let H=this.getComponents("rgb");return{r:H[0],g:H[1],b:H[2],a:H[3]}}}var i=K("colp");class tD{constructor(H,h){this.alphaViews_=null,this.element=H.createElement("div"),this.element.classList.add(i()),h.viewProps.bindClassModifiers(this.element);let D=H.createElement("div");D.classList.add(i("hsv"));let q=H.createElement("div");q.classList.add(i("sv")),this.svPaletteView_=h.svPaletteView,q.appendChild(this.svPaletteView_.element),D.appendChild(q);let W=H.createElement("div");W.classList.add(i("h")),this.hPaletteView_=h.hPaletteView,W.appendChild(this.hPaletteView_.element),D.appendChild(W),this.element.appendChild(D);let J=H.createElement("div");if(J.classList.add(i("rgb")),this.textsView_=h.textsView,J.appendChild(this.textsView_.element),this.element.appendChild(J),h.alphaViews){this.alphaViews_={palette:h.alphaViews.palette,text:h.alphaViews.text};let Q=H.createElement("div");Q.classList.add(i("a"));let U=H.createElement("div");U.classList.add(i("ap")),U.appendChild(this.alphaViews_.palette.element),Q.appendChild(U);let Z=H.createElement("div");Z.classList.add(i("at")),Z.appendChild(this.alphaViews_.text.element),Q.appendChild(Z),this.element.appendChild(Q)}}get allFocusableElements(){let H=[this.svPaletteView_.element,this.hPaletteView_.element,this.textsView_.modeSelectElement,...this.textsView_.inputViews.map((h)=>h.inputElement)];if(this.alphaViews_)H.push(this.alphaViews_.palette.element,this.alphaViews_.text.inputElement);return H}}function Oq(H){return H==="int"?"int":H==="float"?"float":void 0}function u0(H){return S(H,(h)=>({color:h.optional.object({alpha:h.optional.boolean,type:h.optional.custom(Oq)}),expanded:h.optional.boolean,picker:h.optional.custom(xD),readonly:h.optional.constant(!1)}))}function hH(H){return H?0.1:1}function iD(H){var h;return(h=H.color)===null||h===void 0?void 0:h.type}class eH{constructor(H,h){this.type="float",this.mode=h,this.comps_=vD(H,h,this.type)}getComponents(H){return aH(mD(E(this.comps_),{mode:this.mode,type:this.type},{mode:H!==null&&H!==void 0?H:this.mode,type:this.type}),this.comps_[3])}toRgbaObject(){let H=this.getComponents("rgb");return{r:H[0],g:H[1],b:H[2],a:H[3]}}}var wq={int:(H,h)=>new F(H,h),float:(H,h)=>new eH(H,h)};function v0(H,h,D){return wq[D](H,h)}function Sq(H){return H.type==="float"}function yq(H){return H.type==="int"}function $q(H){let h=H.getComponents(),D=UH(H.mode,"int");return new F([Math.round(L(h[0],0,1,0,D[0])),Math.round(L(h[1],0,1,0,D[1])),Math.round(L(h[2],0,1,0,D[2])),h[3]],H.mode)}function Iq(H){let h=H.getComponents(),D=UH(H.mode,"int");return new eH([L(h[0],0,D[0],0,1),L(h[1],0,D[1],0,1),L(h[2],0,D[2],0,1),h[3]],H.mode)}function M(H,h){if(H.type===h)return H;if(yq(H)&&h==="float")return Iq(H);if(Sq(H)&&h==="int")return $q(H);throw y.shouldNeverHappen()}function Mq(H,h){return H.alpha===h.alpha&&H.mode===h.mode&&H.notation===h.notation&&H.type===h.type}function P(H,h){let D=H.match(/^(.+)%$/);if(!D)return Math.min(parseFloat(H),h);return Math.min(parseFloat(D[1])*0.01*h,h)}var Bq={deg:(H)=>H,grad:(H)=>H*360/400,rad:(H)=>H*360/(2*Math.PI),turn:(H)=>H*360};function sD(H){let h=H.match(/^([0-9.]+?)(deg|grad|rad|turn)$/);if(!h)return parseFloat(H);let D=parseFloat(h[1]),q=h[2];return Bq[q](D)}function nD(H){let h=H.match(/^rgb\(\s*([0-9A-Fa-f.]+%?)\s*,\s*([0-9A-Fa-f.]+%?)\s*,\s*([0-9A-Fa-f.]+%?)\s*\)$/);if(!h)return null;let D=[P(h[1],255),P(h[2],255),P(h[3],255)];if(isNaN(D[0])||isNaN(D[1])||isNaN(D[2]))return null;return D}function Aq(H){let h=nD(H);return h?new F(h,"rgb"):null}function gD(H){let h=H.match(/^rgba\(\s*([0-9A-Fa-f.]+%?)\s*,\s*([0-9A-Fa-f.]+%?)\s*,\s*([0-9A-Fa-f.]+%?)\s*,\s*([0-9A-Fa-f.]+%?)\s*\)$/);if(!h)return null;let D=[P(h[1],255),P(h[2],255),P(h[3],255),P(h[4],1)];if(isNaN(D[0])||isNaN(D[1])||isNaN(D[2])||isNaN(D[3]))return null;return D}function jq(H){let h=gD(H);return h?new F(h,"rgb"):null}function pD(H){let h=H.match(/^hsl\(\s*([0-9A-Fa-f.]+(?:deg|grad|rad|turn)?)\s*,\s*([0-9A-Fa-f.]+%?)\s*,\s*([0-9A-Fa-f.]+%?)\s*\)$/);if(!h)return null;let D=[sD(h[1]),P(h[2],100),P(h[3],100)];if(isNaN(D[0])||isNaN(D[1])||isNaN(D[2]))return null;return D}function Rq(H){let h=pD(H);return h?new F(h,"hsl"):null}function cD(H){let h=H.match(/^hsla\(\s*([0-9A-Fa-f.]+(?:deg|grad|rad|turn)?)\s*,\s*([0-9A-Fa-f.]+%?)\s*,\s*([0-9A-Fa-f.]+%?)\s*,\s*([0-9A-Fa-f.]+%?)\s*\)$/);if(!h)return null;let D=[sD(h[1]),P(h[2],100),P(h[3],100),P(h[4],1)];if(isNaN(D[0])||isNaN(D[1])||isNaN(D[2])||isNaN(D[3]))return null;return D}function Nq(H){let h=cD(H);return h?new F(h,"hsl"):null}function lD(H){let h=H.match(/^#([0-9A-Fa-f])([0-9A-Fa-f])([0-9A-Fa-f])$/);if(h)return[parseInt(h[1]+h[1],16),parseInt(h[2]+h[2],16),parseInt(h[3]+h[3],16)];let D=H.match(/^(?:#|0x)([0-9A-Fa-f]{2})([0-9A-Fa-f]{2})([0-9A-Fa-f]{2})$/);if(D)return[parseInt(D[1],16),parseInt(D[2],16),parseInt(D[3],16)];return null}function Tq(H){let h=lD(H);return h?new F(h,"rgb"):null}function rD(H){let h=H.match(/^#([0-9A-Fa-f])([0-9A-Fa-f])([0-9A-Fa-f])([0-9A-Fa-f])$/);if(h)return[parseInt(h[1]+h[1],16),parseInt(h[2]+h[2],16),parseInt(h[3]+h[3],16),L(parseInt(h[4]+h[4],16),0,255,0,1)];let D=H.match(/^(?:#|0x)?([0-9A-Fa-f]{2})([0-9A-Fa-f]{2})([0-9A-Fa-f]{2})([0-9A-Fa-f]{2})$/);if(D)return[parseInt(D[1],16),parseInt(D[2],16),parseInt(D[3],16),L(parseInt(D[4],16),0,255,0,1)];return null}function kq(H){let h=rD(H);return h?new F(h,"rgb"):null}function oD(H){let h=H.match(/^\{\s*r\s*:\s*([0-9A-Fa-f.]+%?)\s*,\s*g\s*:\s*([0-9A-Fa-f.]+%?)\s*,\s*b\s*:\s*([0-9A-Fa-f.]+%?)\s*\}$/);if(!h)return null;let D=[parseFloat(h[1]),parseFloat(h[2]),parseFloat(h[3])];if(isNaN(D[0])||isNaN(D[1])||isNaN(D[2]))return null;return D}function wh(H){return(h)=>{let D=oD(h);return D?v0(D,"rgb",H):null}}function aD(H){let h=H.match(/^\{\s*r\s*:\s*([0-9A-Fa-f.]+%?)\s*,\s*g\s*:\s*([0-9A-Fa-f.]+%?)\s*,\s*b\s*:\s*([0-9A-Fa-f.]+%?)\s*,\s*a\s*:\s*([0-9A-Fa-f.]+%?)\s*\}$/);if(!h)return null;let D=[parseFloat(h[1]),parseFloat(h[2]),parseFloat(h[3]),parseFloat(h[4])];if(isNaN(D[0])||isNaN(D[1])||isNaN(D[2])||isNaN(D[3]))return null;return D}function Sh(H){return(h)=>{let D=aD(h);return D?v0(D,"rgb",H):null}}var Pq=[{parser:lD,result:{alpha:!1,mode:"rgb",notation:"hex"}},{parser:rD,result:{alpha:!0,mode:"rgb",notation:"hex"}},{parser:nD,result:{alpha:!1,mode:"rgb",notation:"func"}},{parser:gD,result:{alpha:!0,mode:"rgb",notation:"func"}},{parser:pD,result:{alpha:!1,mode:"hsl",notation:"func"}},{parser:cD,result:{alpha:!0,mode:"hsl",notation:"func"}},{parser:oD,result:{alpha:!1,mode:"rgb",notation:"object"}},{parser:aD,result:{alpha:!0,mode:"rgb",notation:"object"}}];function Cq(H){return Pq.reduce((h,{parser:D,result:q})=>{if(h)return h;return D(H)?q:null},null)}function Vq(H,h="int"){let D=Cq(H);if(!D)return null;if(D.notation==="hex"&&h!=="float")return Object.assign(Object.assign({},D),{type:"int"});if(D.notation==="func")return Object.assign(Object.assign({},D),{type:h});return null}function EH(H){let h=[Tq,kq,Aq,jq,Rq,Nq];if(H==="int")h.push(wh("int"),Sh("int"));if(H==="float")h.push(wh("float"),Sh("float"));let D=Dq(h);return(q)=>{let W=D(q);return W?M(W,H):null}}function Eq(H){let h=EH("int");if(typeof H!=="string")return F.black();let D=h(H);return D!==null&&D!==void 0?D:F.black()}function eD(H){let h=I(Math.floor(H),0,255).toString(16);return h.length===1?`0${h}`:h}function m0(H,h="#"){let D=E(H.getComponents("rgb")).map(eD).join("");return`${h}${D}`}function t0(H,h="#"){let D=H.getComponents("rgb"),q=[D[0],D[1],D[2],D[3]*255].map(eD).join("");return`${h}${q}`}function H1(H){let h=j(0),D=M(H,"int");return`rgb(${E(D.getComponents("rgb")).map((W)=>h(W)).join(", ")})`}function uH(H){let h=j(2),D=j(0);return`rgba(${M(H,"int").getComponents("rgb").map((J,Q)=>{return(Q===3?h:D)(J)}).join(", ")})`}function _q(H){let h=[j(0),gH,gH],D=M(H,"int");return`hsl(${E(D.getComponents("hsl")).map((W,J)=>h[J](W)).join(", ")})`}function xq(H){let h=[j(0),gH,gH,j(2)];return`hsla(${M(H,"int").getComponents("hsl").map((W,J)=>h[J](W)).join(", ")})`}function h1(H,h){let D=j(h==="float"?2:0),q=["r","g","b"],W=M(H,h);return`{${E(W.getComponents("rgb")).map((Q,U)=>`${q[U]}: ${D(Q)}`).join(", ")}}`}function bq(H){return(h)=>h1(h,H)}function D1(H,h){let D=j(2),q=j(h==="float"?2:0),W=["r","g","b","a"];return`{${M(H,h).getComponents("rgb").map((U,Z)=>{let X=Z===3?D:q;return`${W[Z]}: ${X(U)}`}).join(", ")}}`}function fq(H){return(h)=>D1(h,H)}var dq=[{format:{alpha:!1,mode:"rgb",notation:"hex",type:"int"},stringifier:m0},{format:{alpha:!0,mode:"rgb",notation:"hex",type:"int"},stringifier:t0},{format:{alpha:!1,mode:"rgb",notation:"func",type:"int"},stringifier:H1},{format:{alpha:!0,mode:"rgb",notation:"func",type:"int"},stringifier:uH},{format:{alpha:!1,mode:"hsl",notation:"func",type:"int"},stringifier:_q},{format:{alpha:!0,mode:"hsl",notation:"func",type:"int"},stringifier:xq},...["int","float"].reduce((H,h)=>{return[...H,{format:{alpha:!1,mode:"rgb",notation:"object",type:h},stringifier:bq(h)},{format:{alpha:!0,mode:"rgb",notation:"object",type:h},stringifier:fq(h)}]},[])];function q1(H){return dq.reduce((h,D)=>{if(h)return h;return Mq(D.format,H)?D.stringifier:null},null)}var MH=K("apl");class W1{constructor(H,h){this.onValueChange_=this.onValueChange_.bind(this),this.value=h.value,this.value.emitter.on("change",this.onValueChange_),this.element=H.createElement("div"),this.element.classList.add(MH()),h.viewProps.bindClassModifiers(this.element),h.viewProps.bindTabIndex(this.element);let D=H.createElement("div");D.classList.add(MH("b")),this.element.appendChild(D);let q=H.createElement("div");q.classList.add(MH("c")),D.appendChild(q),this.colorElem_=q;let W=H.createElement("div");W.classList.add(MH("m")),this.element.appendChild(W),this.markerElem_=W;let J=H.createElement("div");J.classList.add(MH("p")),this.markerElem_.appendChild(J),this.previewElem_=J,this.update_()}update_(){let H=this.value.rawValue,h=H.getComponents("rgb"),D=new F([h[0],h[1],h[2],0],"rgb"),q=new F([h[0],h[1],h[2],255],"rgb"),W=["to right",uH(D),uH(q)];this.colorElem_.style.background=`linear-gradient(${W.join(",")})`,this.previewElem_.style.backgroundColor=uH(H);let J=L(h[3],0,1,0,100);this.markerElem_.style.left=`${J}%`}onValueChange_(){this.update_()}}class J1{constructor(H,h){this.onKeyDown_=this.onKeyDown_.bind(this),this.onKeyUp_=this.onKeyUp_.bind(this),this.onPointerDown_=this.onPointerDown_.bind(this),this.onPointerMove_=this.onPointerMove_.bind(this),this.onPointerUp_=this.onPointerUp_.bind(this),this.value=h.value,this.viewProps=h.viewProps,this.view=new W1(H,{value:this.value,viewProps:this.viewProps}),this.ptHandler_=new l(this.view.element),this.ptHandler_.emitter.on("down",this.onPointerDown_),this.ptHandler_.emitter.on("move",this.onPointerMove_),this.ptHandler_.emitter.on("up",this.onPointerUp_),this.view.element.addEventListener("keydown",this.onKeyDown_),this.view.element.addEventListener("keyup",this.onKeyUp_)}handlePointerEvent_(H,h){if(!H.point)return;let D=H.point.x/H.bounds.width,q=this.value.rawValue,[W,J,Q]=q.getComponents("hsv");this.value.setRawValue(new F([W,J,Q,D],"hsv"),h)}onPointerDown_(H){this.handlePointerEvent_(H.data,{forceEmit:!1,last:!1})}onPointerMove_(H){this.handlePointerEvent_(H.data,{forceEmit:!1,last:!1})}onPointerUp_(H){this.handlePointerEvent_(H.data,{forceEmit:!0,last:!0})}onKeyDown_(H){let h=A(hH(!0),m(H));if(h===0)return;let D=this.value.rawValue,[q,W,J,Q]=D.getComponents("hsv");this.value.setRawValue(new F([q,W,J,Q+h],"hsv"),{forceEmit:!1,last:!1})}onKeyUp_(H){if(A(hH(!0),m(H))===0)return;this.value.setRawValue(this.value.rawValue,{forceEmit:!0,last:!0})}}var qH=K("coltxt");function uq(H){let h=H.createElement("select"),D=[{text:"RGB",value:"rgb"},{text:"HSL",value:"hsl"},{text:"HSV",value:"hsv"},{text:"HEX",value:"hex"}];return h.appendChild(D.reduce((q,W)=>{let J=H.createElement("option");return J.textContent=W.text,J.value=W.value,q.appendChild(J),q},H.createDocumentFragment())),h}class Q1{constructor(H,h){this.element=H.createElement("div"),this.element.classList.add(qH()),h.viewProps.bindClassModifiers(this.element);let D=H.createElement("div");D.classList.add(qH("m")),this.modeElem_=uq(H),this.modeElem_.classList.add(qH("ms")),D.appendChild(this.modeSelectElement),h.viewProps.bindDisabled(this.modeElem_);let q=H.createElement("div");q.classList.add(qH("mm")),q.appendChild(pH(H,"dropdown")),D.appendChild(q),this.element.appendChild(D);let W=H.createElement("div");W.classList.add(qH("w")),this.element.appendChild(W),this.inputsElem_=W,this.inputViews_=h.inputViews,this.applyInputViews_(),f(h.mode,(J)=>{this.modeElem_.value=J})}get modeSelectElement(){return this.modeElem_}get inputViews(){return this.inputViews_}set inputViews(H){this.inputViews_=H,this.applyInputViews_()}applyInputViews_(){eh(this.inputsElem_);let H=this.element.ownerDocument;this.inputViews_.forEach((h)=>{let D=H.createElement("div");D.classList.add(qH("c")),D.appendChild(h.element),this.inputsElem_.appendChild(D)})}}function vq(H){return j(H==="float"?2:0)}function mq(H,h,D){let q=UH(H,h)[D];return new XH({min:0,max:q})}function tq(H,h,D){return new OH(H,{arrayPosition:D===0?"fst":D===2?"lst":"mid",parser:h.parser,props:Y.fromObject({formatter:vq(h.colorType),keyScale:hH(!1),pointerScale:h.colorType==="float"?0.01:1}),value:w(0,{constraint:mq(h.colorMode,h.colorType,D)}),viewProps:h.viewProps})}function iq(H,h){let D={colorMode:h.colorMode,colorType:h.colorType,parser:u,viewProps:h.viewProps};return[0,1,2].map((q)=>{let W=tq(H,D,q);return LH({primary:h.value,secondary:W.value,forward(J){return M(J,h.colorType).getComponents(h.colorMode)[q]},backward(J,Q){let U=h.colorMode,X=M(J,h.colorType).getComponents(U);X[q]=Q;let z=v0(aH(E(X),X[3]),U,h.colorType);return M(z,"int")}}),W})}function sq(H,h){let D=new QH(H,{parser:EH("int"),props:Y.fromObject({formatter:m0}),value:w(F.black()),viewProps:h.viewProps});return LH({primary:h.value,secondary:D.value,forward:(q)=>new F(E(q.getComponents()),q.mode),backward:(q,W)=>new F(aH(E(W.getComponents(q.mode)),q.getComponents()[3]),q.mode)}),[D]}function nq(H){return H!=="hex"}class U1{constructor(H,h){this.onModeSelectChange_=this.onModeSelectChange_.bind(this),this.colorType_=h.colorType,this.value=h.value,this.viewProps=h.viewProps,this.colorMode=w(this.value.rawValue.mode),this.ccs_=this.createComponentControllers_(H),this.view=new Q1(H,{mode:this.colorMode,inputViews:[this.ccs_[0].view,this.ccs_[1].view,this.ccs_[2].view],viewProps:this.viewProps}),this.view.modeSelectElement.addEventListener("change",this.onModeSelectChange_)}createComponentControllers_(H){let h=this.colorMode.rawValue;if(nq(h))return iq(H,{colorMode:h,colorType:this.colorType_,value:this.value,viewProps:this.viewProps});return sq(H,{value:this.value,viewProps:this.viewProps})}onModeSelectChange_(H){let h=H.currentTarget;this.colorMode.rawValue=h.value,this.ccs_=this.createComponentControllers_(this.view.element.ownerDocument),this.view.inputViews=this.ccs_.map((D)=>D.view)}}var Y0=K("hpl");class X1{constructor(H,h){this.onValueChange_=this.onValueChange_.bind(this),this.value=h.value,this.value.emitter.on("change",this.onValueChange_),this.element=H.createElement("div"),this.element.classList.add(Y0()),h.viewProps.bindClassModifiers(this.element),h.viewProps.bindTabIndex(this.element);let D=H.createElement("div");D.classList.add(Y0("c")),this.element.appendChild(D);let q=H.createElement("div");q.classList.add(Y0("m")),this.element.appendChild(q),this.markerElem_=q,this.update_()}update_(){let H=this.value.rawValue,[h]=H.getComponents("hsv");this.markerElem_.style.backgroundColor=H1(new F([h,100,100],"hsv"));let D=L(h,0,360,0,100);this.markerElem_.style.left=`${D}%`}onValueChange_(){this.update_()}}class z1{constructor(H,h){this.onKeyDown_=this.onKeyDown_.bind(this),this.onKeyUp_=this.onKeyUp_.bind(this),this.onPointerDown_=this.onPointerDown_.bind(this),this.onPointerMove_=this.onPointerMove_.bind(this),this.onPointerUp_=this.onPointerUp_.bind(this),this.value=h.value,this.viewProps=h.viewProps,this.view=new X1(H,{value:this.value,viewProps:this.viewProps}),this.ptHandler_=new l(this.view.element),this.ptHandler_.emitter.on("down",this.onPointerDown_),this.ptHandler_.emitter.on("move",this.onPointerMove_),this.ptHandler_.emitter.on("up",this.onPointerUp_),this.view.element.addEventListener("keydown",this.onKeyDown_),this.view.element.addEventListener("keyup",this.onKeyUp_)}handlePointerEvent_(H,h){if(!H.point)return;let D=L(I(H.point.x,0,H.bounds.width),0,H.bounds.width,0,360),q=this.value.rawValue,[,W,J,Q]=q.getComponents("hsv");this.value.setRawValue(new F([D,W,J,Q],"hsv"),h)}onPointerDown_(H){this.handlePointerEvent_(H.data,{forceEmit:!1,last:!1})}onPointerMove_(H){this.handlePointerEvent_(H.data,{forceEmit:!1,last:!1})}onPointerUp_(H){this.handlePointerEvent_(H.data,{forceEmit:!0,last:!0})}onKeyDown_(H){let h=A(hH(!1),m(H));if(h===0)return;let D=this.value.rawValue,[q,W,J,Q]=D.getComponents("hsv");this.value.setRawValue(new F([q+h,W,J,Q],"hsv"),{forceEmit:!1,last:!1})}onKeyUp_(H){if(A(hH(!1),m(H))===0)return;this.value.setRawValue(this.value.rawValue,{forceEmit:!0,last:!0})}}var G0=K("svp"),yh=64;class Z1{constructor(H,h){this.onValueChange_=this.onValueChange_.bind(this),this.value=h.value,this.value.emitter.on("change",this.onValueChange_),this.element=H.createElement("div"),this.element.classList.add(G0()),h.viewProps.bindClassModifiers(this.element),h.viewProps.bindTabIndex(this.element);let D=H.createElement("canvas");D.height=yh,D.width=yh,D.classList.add(G0("c")),this.element.appendChild(D),this.canvasElement=D;let q=H.createElement("div");q.classList.add(G0("m")),this.element.appendChild(q),this.markerElem_=q,this.update_()}update_(){let H=k8(this.canvasElement);if(!H)return;let D=this.value.rawValue.getComponents("hsv"),q=this.canvasElement.width,W=this.canvasElement.height,J=H.getImageData(0,0,q,W),Q=J.data;for(let X=0;X<W;X++)for(let z=0;z<q;z++){let G=L(z,0,q,0,100),_=L(X,0,W,100,0),SH=uD(D[0],G,_),fH=(X*q+z)*4;Q[fH]=SH[0],Q[fH+1]=SH[1],Q[fH+2]=SH[2],Q[fH+3]=255}H.putImageData(J,0,0);let U=L(D[1],0,100,0,100);this.markerElem_.style.left=`${U}%`;let Z=L(D[2],0,100,100,0);this.markerElem_.style.top=`${Z}%`}onValueChange_(){this.update_()}}class Y1{constructor(H,h){this.onKeyDown_=this.onKeyDown_.bind(this),this.onKeyUp_=this.onKeyUp_.bind(this),this.onPointerDown_=this.onPointerDown_.bind(this),this.onPointerMove_=this.onPointerMove_.bind(this),this.onPointerUp_=this.onPointerUp_.bind(this),this.value=h.value,this.viewProps=h.viewProps,this.view=new Z1(H,{value:this.value,viewProps:this.viewProps}),this.ptHandler_=new l(this.view.element),this.ptHandler_.emitter.on("down",this.onPointerDown_),this.ptHandler_.emitter.on("move",this.onPointerMove_),this.ptHandler_.emitter.on("up",this.onPointerUp_),this.view.element.addEventListener("keydown",this.onKeyDown_),this.view.element.addEventListener("keyup",this.onKeyUp_)}handlePointerEvent_(H,h){if(!H.point)return;let D=L(H.point.x,0,H.bounds.width,0,100),q=L(H.point.y,0,H.bounds.height,100,0),[W,,,J]=this.value.rawValue.getComponents("hsv");this.value.setRawValue(new F([W,D,q,J],"hsv"),h)}onPointerDown_(H){this.handlePointerEvent_(H.data,{forceEmit:!1,last:!1})}onPointerMove_(H){this.handlePointerEvent_(H.data,{forceEmit:!1,last:!1})}onPointerUp_(H){this.handlePointerEvent_(H.data,{forceEmit:!0,last:!0})}onKeyDown_(H){if(TD(H.key))H.preventDefault();let[h,D,q,W]=this.value.rawValue.getComponents("hsv"),J=hH(!1),Q=A(J,m(H)),U=A(J,jH(H));if(Q===0&&U===0)return;this.value.setRawValue(new F([h,D+Q,q+U,W],"hsv"),{forceEmit:!1,last:!1})}onKeyUp_(H){let h=hH(!1),D=A(h,m(H)),q=A(h,jH(H));if(D===0&&q===0)return;this.value.setRawValue(this.value.rawValue,{forceEmit:!0,last:!0})}}class G1{constructor(H,h){if(this.value=h.value,this.viewProps=h.viewProps,this.hPaletteC_=new z1(H,{value:this.value,viewProps:this.viewProps}),this.svPaletteC_=new Y1(H,{value:this.value,viewProps:this.viewProps}),this.alphaIcs_=h.supportsAlpha?{palette:new J1(H,{value:this.value,viewProps:this.viewProps}),text:new OH(H,{parser:u,props:Y.fromObject({pointerScale:0.01,keyScale:0.1,formatter:j(2)}),value:w(0,{constraint:new XH({min:0,max:1})}),viewProps:this.viewProps})}:null,this.alphaIcs_)LH({primary:this.value,secondary:this.alphaIcs_.text.value,forward:(D)=>D.getComponents()[3],backward:(D,q)=>{let W=D.getComponents();return W[3]=q,new F(W,D.mode)}});this.textsC_=new U1(H,{colorType:h.colorType,value:this.value,viewProps:this.viewProps}),this.view=new tD(H,{alphaViews:this.alphaIcs_?{palette:this.alphaIcs_.palette.view,text:this.alphaIcs_.text.view}:null,hPaletteView:this.hPaletteC_.view,supportsAlpha:h.supportsAlpha,svPaletteView:this.svPaletteC_.view,textsView:this.textsC_.view,viewProps:this.viewProps})}get textsController(){return this.textsC_}}var K0=K("colsw");class K1{constructor(H,h){this.onValueChange_=this.onValueChange_.bind(this),h.value.emitter.on("change",this.onValueChange_),this.value=h.value,this.element=H.createElement("div"),this.element.classList.add(K0()),h.viewProps.bindClassModifiers(this.element);let D=H.createElement("div");D.classList.add(K0("sw")),this.element.appendChild(D),this.swatchElem_=D;let q=H.createElement("button");q.classList.add(K0("b")),h.viewProps.bindDisabled(q),this.element.appendChild(q),this.buttonElement=q,this.update_()}update_(){let H=this.value.rawValue;this.swatchElem_.style.backgroundColor=t0(H)}onValueChange_(){this.update_()}}class F1{constructor(H,h){this.value=h.value,this.viewProps=h.viewProps,this.view=new K1(H,{value:this.value,viewProps:this.viewProps})}}class H0{constructor(H,h){this.onButtonBlur_=this.onButtonBlur_.bind(this),this.onButtonClick_=this.onButtonClick_.bind(this),this.onPopupChildBlur_=this.onPopupChildBlur_.bind(this),this.onPopupChildKeydown_=this.onPopupChildKeydown_.bind(this),this.value=h.value,this.viewProps=h.viewProps,this.foldable_=PH.create(h.expanded),this.swatchC_=new F1(H,{value:this.value,viewProps:this.viewProps});let D=this.swatchC_.view.buttonElement;D.addEventListener("blur",this.onButtonBlur_),D.addEventListener("click",this.onButtonClick_),this.textC_=new QH(H,{parser:h.parser,props:Y.fromObject({formatter:h.formatter}),value:this.value,viewProps:this.viewProps}),this.view=new dD(H,{foldable:this.foldable_,pickerLayout:h.pickerLayout}),this.view.swatchElement.appendChild(this.swatchC_.view.element),this.view.textElement.appendChild(this.textC_.view.element),this.popC_=h.pickerLayout==="popup"?new d0(H,{viewProps:this.viewProps}):null;let q=new G1(H,{colorType:h.colorType,supportsAlpha:h.supportsAlpha,value:this.value,viewProps:this.viewProps});if(q.view.allFocusableElements.forEach((W)=>{W.addEventListener("blur",this.onPopupChildBlur_),W.addEventListener("keydown",this.onPopupChildKeydown_)}),this.pickerC_=q,this.popC_)this.view.element.appendChild(this.popC_.view.element),this.popC_.view.element.appendChild(q.view.element),LH({primary:this.foldable_.value("expanded"),secondary:this.popC_.shows,forward:(W)=>W,backward:(W,J)=>J});else if(this.view.pickerElement)this.view.pickerElement.appendChild(this.pickerC_.view.element),_0(this.foldable_,this.view.pickerElement)}get textController(){return this.textC_}onButtonBlur_(H){if(!this.popC_)return;let h=this.view.element,D=R(H.relatedTarget);if(!D||!h.contains(D))this.popC_.shows.rawValue=!1}onButtonClick_(){if(this.foldable_.set("expanded",!this.foldable_.get("expanded")),this.foldable_.get("expanded"))this.pickerC_.view.allFocusableElements[0].focus()}onPopupChildBlur_(H){if(!this.popC_)return;let h=this.popC_.view.element,D=HD(H);if(D&&h.contains(D))return;if(D&&D===this.swatchC_.view.buttonElement&&!N0(h.ownerDocument))return;this.popC_.shows.rawValue=!1}onPopupChildKeydown_(H){if(this.popC_){if(H.key==="Escape")this.popC_.shows.rawValue=!1}else if(this.view.pickerElement){if(H.key==="Escape")this.swatchC_.view.buttonElement.focus()}}}function gq(H){return E(H.getComponents("rgb")).reduce((h,D)=>{return h<<8|Math.floor(D)&255},0)}function pq(H){return H.getComponents("rgb").reduce((h,D,q)=>{let W=Math.floor(q===3?D*255:D)&255;return h<<8|W},0)>>>0}function cq(H){return new F([H>>16&255,H>>8&255,H&255],"rgb")}function lq(H){return new F([H>>24&255,H>>16&255,H>>8&255,L(H&255,0,255,0,1)],"rgb")}function rq(H){if(typeof H!=="number")return F.black();return cq(H)}function oq(H){if(typeof H!=="number")return F.black();return lq(H)}function vH(H,h){if(typeof H!=="object"||O(H))return!1;return h in H&&typeof H[h]==="number"}function L1(H){return vH(H,"r")&&vH(H,"g")&&vH(H,"b")}function O1(H){return L1(H)&&vH(H,"a")}function w1(H){return L1(H)}function i0(H,h){if(H.mode!==h.mode)return!1;if(H.type!==h.type)return!1;let D=H.getComponents(),q=h.getComponents();for(let W=0;W<D.length;W++)if(D[W]!==q[W])return!1;return!0}function $h(H){return"a"in H?[H.r,H.g,H.b,H.a]:[H.r,H.g,H.b]}function aq(H){let h=q1(H);return h?(D,q)=>{VH(D,h(q))}:null}function eq(H){let h=H?pq:gq;return(D,q)=>{VH(D,h(q))}}function H6(H,h,D){let W=M(h,D).toRgbaObject();H.writeProperty("r",W.r),H.writeProperty("g",W.g),H.writeProperty("b",W.b),H.writeProperty("a",W.a)}function h6(H,h,D){let W=M(h,D).toRgbaObject();H.writeProperty("r",W.r),H.writeProperty("g",W.g),H.writeProperty("b",W.b)}function D6(H,h){return(D,q)=>{if(H)H6(D,q,h);else h6(D,q,h)}}function q6(H){var h;if((h=H===null||H===void 0?void 0:H.color)===null||h===void 0?void 0:h.alpha)return!0;return!1}function W6(H){return H?(h)=>t0(h,"0x"):(h)=>m0(h,"0x")}function J6(H){if("color"in H)return!0;if(H.view==="color")return!0;return!1}var Q6=B({id:"input-color-number",type:"input",accept:(H,h)=>{if(typeof H!=="number")return null;if(!J6(h))return null;let D=u0(h);return D?{initialValue:H,params:Object.assign(Object.assign({},D),{supportsAlpha:q6(h)})}:null},binding:{reader:(H)=>{return H.params.supportsAlpha?oq:rq},equals:i0,writer:(H)=>{return eq(H.params.supportsAlpha)}},controller:(H)=>{var h,D;return new H0(H.document,{colorType:"int",expanded:(h=H.params.expanded)!==null&&h!==void 0?h:!1,formatter:W6(H.params.supportsAlpha),parser:EH("int"),pickerLayout:(D=H.params.picker)!==null&&D!==void 0?D:"popup",supportsAlpha:H.params.supportsAlpha,value:H.value,viewProps:H.viewProps})}});function U6(H,h){if(!w1(H))return M(F.black(),h);if(h==="int"){let D=$h(H);return new F(D,"rgb")}if(h==="float"){let D=$h(H);return new eH(D,"rgb")}return M(F.black(),"int")}function X6(H){return O1(H)}function z6(H){return(h)=>{let D=U6(h,H);return M(D,"int")}}function Z6(H,h){return(D)=>{if(H)return D1(D,h);return h1(D,h)}}var Y6=B({id:"input-color-object",type:"input",accept:(H,h)=>{var D;if(!w1(H))return null;let q=u0(h);return q?{initialValue:H,params:Object.assign(Object.assign({},q),{colorType:(D=iD(h))!==null&&D!==void 0?D:"int"})}:null},binding:{reader:(H)=>z6(H.params.colorType),equals:i0,writer:(H)=>D6(X6(H.initialValue),H.params.colorType)},controller:(H)=>{var h,D;let q=O1(H.initialValue);return new H0(H.document,{colorType:H.params.colorType,expanded:(h=H.params.expanded)!==null&&h!==void 0?h:!1,formatter:Z6(q,H.params.colorType),parser:EH("int"),pickerLayout:(D=H.params.picker)!==null&&D!==void 0?D:"popup",supportsAlpha:q,value:H.value,viewProps:H.viewProps})}}),G6=B({id:"input-color-string",type:"input",accept:(H,h)=>{if(typeof H!=="string")return null;if(h.view==="text")return null;let D=Vq(H,iD(h));if(!D)return null;let q=q1(D);if(!q)return null;let W=u0(h);return W?{initialValue:H,params:Object.assign(Object.assign({},W),{format:D,stringifier:q})}:null},binding:{reader:()=>Eq,equals:i0,writer:(H)=>{let h=aq(H.params.format);if(!h)throw y.notBindable();return h}},controller:(H)=>{var h,D;return new H0(H.document,{colorType:H.params.format.type,expanded:(h=H.params.expanded)!==null&&h!==void 0?h:!1,formatter:H.params.stringifier,parser:EH("int"),pickerLayout:(D=H.params.picker)!==null&&D!==void 0?D:"popup",supportsAlpha:H.params.format.alpha,value:H.value,viewProps:H.viewProps})}});class h0{constructor(H){this.components=H.components,this.asm_=H.assembly}constrain(H){let h=this.asm_.toComponents(H).map((D,q)=>{var W,J;return(J=(W=this.components[q])===null||W===void 0?void 0:W.constrain(D))!==null&&J!==void 0?J:D});return this.asm_.fromComponents(h)}}var Ih=K("pndtxt");class S1{constructor(H,h){this.textViews=h.textViews,this.element=H.createElement("div"),this.element.classList.add(Ih()),this.textViews.forEach((D)=>{let q=H.createElement("div");q.classList.add(Ih("a")),q.appendChild(D.element),this.element.appendChild(q)})}}function K6(H,h,D){return new OH(H,{arrayPosition:D===0?"fst":D===h.axes.length-1?"lst":"mid",parser:h.parser,props:h.axes[D].textProps,value:w(0,{constraint:h.axes[D].constraint}),viewProps:h.viewProps})}class D0{constructor(H,h){this.value=h.value,this.viewProps=h.viewProps,this.acs_=h.axes.map((D,q)=>K6(H,h,q)),this.acs_.forEach((D,q)=>{LH({primary:this.value,secondary:D.value,forward:(W)=>h.assembly.toComponents(W)[q],backward:(W,J)=>{let Q=h.assembly.toComponents(W);return Q[q]=J,h.assembly.fromComponents(Q)}})}),this.view=new S1(H,{textViews:this.acs_.map((D)=>D.view)})}get textControllers(){return this.acs_}}class y1 extends JH{get max(){return this.controller.valueController.sliderController.props.get("max")}set max(H){this.controller.valueController.sliderController.props.set("max",H)}get min(){return this.controller.valueController.sliderController.props.get("min")}set min(H){this.controller.valueController.sliderController.props.set("min",H)}}function F6(H,h){let D=[],q=ih(H,h);if(q)D.push(q);let W=sh(H);if(W)D.push(W);let J=f0(H.options);if(J)D.push(J);return new KH(D)}var L6=B({id:"input-number",type:"input",accept:(H,h)=>{if(typeof H!=="number")return null;let D=S(h,(q)=>Object.assign(Object.assign({},gh(q)),{options:q.optional.custom(CH),readonly:q.optional.constant(!1)}));return D?{initialValue:H,params:D}:null},binding:{reader:(H)=>uh,constraint:(H)=>F6(H.params,H.initialValue),writer:(H)=>VH},controller:(H)=>{let{value:h,constraint:D}=H,q=D&&nH(D,FH);if(q)return new v(H.document,{props:new Y({options:q.values.value("options")}),value:h,viewProps:H.viewProps});let W=nh(H.params,h.rawValue),J=D&&nH(D,XH);if(J)return new RH(H.document,Object.assign(Object.assign({},ED(Object.assign(Object.assign({},W),{keyScale:w(W.keyScale),max:J.values.value("max"),min:J.values.value("min")}))),{parser:u,value:h,viewProps:H.viewProps}));return new OH(H.document,{parser:u,props:Y.fromObject(W),value:h,viewProps:H.viewProps})},api(H){if(typeof H.controller.value.rawValue!=="number")return null;if(H.controller.valueController instanceof RH)return new y1(H.controller);if(H.controller.valueController instanceof v)return new oH(H.controller);return null}});class d{constructor(H=0,h=0){this.x=H,this.y=h}getComponents(){return[this.x,this.y]}static isObject(H){if(O(H))return!1;let{x:h,y:D}=H;if(typeof h!=="number"||typeof D!=="number")return!1;return!0}static equals(H,h){return H.x===h.x&&H.y===h.y}toObject(){return{x:this.x,y:this.y}}}var $1={toComponents:(H)=>H.getComponents(),fromComponents:(H)=>new d(...H)},WH=K("p2d");class I1{constructor(H,h){this.element=H.createElement("div"),this.element.classList.add(WH()),h.viewProps.bindClassModifiers(this.element),f(h.expanded,ZH(this.element,WH(void 0,"expanded")));let D=H.createElement("div");D.classList.add(WH("h")),this.element.appendChild(D);let q=H.createElement("button");q.classList.add(WH("b")),q.appendChild(pH(H,"p2dpad")),h.viewProps.bindDisabled(q),D.appendChild(q),this.buttonElement=q;let W=H.createElement("div");if(W.classList.add(WH("t")),D.appendChild(W),this.textElement=W,h.pickerLayout==="inline"){let J=H.createElement("div");J.classList.add(WH("p")),this.element.appendChild(J),this.pickerElement=J}else this.pickerElement=null}}var s=K("p2dp");class M1{constructor(H,h){if(this.onFoldableChange_=this.onFoldableChange_.bind(this),this.onPropsChange_=this.onPropsChange_.bind(this),this.onValueChange_=this.onValueChange_.bind(this),this.props_=h.props,this.props_.emitter.on("change",this.onPropsChange_),this.element=H.createElement("div"),this.element.classList.add(s()),h.layout==="popup")this.element.classList.add(s(void 0,"p"));h.viewProps.bindClassModifiers(this.element);let D=H.createElement("div");D.classList.add(s("p")),h.viewProps.bindTabIndex(D),this.element.appendChild(D),this.padElement=D;let q=H.createElementNS(C,"svg");q.classList.add(s("g")),this.padElement.appendChild(q),this.svgElem_=q;let W=H.createElementNS(C,"line");W.classList.add(s("ax")),W.setAttributeNS(null,"x1","0"),W.setAttributeNS(null,"y1","50%"),W.setAttributeNS(null,"x2","100%"),W.setAttributeNS(null,"y2","50%"),this.svgElem_.appendChild(W);let J=H.createElementNS(C,"line");J.classList.add(s("ax")),J.setAttributeNS(null,"x1","50%"),J.setAttributeNS(null,"y1","0"),J.setAttributeNS(null,"x2","50%"),J.setAttributeNS(null,"y2","100%"),this.svgElem_.appendChild(J);let Q=H.createElementNS(C,"line");Q.classList.add(s("l")),Q.setAttributeNS(null,"x1","50%"),Q.setAttributeNS(null,"y1","50%"),this.svgElem_.appendChild(Q),this.lineElem_=Q;let U=H.createElement("div");U.classList.add(s("m")),this.padElement.appendChild(U),this.markerElem_=U,h.value.emitter.on("change",this.onValueChange_),this.value=h.value,this.update_()}get allFocusableElements(){return[this.padElement]}update_(){let[H,h]=this.value.rawValue.getComponents(),D=this.props_.get("max"),q=L(H,-D,+D,0,100),W=L(h,-D,+D,0,100),J=this.props_.get("invertsY")?100-W:W;this.lineElem_.setAttributeNS(null,"x2",`${q}%`),this.lineElem_.setAttributeNS(null,"y2",`${J}%`),this.markerElem_.style.left=`${q}%`,this.markerElem_.style.top=`${J}%`}onValueChange_(){this.update_()}onPropsChange_(){this.update_()}onFoldableChange_(){this.update_()}}function Mh(H,h,D){return[A(h[0],m(H)),A(h[1],jH(H))*(D?1:-1)]}class B1{constructor(H,h){this.onPadKeyDown_=this.onPadKeyDown_.bind(this),this.onPadKeyUp_=this.onPadKeyUp_.bind(this),this.onPointerDown_=this.onPointerDown_.bind(this),this.onPointerMove_=this.onPointerMove_.bind(this),this.onPointerUp_=this.onPointerUp_.bind(this),this.props=h.props,this.value=h.value,this.viewProps=h.viewProps,this.view=new M1(H,{layout:h.layout,props:this.props,value:this.value,viewProps:this.viewProps}),this.ptHandler_=new l(this.view.padElement),this.ptHandler_.emitter.on("down",this.onPointerDown_),this.ptHandler_.emitter.on("move",this.onPointerMove_),this.ptHandler_.emitter.on("up",this.onPointerUp_),this.view.padElement.addEventListener("keydown",this.onPadKeyDown_),this.view.padElement.addEventListener("keyup",this.onPadKeyUp_)}handlePointerEvent_(H,h){if(!H.point)return;let D=this.props.get("max"),q=L(H.point.x,0,H.bounds.width,-D,+D),W=L(this.props.get("invertsY")?H.bounds.height-H.point.y:H.point.y,0,H.bounds.height,-D,+D);this.value.setRawValue(new d(q,W),h)}onPointerDown_(H){this.handlePointerEvent_(H.data,{forceEmit:!1,last:!1})}onPointerMove_(H){this.handlePointerEvent_(H.data,{forceEmit:!1,last:!1})}onPointerUp_(H){this.handlePointerEvent_(H.data,{forceEmit:!0,last:!0})}onPadKeyDown_(H){if(TD(H.key))H.preventDefault();let[h,D]=Mh(H,[this.props.get("xKeyScale"),this.props.get("yKeyScale")],this.props.get("invertsY"));if(h===0&&D===0)return;this.value.setRawValue(new d(this.value.rawValue.x+h,this.value.rawValue.y+D),{forceEmit:!1,last:!1})}onPadKeyUp_(H){let[h,D]=Mh(H,[this.props.get("xKeyScale"),this.props.get("yKeyScale")],this.props.get("invertsY"));if(h===0&&D===0)return;this.value.setRawValue(this.value.rawValue,{forceEmit:!0,last:!0})}}class A1{constructor(H,h){var D,q;this.onPopupChildBlur_=this.onPopupChildBlur_.bind(this),this.onPopupChildKeydown_=this.onPopupChildKeydown_.bind(this),this.onPadButtonBlur_=this.onPadButtonBlur_.bind(this),this.onPadButtonClick_=this.onPadButtonClick_.bind(this),this.value=h.value,this.viewProps=h.viewProps,this.foldable_=PH.create(h.expanded),this.popC_=h.pickerLayout==="popup"?new d0(H,{viewProps:this.viewProps}):null;let W=new B1(H,{layout:h.pickerLayout,props:new Y({invertsY:w(h.invertsY),max:w(h.max),xKeyScale:h.axes[0].textProps.value("keyScale"),yKeyScale:h.axes[1].textProps.value("keyScale")}),value:this.value,viewProps:this.viewProps});if(W.view.allFocusableElements.forEach((J)=>{J.addEventListener("blur",this.onPopupChildBlur_),J.addEventListener("keydown",this.onPopupChildKeydown_)}),this.pickerC_=W,this.textC_=new D0(H,{assembly:$1,axes:h.axes,parser:h.parser,value:this.value,viewProps:this.viewProps}),this.view=new I1(H,{expanded:this.foldable_.value("expanded"),pickerLayout:h.pickerLayout,viewProps:this.viewProps}),this.view.textElement.appendChild(this.textC_.view.element),(D=this.view.buttonElement)===null||D===void 0||D.addEventListener("blur",this.onPadButtonBlur_),(q=this.view.buttonElement)===null||q===void 0||q.addEventListener("click",this.onPadButtonClick_),this.popC_)this.view.element.appendChild(this.popC_.view.element),this.popC_.view.element.appendChild(this.pickerC_.view.element),LH({primary:this.foldable_.value("expanded"),secondary:this.popC_.shows,forward:(J)=>J,backward:(J,Q)=>Q});else if(this.view.pickerElement)this.view.pickerElement.appendChild(this.pickerC_.view.element),_0(this.foldable_,this.view.pickerElement)}get textController(){return this.textC_}onPadButtonBlur_(H){if(!this.popC_)return;let h=this.view.element,D=R(H.relatedTarget);if(!D||!h.contains(D))this.popC_.shows.rawValue=!1}onPadButtonClick_(){if(this.foldable_.set("expanded",!this.foldable_.get("expanded")),this.foldable_.get("expanded"))this.pickerC_.view.allFocusableElements[0].focus()}onPopupChildBlur_(H){if(!this.popC_)return;let h=this.popC_.view.element,D=HD(H);if(D&&h.contains(D))return;if(D&&D===this.view.buttonElement&&!N0(h.ownerDocument))return;this.popC_.shows.rawValue=!1}onPopupChildKeydown_(H){if(this.popC_){if(H.key==="Escape")this.popC_.shows.rawValue=!1}else if(this.view.pickerElement){if(H.key==="Escape")this.view.buttonElement.focus()}}}function O6(H){return d.isObject(H)?new d(H.x,H.y):new d}function w6(H,h){H.writeProperty("x",h.x),H.writeProperty("y",h.y)}function S6(H,h){return new h0({assembly:$1,components:[b(Object.assign(Object.assign({},H),H.x),h.x),b(Object.assign(Object.assign({},H),H.y),h.y)]})}function Bh(H,h){var D,q;if(!O(H.min)||!O(H.max))return Math.max(Math.abs((D=H.min)!==null&&D!==void 0?D:0),Math.abs((q=H.max)!==null&&q!==void 0?q:0));let W=mh(H);return Math.max(Math.abs(W)*10,Math.abs(h)*10)}function y6(H,h){var D,q;let W=Bh(HH(H,(D=H.x)!==null&&D!==void 0?D:{}),h.x),J=Bh(HH(H,(q=H.y)!==null&&q!==void 0?q:{}),h.y);return Math.max(W,J)}function $6(H){if(!("y"in H))return!1;let h=H.y;if(!h)return!1;return"inverted"in h?!!h.inverted:!1}var I6=B({id:"input-point2d",type:"input",accept:(H,h)=>{if(!d.isObject(H))return null;let D=S(h,(q)=>Object.assign(Object.assign({},NH(q)),{expanded:q.optional.boolean,picker:q.optional.custom(xD),readonly:q.optional.constant(!1),x:q.optional.custom(g),y:q.optional.object(Object.assign(Object.assign({},NH(q)),{inverted:q.optional.boolean}))}));return D?{initialValue:H,params:D}:null},binding:{reader:()=>O6,constraint:(H)=>S6(H.params,H.initialValue),equals:d.equals,writer:()=>w6},controller:(H)=>{var h,D;let{document:q,value:W,constraint:J}=H,Q=[H.params.x,H.params.y];return new A1(q,{axes:W.rawValue.getComponents().map((U,Z)=>{var X;return R0({constraint:J.components[Z],initialValue:U,params:HH(H.params,(X=Q[Z])!==null&&X!==void 0?X:{})})}),expanded:(h=H.params.expanded)!==null&&h!==void 0?h:!1,invertsY:$6(H.params),max:y6(H.params,W.rawValue),parser:u,pickerLayout:(D=H.params.picker)!==null&&D!==void 0?D:"popup",value:W,viewProps:H.viewProps})}});class a{constructor(H=0,h=0,D=0){this.x=H,this.y=h,this.z=D}getComponents(){return[this.x,this.y,this.z]}static isObject(H){if(O(H))return!1;let{x:h,y:D,z:q}=H;if(typeof h!=="number"||typeof D!=="number"||typeof q!=="number")return!1;return!0}static equals(H,h){return H.x===h.x&&H.y===h.y&&H.z===h.z}toObject(){return{x:this.x,y:this.y,z:this.z}}}var j1={toComponents:(H)=>H.getComponents(),fromComponents:(H)=>new a(...H)};function M6(H){return a.isObject(H)?new a(H.x,H.y,H.z):new a}function B6(H,h){H.writeProperty("x",h.x),H.writeProperty("y",h.y),H.writeProperty("z",h.z)}function A6(H,h){return new h0({assembly:j1,components:[b(Object.assign(Object.assign({},H),H.x),h.x),b(Object.assign(Object.assign({},H),H.y),h.y),b(Object.assign(Object.assign({},H),H.z),h.z)]})}var j6=B({id:"input-point3d",type:"input",accept:(H,h)=>{if(!a.isObject(H))return null;let D=S(h,(q)=>Object.assign(Object.assign({},NH(q)),{readonly:q.optional.constant(!1),x:q.optional.custom(g),y:q.optional.custom(g),z:q.optional.custom(g)}));return D?{initialValue:H,params:D}:null},binding:{reader:(H)=>M6,constraint:(H)=>A6(H.params,H.initialValue),equals:a.equals,writer:(H)=>B6},controller:(H)=>{let{value:h,constraint:D}=H,q=[H.params.x,H.params.y,H.params.z];return new D0(H.document,{assembly:j1,axes:h.rawValue.getComponents().map((W,J)=>{var Q;return R0({constraint:D.components[J],initialValue:W,params:HH(H.params,(Q=q[J])!==null&&Q!==void 0?Q:{})})}),parser:u,value:h,viewProps:H.viewProps})}});class e{constructor(H=0,h=0,D=0,q=0){this.x=H,this.y=h,this.z=D,this.w=q}getComponents(){return[this.x,this.y,this.z,this.w]}static isObject(H){if(O(H))return!1;let{x:h,y:D,z:q,w:W}=H;if(typeof h!=="number"||typeof D!=="number"||typeof q!=="number"||typeof W!=="number")return!1;return!0}static equals(H,h){return H.x===h.x&&H.y===h.y&&H.z===h.z&&H.w===h.w}toObject(){return{x:this.x,y:this.y,z:this.z,w:this.w}}}var R1={toComponents:(H)=>H.getComponents(),fromComponents:(H)=>new e(...H)};function R6(H){return e.isObject(H)?new e(H.x,H.y,H.z,H.w):new e}function N6(H,h){H.writeProperty("x",h.x),H.writeProperty("y",h.y),H.writeProperty("z",h.z),H.writeProperty("w",h.w)}function T6(H,h){return new h0({assembly:R1,components:[b(Object.assign(Object.assign({},H),H.x),h.x),b(Object.assign(Object.assign({},H),H.y),h.y),b(Object.assign(Object.assign({},H),H.z),h.z),b(Object.assign(Object.assign({},H),H.w),h.w)]})}var k6=B({id:"input-point4d",type:"input",accept:(H,h)=>{if(!e.isObject(H))return null;let D=S(h,(q)=>Object.assign(Object.assign({},NH(q)),{readonly:q.optional.constant(!1),w:q.optional.custom(g),x:q.optional.custom(g),y:q.optional.custom(g),z:q.optional.custom(g)}));return D?{initialValue:H,params:D}:null},binding:{reader:(H)=>R6,constraint:(H)=>T6(H.params,H.initialValue),equals:e.equals,writer:(H)=>N6},controller:(H)=>{let{value:h,constraint:D}=H,q=[H.params.x,H.params.y,H.params.z,H.params.w];return new D0(H.document,{assembly:R1,axes:h.rawValue.getComponents().map((W,J)=>{var Q;return R0({constraint:D.components[J],initialValue:W,params:HH(H.params,(Q=q[J])!==null&&Q!==void 0?Q:{})})}),parser:u,value:h,viewProps:H.viewProps})}});function P6(H){let h=[],D=f0(H.options);if(D)h.push(D);return new KH(h)}var C6=B({id:"input-string",type:"input",accept:(H,h)=>{if(typeof H!=="string")return null;let D=S(h,(q)=>({readonly:q.optional.constant(!1),options:q.optional.custom(CH)}));return D?{initialValue:H,params:D}:null},binding:{reader:(H)=>ND,constraint:(H)=>P6(H.params),writer:(H)=>VH},controller:(H)=>{let{document:h,value:D,constraint:q}=H,W=q&&nH(q,FH);if(W)return new v(h,{props:new Y({options:W.values.value("options")}),value:D,viewProps:H.viewProps});return new QH(h,{parser:(J)=>J,props:Y.fromObject({formatter:y0}),value:D,viewProps:H.viewProps})},api(H){if(typeof H.controller.value.rawValue!=="string")return null;if(H.controller.valueController instanceof v)return new oH(H.controller);return null}}),_H={monitor:{defaultInterval:200,defaultRows:3}},Ah=K("mll");class N1{constructor(H,h){this.onValueUpdate_=this.onValueUpdate_.bind(this),this.formatter_=h.formatter,this.element=H.createElement("div"),this.element.classList.add(Ah()),h.viewProps.bindClassModifiers(this.element);let D=H.createElement("textarea");D.classList.add(Ah("i")),D.style.height=`calc(var(${_D("containerUnitSize")}) * ${h.rows})`,D.readOnly=!0,h.viewProps.bindDisabled(D),this.element.appendChild(D),this.textareaElem_=D,h.value.emitter.on("change",this.onValueUpdate_),this.value=h.value,this.update_()}update_(){let H=this.textareaElem_,h=H.scrollTop===H.scrollHeight-H.clientHeight,D=[];if(this.value.rawValue.forEach((q)=>{if(q!==void 0)D.push(this.formatter_(q))}),H.textContent=D.join(`
-`),h)H.scrollTop=H.scrollHeight}onValueUpdate_(){this.update_()}}class q0{constructor(H,h){this.value=h.value,this.viewProps=h.viewProps,this.view=new N1(H,{formatter:h.formatter,rows:h.rows,value:this.value,viewProps:this.viewProps})}}var jh=K("sgl");class T1{constructor(H,h){this.onValueUpdate_=this.onValueUpdate_.bind(this),this.formatter_=h.formatter,this.element=H.createElement("div"),this.element.classList.add(jh()),h.viewProps.bindClassModifiers(this.element);let D=H.createElement("input");D.classList.add(jh("i")),D.readOnly=!0,D.type="text",h.viewProps.bindDisabled(D),this.element.appendChild(D),this.inputElement=D,h.value.emitter.on("change",this.onValueUpdate_),this.value=h.value,this.update_()}update_(){let H=this.value.rawValue,h=H[H.length-1];this.inputElement.value=h!==void 0?this.formatter_(h):""}onValueUpdate_(){this.update_()}}class W0{constructor(H,h){this.value=h.value,this.viewProps=h.viewProps,this.view=new T1(H,{formatter:h.formatter,value:this.value,viewProps:this.viewProps})}}var V6=B({id:"monitor-bool",type:"monitor",accept:(H,h)=>{if(typeof H!=="boolean")return null;let D=S(h,(q)=>({readonly:q.required.constant(!0),rows:q.optional.number}));return D?{initialValue:H,params:D}:null},binding:{reader:(H)=>RD},controller:(H)=>{var h;if(H.value.rawValue.length===1)return new W0(H.document,{formatter:Lh,value:H.value,viewProps:H.viewProps});return new q0(H.document,{formatter:Lh,rows:(h=H.params.rows)!==null&&h!==void 0?h:_H.monitor.defaultRows,value:H.value,viewProps:H.viewProps})}});class k1 extends JH{get max(){return this.controller.valueController.props.get("max")}set max(H){this.controller.valueController.props.set("max",H)}get min(){return this.controller.valueController.props.get("min")}set min(H){this.controller.valueController.props.set("min",H)}}var n=K("grl");class P1{constructor(H,h){this.onCursorChange_=this.onCursorChange_.bind(this),this.onValueUpdate_=this.onValueUpdate_.bind(this),this.element=H.createElement("div"),this.element.classList.add(n()),h.viewProps.bindClassModifiers(this.element),this.formatter_=h.formatter,this.props_=h.props,this.cursor_=h.cursor,this.cursor_.emitter.on("change",this.onCursorChange_);let D=H.createElementNS(C,"svg");D.classList.add(n("g")),D.style.height=`calc(var(${_D("containerUnitSize")}) * ${h.rows})`,this.element.appendChild(D),this.svgElem_=D;let q=H.createElementNS(C,"polyline");this.svgElem_.appendChild(q),this.lineElem_=q;let W=H.createElement("div");W.classList.add(n("t"),K("tt")()),this.element.appendChild(W),this.tooltipElem_=W,h.value.emitter.on("change",this.onValueUpdate_),this.value=h.value,this.update_()}get graphElement(){return this.svgElem_}update_(){let{clientWidth:H,clientHeight:h}=this.element,D=this.value.rawValue.length-1,q=this.props_.get("min"),W=this.props_.get("max"),J=[];this.value.rawValue.forEach((z,G)=>{if(z===void 0)return;let _=L(G,0,D,0,H),SH=L(z,q,W,h,0);J.push([_,SH].join(","))}),this.lineElem_.setAttributeNS(null,"points",J.join(" "));let Q=this.tooltipElem_,U=this.value.rawValue[this.cursor_.rawValue];if(U===void 0){Q.classList.remove(n("t","a"));return}let Z=L(this.cursor_.rawValue,0,D,0,H),X=L(U,q,W,h,0);if(Q.style.left=`${Z}px`,Q.style.top=`${X}px`,Q.textContent=`${this.formatter_(U)}`,!Q.classList.contains(n("t","a")))Q.classList.add(n("t","a"),n("t","in")),tH(Q),Q.classList.remove(n("t","in"))}onValueUpdate_(){this.update_()}onCursorChange_(){this.update_()}}class s0{constructor(H,h){if(this.onGraphMouseMove_=this.onGraphMouseMove_.bind(this),this.onGraphMouseLeave_=this.onGraphMouseLeave_.bind(this),this.onGraphPointerDown_=this.onGraphPointerDown_.bind(this),this.onGraphPointerMove_=this.onGraphPointerMove_.bind(this),this.onGraphPointerUp_=this.onGraphPointerUp_.bind(this),this.props=h.props,this.value=h.value,this.viewProps=h.viewProps,this.cursor_=w(-1),this.view=new P1(H,{cursor:this.cursor_,formatter:h.formatter,rows:h.rows,props:this.props,value:this.value,viewProps:this.viewProps}),!N0(H))this.view.element.addEventListener("mousemove",this.onGraphMouseMove_),this.view.element.addEventListener("mouseleave",this.onGraphMouseLeave_);else{let D=new l(this.view.element);D.emitter.on("down",this.onGraphPointerDown_),D.emitter.on("move",this.onGraphPointerMove_),D.emitter.on("up",this.onGraphPointerUp_)}}importProps(H){return N(H,null,(h)=>({max:h.required.number,min:h.required.number}),(h)=>{return this.props.set("max",h.max),this.props.set("min",h.min),!0})}exportProps(){return T(null,{max:this.props.get("max"),min:this.props.get("min")})}onGraphMouseLeave_(){this.cursor_.rawValue=-1}onGraphMouseMove_(H){let{clientWidth:h}=this.view.element;this.cursor_.rawValue=Math.floor(L(H.offsetX,0,h,0,this.value.rawValue.length))}onGraphPointerDown_(H){this.onGraphPointerMove_(H)}onGraphPointerMove_(H){if(!H.data.point){this.cursor_.rawValue=-1;return}this.cursor_.rawValue=Math.floor(L(H.data.point.x,0,H.data.bounds.width,0,this.value.rawValue.length))}onGraphPointerUp_(){this.cursor_.rawValue=-1}}function $0(H){return!O(H.format)?H.format:j(2)}function E6(H){var h;if(H.value.rawValue.length===1)return new W0(H.document,{formatter:$0(H.params),value:H.value,viewProps:H.viewProps});return new q0(H.document,{formatter:$0(H.params),rows:(h=H.params.rows)!==null&&h!==void 0?h:_H.monitor.defaultRows,value:H.value,viewProps:H.viewProps})}function _6(H){var h,D,q;return new s0(H.document,{formatter:$0(H.params),rows:(h=H.params.rows)!==null&&h!==void 0?h:_H.monitor.defaultRows,props:Y.fromObject({max:(D=H.params.max)!==null&&D!==void 0?D:100,min:(q=H.params.min)!==null&&q!==void 0?q:0}),value:H.value,viewProps:H.viewProps})}function Rh(H){return H.view==="graph"}var x6=B({id:"monitor-number",type:"monitor",accept:(H,h)=>{if(typeof H!=="number")return null;let D=S(h,(q)=>({format:q.optional.function,max:q.optional.number,min:q.optional.number,readonly:q.required.constant(!0),rows:q.optional.number,view:q.optional.string}));return D?{initialValue:H,params:D}:null},binding:{defaultBufferSize:(H)=>Rh(H)?64:1,reader:(H)=>uh},controller:(H)=>{if(Rh(H.params))return _6(H);return E6(H)},api:(H)=>{if(H.controller.valueController instanceof s0)return new k1(H.controller);return null}}),b6=B({id:"monitor-string",type:"monitor",accept:(H,h)=>{if(typeof H!=="string")return null;let D=S(h,(q)=>({multiline:q.optional.boolean,readonly:q.required.constant(!0),rows:q.optional.number}));return D?{initialValue:H,params:D}:null},binding:{reader:(H)=>ND},controller:(H)=>{var h;let D=H.value;if(D.rawValue.length>1||H.params.multiline)return new q0(H.document,{formatter:y0,rows:(h=H.params.rows)!==null&&h!==void 0?h:_H.monitor.defaultRows,value:D,viewProps:H.viewProps});return new W0(H.document,{formatter:y0,value:D,viewProps:H.viewProps})}});class C1{constructor(){this.map_=new Map}get(H){var h;return(h=this.map_.get(H))!==null&&h!==void 0?h:null}has(H){return this.map_.has(H)}add(H,h){return this.map_.set(H,h),H.viewProps.handleDispose(()=>{this.map_.delete(H)}),h}}class V1{constructor(H){this.target=H.target,this.reader_=H.reader,this.writer_=H.writer}read(){return this.reader_(this.target.read())}write(H){this.writer_(this.target,H)}inject(H){this.write(this.reader_(H))}}function f6(H,h){var D;let q=H.accept(h.target.read(),h.params);if(O(q))return null;let W={target:h.target,initialValue:q.initialValue,params:q.params},J=S(h.params,(G)=>({disabled:G.optional.boolean,hidden:G.optional.boolean,label:G.optional.string,tag:G.optional.string})),Q=H.binding.reader(W),U=H.binding.constraint?H.binding.constraint(W):void 0,Z=new V1({reader:Q,target:h.target,writer:H.binding.writer(W)}),X=new rh(w(Q(q.initialValue),{constraint:U,equals:H.binding.equals}),Z),z=H.controller({constraint:U,document:h.document,initialValue:q.initialValue,params:q.params,value:X,viewProps:t.create({disabled:J===null||J===void 0?void 0:J.disabled,hidden:J===null||J===void 0?void 0:J.hidden})});return new hD(h.document,{blade:GH(),props:Y.fromObject({label:"label"in h.params?(D=J===null||J===void 0?void 0:J.label)!==null&&D!==void 0?D:null:h.target.key}),tag:J===null||J===void 0?void 0:J.tag,value:X,valueController:z})}class E1{constructor(H){this.target=H.target,this.reader_=H.reader}read(){return this.reader_(this.target.read())}}function d6(H,h){return h===0?new ID:new MD(H,h!==null&&h!==void 0?h:_H.monitor.defaultInterval)}function u6(H,h){var D,q,W;let J=H.accept(h.target.read(),h.params);if(O(J))return null;let Q={target:h.target,initialValue:J.initialValue,params:J.params},U=S(h.params,(_)=>({bufferSize:_.optional.number,disabled:_.optional.boolean,hidden:_.optional.boolean,interval:_.optional.number,label:_.optional.string})),Z=H.binding.reader(Q),X=(q=(D=U===null||U===void 0?void 0:U.bufferSize)!==null&&D!==void 0?D:H.binding.defaultBufferSize&&H.binding.defaultBufferSize(J.params))!==null&&q!==void 0?q:1,z=new qD({binding:new E1({reader:Z,target:h.target}),bufferSize:X,ticker:d6(h.document,U===null||U===void 0?void 0:U.interval)}),G=H.controller({document:h.document,params:J.params,value:z,viewProps:t.create({disabled:U===null||U===void 0?void 0:U.disabled,hidden:U===null||U===void 0?void 0:U.hidden})});return G.viewProps.bindDisabled(z.ticker),G.viewProps.handleDispose(()=>{z.ticker.dispose()}),new WD(h.document,{blade:GH(),props:Y.fromObject({label:"label"in h.params?(W=U===null||U===void 0?void 0:U.label)!==null&&W!==void 0?W:null:h.target.key}),value:z,valueController:G})}class _1{constructor(H){this.pluginsMap_={blades:[],inputs:[],monitors:[]},this.apiCache_=H}getAll(){return[...this.pluginsMap_.blades,...this.pluginsMap_.inputs,...this.pluginsMap_.monitors]}register(H,h){if(!Qq(h.core))throw y.notCompatible(H,h.id);if(h.type==="blade")this.pluginsMap_.blades.unshift(h);else if(h.type==="input")this.pluginsMap_.inputs.unshift(h);else if(h.type==="monitor")this.pluginsMap_.monitors.unshift(h)}createInput_(H,h,D){return this.pluginsMap_.inputs.reduce((q,W)=>q!==null&&q!==void 0?q:f6(W,{document:H,target:h,params:D}),null)}createMonitor_(H,h,D){return this.pluginsMap_.monitors.reduce((q,W)=>q!==null&&q!==void 0?q:u6(W,{document:H,params:D,target:h}),null)}createBinding(H,h,D){let q=h.read();if(O(q))throw new y({context:{key:h.key},type:"nomatchingcontroller"});let W=this.createInput_(H,h,D);if(W)return W;let J=this.createMonitor_(H,h,D);if(J)return J;throw new y({context:{key:h.key},type:"nomatchingcontroller"})}createBlade(H,h){let D=this.pluginsMap_.blades.reduce((q,W)=>q!==null&&q!==void 0?q:Hq(W,{document:H,params:h}),null);if(!D)throw new y({type:"nomatchingview",context:{params:h}});return D}createInputBindingApi_(H){let h=this.pluginsMap_.inputs.reduce((D,q)=>{var W,J;if(D)return D;return(J=(W=q.api)===null||W===void 0?void 0:W.call(q,{controller:H}))!==null&&J!==void 0?J:null},null);return this.apiCache_.add(H,h!==null&&h!==void 0?h:new JH(H))}createMonitorBindingApi_(H){let h=this.pluginsMap_.monitors.reduce((D,q)=>{var W,J;if(D)return D;return(J=(W=q.api)===null||W===void 0?void 0:W.call(q,{controller:H}))!==null&&J!==void 0?J:null},null);return this.apiCache_.add(H,h!==null&&h!==void 0?h:new JH(H))}createBindingApi(H){if(this.apiCache_.has(H))return this.apiCache_.get(H);if(b8(H))return this.createInputBindingApi_(H);if(m8(H))return this.createMonitorBindingApi_(H);throw y.shouldNeverHappen()}createApi(H){if(this.apiCache_.has(H))return this.apiCache_.get(H);if(x8(H))return this.createBindingApi(H);let h=this.pluginsMap_.blades.reduce((D,q)=>D!==null&&D!==void 0?D:q.api({controller:H,pool:this}),null);if(!h)throw y.shouldNeverHappen();return this.apiCache_.add(H,h)}}var v6=new C1;function m6(){let H=new _1(v6);return[I6,j6,k6,C6,L6,G6,Y6,Q6,Xq,V6,b6,x6,i8,a8,$D].forEach((h)=>{H.register("core",h)}),H}class x1 extends c{constructor(H){super(H);this.emitter_=new $,this.controller.value.emitter.on("change",(h)=>{this.emitter_.emit("change",new zH(this,h.rawValue))})}get label(){return this.controller.labelController.props.get("label")}set label(H){this.controller.labelController.props.set("label",H)}get options(){return this.controller.valueController.props.get("options")}set options(H){this.controller.valueController.props.set("options",H)}get value(){return this.controller.value.rawValue}set value(H){this.controller.value.rawValue=H}on(H,h){let D=h.bind(this);return this.emitter_.on(H,(q)=>{D(q)},{key:h}),this}off(H,h){return this.emitter_.off(H,h),this}}class b1 extends c{}class f1 extends c{constructor(H){super(H);this.emitter_=new $,this.controller.value.emitter.on("change",(h)=>{this.emitter_.emit("change",new zH(this,h.rawValue))})}get label(){return this.controller.labelController.props.get("label")}set label(H){this.controller.labelController.props.set("label",H)}get max(){return this.controller.valueController.sliderController.props.get("max")}set max(H){this.controller.valueController.sliderController.props.set("max",H)}get min(){return this.controller.valueController.sliderController.props.get("min")}set min(H){this.controller.valueController.sliderController.props.set("min",H)}get value(){return this.controller.value.rawValue}set value(H){this.controller.value.rawValue=H}on(H,h){let D=h.bind(this);return this.emitter_.on(H,(q)=>{D(q)},{key:h}),this}off(H,h){return this.emitter_.off(H,h),this}}class d1 extends c{constructor(H){super(H);this.emitter_=new $,this.controller.value.emitter.on("change",(h)=>{this.emitter_.emit("change",new zH(this,h.rawValue))})}get label(){return this.controller.labelController.props.get("label")}set label(H){this.controller.labelController.props.set("label",H)}get formatter(){return this.controller.valueController.props.get("formatter")}set formatter(H){this.controller.valueController.props.set("formatter",H)}get value(){return this.controller.value.rawValue}set value(H){this.controller.value.rawValue=H}on(H,h){let D=h.bind(this);return this.emitter_.on(H,(q)=>{D(q)},{key:h}),this}off(H,h){return this.emitter_.off(H,h),this}}var t6=function(){return{id:"list",type:"blade",core:YH,accept(H){let h=S(H,(D)=>({options:D.required.custom(CH),value:D.required.raw,view:D.required.constant("list"),label:D.optional.string}));return h?{params:h}:null},controller(H){let h=new FH(b0(H.params.options)),D=w(H.params.value,{constraint:h}),q=new v(H.document,{props:new Y({options:h.values.value("options")}),value:D,viewProps:H.viewProps});return new p(H.document,{blade:H.blade,props:Y.fromObject({label:H.params.label}),value:D,valueController:q})},api(H){if(!(H.controller instanceof p))return null;if(!(H.controller.valueController instanceof v))return null;return new x1(H.controller)}}}();class u1 extends x0{constructor(H,h){super(H,h)}get element(){return this.controller.view.element}}class v1 extends iH{constructor(H,h){super(H,{expanded:h.expanded,blade:h.blade,props:h.props,root:!0,viewProps:h.viewProps})}}var Nh=K("spr");class m1{constructor(H,h){this.element=H.createElement("div"),this.element.classList.add(Nh()),h.viewProps.bindClassModifiers(this.element);let D=H.createElement("hr");D.classList.add(Nh("r")),this.element.appendChild(D)}}class I0 extends kH{constructor(H,h){super(Object.assign(Object.assign({},h),{view:new m1(H,{viewProps:h.viewProps})}))}}var i6={id:"separator",type:"blade",core:YH,accept(H){let h=S(H,(D)=>({view:D.required.constant("separator")}));return h?{params:h}:null},controller(H){return new I0(H.document,{blade:H.blade,viewProps:H.viewProps})},api(H){if(!(H.controller instanceof I0))return null;return new b1(H.controller)}},s6={id:"slider",type:"blade",core:YH,accept(H){let h=S(H,(D)=>({max:D.required.number,min:D.required.number,view:D.required.constant("slider"),format:D.optional.function,label:D.optional.string,value:D.optional.number}));return h?{params:h}:null},controller(H){var h,D;let q=(h=H.params.value)!==null&&h!==void 0?h:0,W=new XH({max:H.params.max,min:H.params.min}),J=w(q,{constraint:W}),Q=new RH(H.document,Object.assign(Object.assign({},ED({formatter:(D=H.params.format)!==null&&D!==void 0?D:$8,keyScale:w(1),max:W.values.value("max"),min:W.values.value("min"),pointerScale:th(H.params,q)})),{parser:u,value:J,viewProps:H.viewProps}));return new p(H.document,{blade:H.blade,props:Y.fromObject({label:H.params.label}),value:J,valueController:Q})},api(H){if(!(H.controller instanceof p))return null;if(!(H.controller.valueController instanceof RH))return null;return new f1(H.controller)}},n6=function(){return{id:"text",type:"blade",core:YH,accept(H){let h=S(H,(D)=>({parse:D.required.function,value:D.required.raw,view:D.required.constant("text"),format:D.optional.function,label:D.optional.string}));return h?{params:h}:null},controller(H){var h;let D=w(H.params.value),q=new QH(H.document,{parser:H.params.parse,props:Y.fromObject({formatter:(h=H.params.format)!==null&&h!==void 0?h:(W)=>String(W)}),value:D,viewProps:H.viewProps});return new p(H.document,{blade:H.blade,props:Y.fromObject({label:H.params.label}),value:D,valueController:q})},api(H){if(!(H.controller instanceof p))return null;if(!(H.controller.valueController instanceof QH))return null;return new d1(H.controller)}}}();function g6(H){let h=H.createElement("div");if(h.classList.add(K("dfw")()),H.body)H.body.appendChild(h);return h}function p6(H,h,D){if(H.querySelector(`style[data-tp-style=${h}]`))return;let q=H.createElement("style");q.dataset.tpStyle=h,q.textContent=D,H.head.appendChild(q)}class n0 extends u1{constructor(H){var h,D;let q=H!==null&&H!==void 0?H:{},W=(h=q.document)!==null&&h!==void 0?h:T8(),J=m6(),Q=new v1(W,{expanded:q.expanded,blade:GH(),props:Y.fromObject({title:q.title}),viewProps:t.create()});super(Q,J);this.pool_=J,this.containerElem_=(D=q.container)!==null&&D!==void 0?D:g6(W),this.containerElem_.appendChild(this.element),this.doc_=W,this.usesDefaultWrapper_=!q.container,this.setUpDefaultPlugins_()}get document(){if(!this.doc_)throw y.alreadyDisposed();return this.doc_}dispose(){let H=this.containerElem_;if(!H)throw y.alreadyDisposed();if(this.usesDefaultWrapper_){let h=H.parentElement;if(h)h.removeChild(H)}this.containerElem_=null,this.doc_=null,super.dispose()}registerPlugin(H){if(H.css)p6(this.document,`plugin-${H.id}`,H.css);("plugin"in H?[H.plugin]:("plugins"in H)?H.plugins:[]).forEach((D)=>{this.pool_.register(H.id,D)})}setUpDefaultPlugins_(){this.registerPlugin({id:"default",css:".tp-tbiv_b,.tp-coltxtv_ms,.tp-colswv_b,.tp-ckbv_i,.tp-sglv_i,.tp-mllv_i,.tp-grlv_g,.tp-txtv_i,.tp-p2dpv_p,.tp-colswv_sw,.tp-rotv_b,.tp-fldv_b,.tp-p2dv_b,.tp-btnv_b,.tp-lstv_s{-webkit-appearance:none;-moz-appearance:none;appearance:none;background-color:rgba(0,0,0,0);border-width:0;font-family:inherit;font-size:inherit;font-weight:inherit;margin:0;outline:none;padding:0}.tp-p2dv_b,.tp-btnv_b,.tp-lstv_s{background-color:var(--btn-bg);border-radius:var(--bld-br);color:var(--btn-fg);cursor:pointer;display:block;font-weight:bold;height:var(--cnt-usz);line-height:var(--cnt-usz);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.tp-p2dv_b:hover,.tp-btnv_b:hover,.tp-lstv_s:hover{background-color:var(--btn-bg-h)}.tp-p2dv_b:focus,.tp-btnv_b:focus,.tp-lstv_s:focus{background-color:var(--btn-bg-f)}.tp-p2dv_b:active,.tp-btnv_b:active,.tp-lstv_s:active{background-color:var(--btn-bg-a)}.tp-p2dv_b:disabled,.tp-btnv_b:disabled,.tp-lstv_s:disabled{opacity:.5}.tp-rotv_c>.tp-cntv.tp-v-lst,.tp-tbpv_c>.tp-cntv.tp-v-lst,.tp-fldv_c>.tp-cntv.tp-v-lst{margin-bottom:calc(-1*var(--cnt-vp))}.tp-rotv_c>.tp-fldv.tp-v-lst .tp-fldv_c,.tp-tbpv_c>.tp-fldv.tp-v-lst .tp-fldv_c,.tp-fldv_c>.tp-fldv.tp-v-lst .tp-fldv_c{border-bottom-left-radius:0}.tp-rotv_c>.tp-fldv.tp-v-lst .tp-fldv_b,.tp-tbpv_c>.tp-fldv.tp-v-lst .tp-fldv_b,.tp-fldv_c>.tp-fldv.tp-v-lst .tp-fldv_b{border-bottom-left-radius:0}.tp-rotv_c>*:not(.tp-v-fst),.tp-tbpv_c>*:not(.tp-v-fst),.tp-fldv_c>*:not(.tp-v-fst){margin-top:var(--cnt-usp)}.tp-rotv_c>.tp-sprv:not(.tp-v-fst),.tp-tbpv_c>.tp-sprv:not(.tp-v-fst),.tp-fldv_c>.tp-sprv:not(.tp-v-fst),.tp-rotv_c>.tp-cntv:not(.tp-v-fst),.tp-tbpv_c>.tp-cntv:not(.tp-v-fst),.tp-fldv_c>.tp-cntv:not(.tp-v-fst){margin-top:var(--cnt-vp)}.tp-rotv_c>.tp-sprv+*:not(.tp-v-hidden),.tp-tbpv_c>.tp-sprv+*:not(.tp-v-hidden),.tp-fldv_c>.tp-sprv+*:not(.tp-v-hidden),.tp-rotv_c>.tp-cntv+*:not(.tp-v-hidden),.tp-tbpv_c>.tp-cntv+*:not(.tp-v-hidden),.tp-fldv_c>.tp-cntv+*:not(.tp-v-hidden){margin-top:var(--cnt-vp)}.tp-rotv_c>.tp-sprv:not(.tp-v-hidden)+.tp-sprv,.tp-tbpv_c>.tp-sprv:not(.tp-v-hidden)+.tp-sprv,.tp-fldv_c>.tp-sprv:not(.tp-v-hidden)+.tp-sprv,.tp-rotv_c>.tp-cntv:not(.tp-v-hidden)+.tp-cntv,.tp-tbpv_c>.tp-cntv:not(.tp-v-hidden)+.tp-cntv,.tp-fldv_c>.tp-cntv:not(.tp-v-hidden)+.tp-cntv{margin-top:0}.tp-tbpv_c>.tp-cntv,.tp-fldv_c>.tp-cntv{margin-left:4px}.tp-tbpv_c>.tp-fldv>.tp-fldv_b,.tp-fldv_c>.tp-fldv>.tp-fldv_b{border-top-left-radius:var(--bld-br);border-bottom-left-radius:var(--bld-br)}.tp-tbpv_c>.tp-fldv.tp-fldv-expanded>.tp-fldv_b,.tp-fldv_c>.tp-fldv.tp-fldv-expanded>.tp-fldv_b{border-bottom-left-radius:0}.tp-tbpv_c .tp-fldv>.tp-fldv_c,.tp-fldv_c .tp-fldv>.tp-fldv_c{border-bottom-left-radius:var(--bld-br)}.tp-tbpv_c>.tp-cntv+.tp-fldv>.tp-fldv_b,.tp-fldv_c>.tp-cntv+.tp-fldv>.tp-fldv_b{border-top-left-radius:0}.tp-tbpv_c>.tp-cntv+.tp-tabv>.tp-tabv_t,.tp-fldv_c>.tp-cntv+.tp-tabv>.tp-tabv_t{border-top-left-radius:0}.tp-tbpv_c>.tp-tabv>.tp-tabv_t,.tp-fldv_c>.tp-tabv>.tp-tabv_t{border-top-left-radius:var(--bld-br)}.tp-tbpv_c .tp-tabv>.tp-tabv_c,.tp-fldv_c .tp-tabv>.tp-tabv_c{border-bottom-left-radius:var(--bld-br)}.tp-rotv_b,.tp-fldv_b{background-color:var(--cnt-bg);color:var(--cnt-fg);cursor:pointer;display:block;height:calc(var(--cnt-usz) + 4px);line-height:calc(var(--cnt-usz) + 4px);overflow:hidden;padding-left:var(--cnt-hp);padding-right:calc(4px + var(--cnt-usz) + var(--cnt-hp));position:relative;text-align:left;text-overflow:ellipsis;white-space:nowrap;width:100%;transition:border-radius .2s ease-in-out .2s}.tp-rotv_b:hover,.tp-fldv_b:hover{background-color:var(--cnt-bg-h)}.tp-rotv_b:focus,.tp-fldv_b:focus{background-color:var(--cnt-bg-f)}.tp-rotv_b:active,.tp-fldv_b:active{background-color:var(--cnt-bg-a)}.tp-rotv_b:disabled,.tp-fldv_b:disabled{opacity:.5}.tp-rotv_m,.tp-fldv_m{background:linear-gradient(to left, var(--cnt-fg), var(--cnt-fg) 2px, transparent 2px, transparent 4px, var(--cnt-fg) 4px);border-radius:2px;bottom:0;content:\"\";display:block;height:6px;right:calc(var(--cnt-hp) + (var(--cnt-usz) + 4px - 6px)/2 - 2px);margin:auto;opacity:.5;position:absolute;top:0;transform:rotate(90deg);transition:transform .2s ease-in-out;width:6px}.tp-rotv.tp-rotv-expanded .tp-rotv_m,.tp-fldv.tp-fldv-expanded>.tp-fldv_b>.tp-fldv_m{transform:none}.tp-rotv_c,.tp-fldv_c{box-sizing:border-box;height:0;opacity:0;overflow:hidden;padding-bottom:0;padding-top:0;position:relative;transition:height .2s ease-in-out,opacity .2s linear,padding .2s ease-in-out}.tp-rotv.tp-rotv-cpl:not(.tp-rotv-expanded) .tp-rotv_c,.tp-fldv.tp-fldv-cpl:not(.tp-fldv-expanded)>.tp-fldv_c{display:none}.tp-rotv.tp-rotv-expanded .tp-rotv_c,.tp-fldv.tp-fldv-expanded>.tp-fldv_c{opacity:1;padding-bottom:var(--cnt-vp);padding-top:var(--cnt-vp);transform:none;overflow:visible;transition:height .2s ease-in-out,opacity .2s linear .2s,padding .2s ease-in-out}.tp-txtv_i,.tp-p2dpv_p,.tp-colswv_sw{background-color:var(--in-bg);border-radius:var(--bld-br);box-sizing:border-box;color:var(--in-fg);font-family:inherit;height:var(--cnt-usz);line-height:var(--cnt-usz);min-width:0;width:100%}.tp-txtv_i:hover,.tp-p2dpv_p:hover,.tp-colswv_sw:hover{background-color:var(--in-bg-h)}.tp-txtv_i:focus,.tp-p2dpv_p:focus,.tp-colswv_sw:focus{background-color:var(--in-bg-f)}.tp-txtv_i:active,.tp-p2dpv_p:active,.tp-colswv_sw:active{background-color:var(--in-bg-a)}.tp-txtv_i:disabled,.tp-p2dpv_p:disabled,.tp-colswv_sw:disabled{opacity:.5}.tp-lstv,.tp-coltxtv_m{position:relative}.tp-lstv_s{padding:0 20px 0 4px;width:100%}.tp-lstv_m,.tp-coltxtv_mm{bottom:0;margin:auto;pointer-events:none;position:absolute;right:2px;top:0}.tp-lstv_m svg,.tp-coltxtv_mm svg{bottom:0;height:16px;margin:auto;position:absolute;right:0;top:0;width:16px}.tp-lstv_m svg path,.tp-coltxtv_mm svg path{fill:currentColor}.tp-sglv_i,.tp-mllv_i,.tp-grlv_g{background-color:var(--mo-bg);border-radius:var(--bld-br);box-sizing:border-box;color:var(--mo-fg);height:var(--cnt-usz);scrollbar-color:currentColor rgba(0,0,0,0);scrollbar-width:thin;width:100%}.tp-sglv_i::-webkit-scrollbar,.tp-mllv_i::-webkit-scrollbar,.tp-grlv_g::-webkit-scrollbar{height:8px;width:8px}.tp-sglv_i::-webkit-scrollbar-corner,.tp-mllv_i::-webkit-scrollbar-corner,.tp-grlv_g::-webkit-scrollbar-corner{background-color:rgba(0,0,0,0)}.tp-sglv_i::-webkit-scrollbar-thumb,.tp-mllv_i::-webkit-scrollbar-thumb,.tp-grlv_g::-webkit-scrollbar-thumb{background-clip:padding-box;background-color:currentColor;border:rgba(0,0,0,0) solid 2px;border-radius:4px}.tp-pndtxtv,.tp-coltxtv_w{display:flex}.tp-pndtxtv_a,.tp-coltxtv_c{width:100%}.tp-pndtxtv_a+.tp-pndtxtv_a,.tp-coltxtv_c+.tp-pndtxtv_a,.tp-pndtxtv_a+.tp-coltxtv_c,.tp-coltxtv_c+.tp-coltxtv_c{margin-left:2px}.tp-rotv{--bs-bg: var(--tp-base-background-color, hsl(230, 7%, 17%));--bs-br: var(--tp-base-border-radius, 6px);--bs-ff: var(--tp-base-font-family, Roboto Mono, Source Code Pro, Menlo, Courier, monospace);--bs-sh: var(--tp-base-shadow-color, rgba(0, 0, 0, 0.2));--bld-br: var(--tp-blade-border-radius, 2px);--bld-hp: var(--tp-blade-horizontal-padding, 4px);--bld-vw: var(--tp-blade-value-width, 160px);--btn-bg: var(--tp-button-background-color, hsl(230, 7%, 70%));--btn-bg-a: var(--tp-button-background-color-active, #d6d7db);--btn-bg-f: var(--tp-button-background-color-focus, #c8cad0);--btn-bg-h: var(--tp-button-background-color-hover, #bbbcc4);--btn-fg: var(--tp-button-foreground-color, hsl(230, 7%, 17%));--cnt-bg: var(--tp-container-background-color, rgba(187, 188, 196, 0.1));--cnt-bg-a: var(--tp-container-background-color-active, rgba(187, 188, 196, 0.25));--cnt-bg-f: var(--tp-container-background-color-focus, rgba(187, 188, 196, 0.2));--cnt-bg-h: var(--tp-container-background-color-hover, rgba(187, 188, 196, 0.15));--cnt-fg: var(--tp-container-foreground-color, hsl(230, 7%, 75%));--cnt-hp: var(--tp-container-horizontal-padding, 4px);--cnt-vp: var(--tp-container-vertical-padding, 4px);--cnt-usp: var(--tp-container-unit-spacing, 4px);--cnt-usz: var(--tp-container-unit-size, 20px);--in-bg: var(--tp-input-background-color, rgba(187, 188, 196, 0.1));--in-bg-a: var(--tp-input-background-color-active, rgba(187, 188, 196, 0.25));--in-bg-f: var(--tp-input-background-color-focus, rgba(187, 188, 196, 0.2));--in-bg-h: var(--tp-input-background-color-hover, rgba(187, 188, 196, 0.15));--in-fg: var(--tp-input-foreground-color, hsl(230, 7%, 75%));--lbl-fg: var(--tp-label-foreground-color, rgba(187, 188, 196, 0.7));--mo-bg: var(--tp-monitor-background-color, rgba(0, 0, 0, 0.2));--mo-fg: var(--tp-monitor-foreground-color, rgba(187, 188, 196, 0.7));--grv-fg: var(--tp-groove-foreground-color, rgba(187, 188, 196, 0.1))}.tp-btnv_b{width:100%}.tp-btnv_t{text-align:center}.tp-ckbv_l{display:block;position:relative}.tp-ckbv_i{left:0;opacity:0;position:absolute;top:0}.tp-ckbv_w{background-color:var(--in-bg);border-radius:var(--bld-br);cursor:pointer;display:block;height:var(--cnt-usz);position:relative;width:var(--cnt-usz)}.tp-ckbv_w svg{display:block;height:16px;inset:0;margin:auto;opacity:0;position:absolute;width:16px}.tp-ckbv_w svg path{fill:none;stroke:var(--in-fg);stroke-width:2}.tp-ckbv_i:hover+.tp-ckbv_w{background-color:var(--in-bg-h)}.tp-ckbv_i:focus+.tp-ckbv_w{background-color:var(--in-bg-f)}.tp-ckbv_i:active+.tp-ckbv_w{background-color:var(--in-bg-a)}.tp-ckbv_i:checked+.tp-ckbv_w svg{opacity:1}.tp-ckbv.tp-v-disabled .tp-ckbv_w{opacity:.5}.tp-colv{position:relative}.tp-colv_h{display:flex}.tp-colv_s{flex-grow:0;flex-shrink:0;width:var(--cnt-usz)}.tp-colv_t{flex:1;margin-left:4px}.tp-colv_p{height:0;margin-top:0;opacity:0;overflow:hidden;transition:height .2s ease-in-out,opacity .2s linear,margin .2s ease-in-out}.tp-colv.tp-colv-expanded.tp-colv-cpl .tp-colv_p{overflow:visible}.tp-colv.tp-colv-expanded .tp-colv_p{margin-top:var(--cnt-usp);opacity:1}.tp-colv .tp-popv{left:calc(-1*var(--cnt-hp));right:calc(-1*var(--cnt-hp));top:var(--cnt-usz)}.tp-colpv_h,.tp-colpv_ap{margin-left:6px;margin-right:6px}.tp-colpv_h{margin-top:var(--cnt-usp)}.tp-colpv_rgb{display:flex;margin-top:var(--cnt-usp);width:100%}.tp-colpv_a{display:flex;margin-top:var(--cnt-vp);padding-top:calc(var(--cnt-vp) + 2px);position:relative}.tp-colpv_a::before{background-color:var(--grv-fg);content:\"\";height:2px;left:calc(-1*var(--cnt-hp));position:absolute;right:calc(-1*var(--cnt-hp));top:0}.tp-colpv.tp-v-disabled .tp-colpv_a::before{opacity:.5}.tp-colpv_ap{align-items:center;display:flex;flex:3}.tp-colpv_at{flex:1;margin-left:4px}.tp-svpv{border-radius:var(--bld-br);outline:none;overflow:hidden;position:relative}.tp-svpv.tp-v-disabled{opacity:.5}.tp-svpv_c{cursor:crosshair;display:block;height:calc(var(--cnt-usz)*4);width:100%}.tp-svpv_m{border-radius:100%;border:rgba(255,255,255,.75) solid 2px;box-sizing:border-box;filter:drop-shadow(0 0 1px rgba(0, 0, 0, 0.3));height:12px;margin-left:-6px;margin-top:-6px;pointer-events:none;position:absolute;width:12px}.tp-svpv:focus .tp-svpv_m{border-color:#fff}.tp-hplv{cursor:pointer;height:var(--cnt-usz);outline:none;position:relative}.tp-hplv.tp-v-disabled{opacity:.5}.tp-hplv_c{background-image:url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAAABCAYAAABubagXAAAAQ0lEQVQoU2P8z8Dwn0GCgQEDi2OK/RBgYHjBgIpfovFh8j8YBIgzFGQxuqEgPhaDOT5gOhPkdCxOZeBg+IDFZZiGAgCaSSMYtcRHLgAAAABJRU5ErkJggg==);background-position:left top;background-repeat:no-repeat;background-size:100% 100%;border-radius:2px;display:block;height:4px;left:0;margin-top:-2px;position:absolute;top:50%;width:100%}.tp-hplv_m{border-radius:var(--bld-br);border:rgba(255,255,255,.75) solid 2px;box-shadow:0 0 2px rgba(0,0,0,.1);box-sizing:border-box;height:12px;left:50%;margin-left:-6px;margin-top:-6px;position:absolute;top:50%;width:12px}.tp-hplv:focus .tp-hplv_m{border-color:#fff}.tp-aplv{cursor:pointer;height:var(--cnt-usz);outline:none;position:relative;width:100%}.tp-aplv.tp-v-disabled{opacity:.5}.tp-aplv_b{background-color:#fff;background-image:linear-gradient(to top right, #ddd 25%, transparent 25%, transparent 75%, #ddd 75%),linear-gradient(to top right, #ddd 25%, transparent 25%, transparent 75%, #ddd 75%);background-size:4px 4px;background-position:0 0,2px 2px;border-radius:2px;display:block;height:4px;left:0;margin-top:-2px;overflow:hidden;position:absolute;top:50%;width:100%}.tp-aplv_c{inset:0;position:absolute}.tp-aplv_m{background-color:#fff;background-image:linear-gradient(to top right, #ddd 25%, transparent 25%, transparent 75%, #ddd 75%),linear-gradient(to top right, #ddd 25%, transparent 25%, transparent 75%, #ddd 75%);background-size:12px 12px;background-position:0 0,6px 6px;border-radius:var(--bld-br);box-shadow:0 0 2px rgba(0,0,0,.1);height:12px;left:50%;margin-left:-6px;margin-top:-6px;overflow:hidden;position:absolute;top:50%;width:12px}.tp-aplv_p{border-radius:var(--bld-br);border:rgba(255,255,255,.75) solid 2px;box-sizing:border-box;inset:0;position:absolute}.tp-aplv:focus .tp-aplv_p{border-color:#fff}.tp-colswv{background-color:#fff;background-image:linear-gradient(to top right, #ddd 25%, transparent 25%, transparent 75%, #ddd 75%),linear-gradient(to top right, #ddd 25%, transparent 25%, transparent 75%, #ddd 75%);background-size:10px 10px;background-position:0 0,5px 5px;border-radius:var(--bld-br);overflow:hidden}.tp-colswv.tp-v-disabled{opacity:.5}.tp-colswv_sw{border-radius:0}.tp-colswv_b{cursor:pointer;display:block;height:var(--cnt-usz);left:0;position:absolute;top:0;width:var(--cnt-usz)}.tp-colswv_b:focus::after{border:rgba(255,255,255,.75) solid 2px;border-radius:var(--bld-br);content:\"\";display:block;inset:0;position:absolute}.tp-coltxtv{display:flex;width:100%}.tp-coltxtv_m{margin-right:4px}.tp-coltxtv_ms{border-radius:var(--bld-br);color:var(--lbl-fg);cursor:pointer;height:var(--cnt-usz);line-height:var(--cnt-usz);padding:0 18px 0 4px}.tp-coltxtv_ms:hover{background-color:var(--in-bg-h)}.tp-coltxtv_ms:focus{background-color:var(--in-bg-f)}.tp-coltxtv_ms:active{background-color:var(--in-bg-a)}.tp-coltxtv_mm{color:var(--lbl-fg)}.tp-coltxtv.tp-v-disabled .tp-coltxtv_mm{opacity:.5}.tp-coltxtv_w{flex:1}.tp-dfwv{position:absolute;top:8px;right:8px;width:256px}.tp-fldv{position:relative}.tp-fldv_t{padding-left:4px}.tp-fldv_b:disabled .tp-fldv_m{display:none}.tp-fldv_c{padding-left:4px}.tp-fldv_i{bottom:0;color:var(--cnt-bg);left:0;overflow:hidden;position:absolute;top:calc(var(--cnt-usz) + 4px);width:max(var(--bs-br),4px)}.tp-fldv_i::before{background-color:currentColor;bottom:0;content:\"\";left:0;position:absolute;top:0;width:4px}.tp-fldv_b:hover+.tp-fldv_i{color:var(--cnt-bg-h)}.tp-fldv_b:focus+.tp-fldv_i{color:var(--cnt-bg-f)}.tp-fldv_b:active+.tp-fldv_i{color:var(--cnt-bg-a)}.tp-fldv.tp-v-disabled>.tp-fldv_i{opacity:.5}.tp-grlv{position:relative}.tp-grlv_g{display:block;height:calc(var(--cnt-usz)*3)}.tp-grlv_g polyline{fill:none;stroke:var(--mo-fg);stroke-linejoin:round}.tp-grlv_t{margin-top:-4px;transition:left .05s,top .05s;visibility:hidden}.tp-grlv_t.tp-grlv_t-a{visibility:visible}.tp-grlv_t.tp-grlv_t-in{transition:none}.tp-grlv.tp-v-disabled .tp-grlv_g{opacity:.5}.tp-grlv .tp-ttv{background-color:var(--mo-fg)}.tp-grlv .tp-ttv::before{border-top-color:var(--mo-fg)}.tp-lblv{align-items:center;display:flex;line-height:1.3;padding-left:var(--cnt-hp);padding-right:var(--cnt-hp)}.tp-lblv.tp-lblv-nol{display:block}.tp-lblv_l{color:var(--lbl-fg);flex:1;-webkit-hyphens:auto;hyphens:auto;overflow:hidden;padding-left:4px;padding-right:16px}.tp-lblv.tp-v-disabled .tp-lblv_l{opacity:.5}.tp-lblv.tp-lblv-nol .tp-lblv_l{display:none}.tp-lblv_v{align-self:flex-start;flex-grow:0;flex-shrink:0;width:var(--bld-vw)}.tp-lblv.tp-lblv-nol .tp-lblv_v{width:100%}.tp-lstv_s{padding:0 20px 0 var(--bld-hp);width:100%}.tp-lstv_m{color:var(--btn-fg)}.tp-sglv_i{padding-left:var(--bld-hp);padding-right:var(--bld-hp)}.tp-sglv.tp-v-disabled .tp-sglv_i{opacity:.5}.tp-mllv_i{display:block;height:calc(var(--cnt-usz)*3);line-height:var(--cnt-usz);padding-left:var(--bld-hp);padding-right:var(--bld-hp);resize:none;white-space:pre}.tp-mllv.tp-v-disabled .tp-mllv_i{opacity:.5}.tp-p2dv{position:relative}.tp-p2dv_h{display:flex}.tp-p2dv_b{height:var(--cnt-usz);margin-right:4px;position:relative;width:var(--cnt-usz)}.tp-p2dv_b svg{display:block;height:16px;left:50%;margin-left:-8px;margin-top:-8px;position:absolute;top:50%;width:16px}.tp-p2dv_b svg path{stroke:currentColor;stroke-width:2}.tp-p2dv_b svg circle{fill:currentColor}.tp-p2dv_t{flex:1}.tp-p2dv_p{height:0;margin-top:0;opacity:0;overflow:hidden;transition:height .2s ease-in-out,opacity .2s linear,margin .2s ease-in-out}.tp-p2dv.tp-p2dv-expanded .tp-p2dv_p{margin-top:var(--cnt-usp);opacity:1}.tp-p2dv .tp-popv{left:calc(-1*var(--cnt-hp));right:calc(-1*var(--cnt-hp));top:var(--cnt-usz)}.tp-p2dpv{padding-left:calc(var(--cnt-usz) + 4px)}.tp-p2dpv_p{cursor:crosshair;height:0;overflow:hidden;padding-bottom:100%;position:relative}.tp-p2dpv.tp-v-disabled .tp-p2dpv_p{opacity:.5}.tp-p2dpv_g{display:block;height:100%;left:0;pointer-events:none;position:absolute;top:0;width:100%}.tp-p2dpv_ax{opacity:.1;stroke:var(--in-fg);stroke-dasharray:1}.tp-p2dpv_l{opacity:.5;stroke:var(--in-fg);stroke-dasharray:1}.tp-p2dpv_m{border:var(--in-fg) solid 1px;border-radius:50%;box-sizing:border-box;height:4px;margin-left:-2px;margin-top:-2px;position:absolute;width:4px}.tp-p2dpv_p:focus .tp-p2dpv_m{background-color:var(--in-fg);border-width:0}.tp-popv{background-color:var(--bs-bg);border-radius:var(--bs-br);box-shadow:0 2px 4px var(--bs-sh);display:none;max-width:var(--bld-vw);padding:var(--cnt-vp) var(--cnt-hp);position:absolute;visibility:hidden;z-index:1000}.tp-popv.tp-popv-v{display:block;visibility:visible}.tp-sldv.tp-v-disabled{opacity:.5}.tp-sldv_t{box-sizing:border-box;cursor:pointer;height:var(--cnt-usz);margin:0 6px;outline:none;position:relative}.tp-sldv_t::before{background-color:var(--in-bg);border-radius:1px;content:\"\";display:block;height:2px;inset:0;margin:auto;position:absolute}.tp-sldv_k{height:100%;left:0;position:absolute;top:0}.tp-sldv_k::before{background-color:var(--in-fg);border-radius:1px;content:\"\";display:block;height:2px;inset:0;margin-bottom:auto;margin-top:auto;position:absolute}.tp-sldv_k::after{background-color:var(--btn-bg);border-radius:var(--bld-br);bottom:0;content:\"\";display:block;height:12px;margin-bottom:auto;margin-top:auto;position:absolute;right:-6px;top:0;width:12px}.tp-sldv_t:hover .tp-sldv_k::after{background-color:var(--btn-bg-h)}.tp-sldv_t:focus .tp-sldv_k::after{background-color:var(--btn-bg-f)}.tp-sldv_t:active .tp-sldv_k::after{background-color:var(--btn-bg-a)}.tp-sldtxtv{display:flex}.tp-sldtxtv_s{flex:2}.tp-sldtxtv_t{flex:1;margin-left:4px}.tp-tabv{position:relative}.tp-tabv_t{align-items:flex-end;color:var(--cnt-bg);display:flex;overflow:hidden;position:relative}.tp-tabv_t:hover{color:var(--cnt-bg-h)}.tp-tabv_t:has(*:focus){color:var(--cnt-bg-f)}.tp-tabv_t:has(*:active){color:var(--cnt-bg-a)}.tp-tabv_t::before{background-color:currentColor;bottom:0;content:\"\";height:2px;left:0;pointer-events:none;position:absolute;right:0}.tp-tabv.tp-v-disabled .tp-tabv_t::before{opacity:.5}.tp-tabv.tp-tabv-nop .tp-tabv_t{height:calc(var(--cnt-usz) + 4px);position:relative}.tp-tabv.tp-tabv-nop .tp-tabv_t::before{background-color:var(--cnt-bg);bottom:0;content:\"\";height:2px;left:0;position:absolute;right:0}.tp-tabv_i{bottom:0;color:var(--cnt-bg);left:0;overflow:hidden;position:absolute;top:calc(var(--cnt-usz) + 4px);width:max(var(--bs-br),4px)}.tp-tabv_i::before{background-color:currentColor;bottom:0;content:\"\";left:0;position:absolute;top:0;width:4px}.tp-tabv_t:hover+.tp-tabv_i{color:var(--cnt-bg-h)}.tp-tabv_t:has(*:focus)+.tp-tabv_i{color:var(--cnt-bg-f)}.tp-tabv_t:has(*:active)+.tp-tabv_i{color:var(--cnt-bg-a)}.tp-tabv.tp-v-disabled>.tp-tabv_i{opacity:.5}.tp-tbiv{flex:1;min-width:0;position:relative}.tp-tbiv+.tp-tbiv{margin-left:2px}.tp-tbiv+.tp-tbiv.tp-v-disabled::before{opacity:.5}.tp-tbiv_b{display:block;padding-left:calc(var(--cnt-hp) + 4px);padding-right:calc(var(--cnt-hp) + 4px);position:relative;width:100%}.tp-tbiv_b:disabled{opacity:.5}.tp-tbiv_b::before{background-color:var(--cnt-bg);content:\"\";inset:0 0 2px;pointer-events:none;position:absolute}.tp-tbiv_b:hover::before{background-color:var(--cnt-bg-h)}.tp-tbiv_b:focus::before{background-color:var(--cnt-bg-f)}.tp-tbiv_b:active::before{background-color:var(--cnt-bg-a)}.tp-tbiv_t{color:var(--cnt-fg);height:calc(var(--cnt-usz) + 4px);line-height:calc(var(--cnt-usz) + 4px);opacity:.5;overflow:hidden;position:relative;text-overflow:ellipsis}.tp-tbiv.tp-tbiv-sel .tp-tbiv_t{opacity:1}.tp-tbpv_c{padding-bottom:var(--cnt-vp);padding-left:4px;padding-top:var(--cnt-vp)}.tp-txtv{position:relative}.tp-txtv_i{padding-left:var(--bld-hp);padding-right:var(--bld-hp)}.tp-txtv.tp-txtv-fst .tp-txtv_i{border-bottom-right-radius:0;border-top-right-radius:0}.tp-txtv.tp-txtv-mid .tp-txtv_i{border-radius:0}.tp-txtv.tp-txtv-lst .tp-txtv_i{border-bottom-left-radius:0;border-top-left-radius:0}.tp-txtv.tp-txtv-num .tp-txtv_i{text-align:right}.tp-txtv.tp-txtv-drg .tp-txtv_i{opacity:.3}.tp-txtv_k{cursor:pointer;height:100%;left:calc(var(--bld-hp) - 5px);position:absolute;top:0;width:12px}.tp-txtv_k::before{background-color:var(--in-fg);border-radius:1px;bottom:0;content:\"\";height:calc(var(--cnt-usz) - 4px);left:50%;margin-bottom:auto;margin-left:-1px;margin-top:auto;opacity:.1;position:absolute;top:0;transition:border-radius .1s,height .1s,transform .1s,width .1s;width:2px}.tp-txtv_k:hover::before,.tp-txtv.tp-txtv-drg .tp-txtv_k::before{opacity:1}.tp-txtv.tp-txtv-drg .tp-txtv_k::before{border-radius:50%;height:4px;transform:translateX(-1px);width:4px}.tp-txtv_g{bottom:0;display:block;height:8px;left:50%;margin:auto;overflow:visible;pointer-events:none;position:absolute;top:0;visibility:hidden;width:100%}.tp-txtv.tp-txtv-drg .tp-txtv_g{visibility:visible}.tp-txtv_gb{fill:none;stroke:var(--in-fg);stroke-dasharray:1}.tp-txtv_gh{fill:none;stroke:var(--in-fg)}.tp-txtv .tp-ttv{margin-left:6px;visibility:hidden}.tp-txtv.tp-txtv-drg .tp-ttv{visibility:visible}.tp-ttv{background-color:var(--in-fg);border-radius:var(--bld-br);color:var(--bs-bg);padding:2px 4px;pointer-events:none;position:absolute;transform:translate(-50%, -100%)}.tp-ttv::before{border-color:var(--in-fg) rgba(0,0,0,0) rgba(0,0,0,0) rgba(0,0,0,0);border-style:solid;border-width:2px;box-sizing:border-box;content:\"\";font-size:.9em;height:4px;left:50%;margin-left:-2px;position:absolute;top:100%;width:4px}.tp-rotv{background-color:var(--bs-bg);border-radius:var(--bs-br);box-shadow:0 2px 4px var(--bs-sh);font-family:var(--bs-ff);font-size:11px;font-weight:500;line-height:1;text-align:left}.tp-rotv_b{border-bottom-left-radius:var(--bs-br);border-bottom-right-radius:var(--bs-br);border-top-left-radius:var(--bs-br);border-top-right-radius:var(--bs-br);padding-left:calc(4px + var(--cnt-usz) + var(--cnt-hp));text-align:center}.tp-rotv.tp-rotv-expanded .tp-rotv_b{border-bottom-left-radius:0;border-bottom-right-radius:0;transition-delay:0s;transition-duration:0s}.tp-rotv.tp-rotv-not>.tp-rotv_b{display:none}.tp-rotv_b:disabled .tp-rotv_m{display:none}.tp-rotv_c>.tp-fldv.tp-v-lst>.tp-fldv_c{border-bottom-left-radius:var(--bs-br);border-bottom-right-radius:var(--bs-br)}.tp-rotv_c>.tp-fldv.tp-v-lst>.tp-fldv_i{border-bottom-left-radius:var(--bs-br)}.tp-rotv_c>.tp-fldv.tp-v-lst:not(.tp-fldv-expanded)>.tp-fldv_b{border-bottom-left-radius:var(--bs-br);border-bottom-right-radius:var(--bs-br)}.tp-rotv_c>.tp-fldv.tp-v-lst.tp-fldv-expanded>.tp-fldv_b{transition-delay:0s;transition-duration:0s}.tp-rotv_c .tp-fldv.tp-v-vlst:not(.tp-fldv-expanded)>.tp-fldv_b{border-bottom-right-radius:var(--bs-br)}.tp-rotv.tp-rotv-not .tp-rotv_c>.tp-fldv.tp-v-fst{margin-top:calc(-1*var(--cnt-vp))}.tp-rotv.tp-rotv-not .tp-rotv_c>.tp-fldv.tp-v-fst>.tp-fldv_b{border-top-left-radius:var(--bs-br);border-top-right-radius:var(--bs-br)}.tp-rotv_c>.tp-tabv.tp-v-lst>.tp-tabv_c{border-bottom-left-radius:var(--bs-br);border-bottom-right-radius:var(--bs-br)}.tp-rotv_c>.tp-tabv.tp-v-lst>.tp-tabv_i{border-bottom-left-radius:var(--bs-br)}.tp-rotv.tp-rotv-not .tp-rotv_c>.tp-tabv.tp-v-fst{margin-top:calc(-1*var(--cnt-vp))}.tp-rotv.tp-rotv-not .tp-rotv_c>.tp-tabv.tp-v-fst>.tp-tabv_t{border-top-left-radius:var(--bs-br);border-top-right-radius:var(--bs-br)}.tp-rotv.tp-v-disabled,.tp-rotv .tp-v-disabled{pointer-events:none}.tp-rotv.tp-v-hidden,.tp-rotv .tp-v-hidden{display:none}.tp-sprv_r{background-color:var(--grv-fg);border-width:0;display:block;height:2px;margin:0;width:100%}.tp-sprv.tp-v-disabled .tp-sprv_r{opacity:.5}",plugins:[t6,i6,s6,$D,n6]})}}var r6=new E0("4.0.5");var xH={cssVariables:{"--bg":"#0a0e14","--bg-elevated":"#0f1419","--muted":"#1a2332","--text":"#e6edf3","--text-secondary":"#8b949e","--accent":"#58d5ff","--accent-2":"#42a5cc","--border":"#21262d","--border-hover":"#30363d","--success":"#3fb950","--error":"#f85149"},tweakpane:{"--tp-base-background-color":"var(--bg-elevated)","--tp-base-shadow-color":"rgba(0, 0, 0, 0.4)","--tp-button-background-color":"var(--muted)","--tp-button-background-color-active":"var(--accent-2)","--tp-button-background-color-focus":"var(--accent)","--tp-button-background-color-hover":"var(--border-hover)","--tp-button-foreground-color":"var(--text)","--tp-container-background-color":"rgba(15, 20, 25, 0.6)","--tp-container-background-color-active":"rgba(15, 20, 25, 0.8)","--tp-container-background-color-focus":"rgba(15, 20, 25, 0.9)","--tp-container-background-color-hover":"rgba(15, 20, 25, 0.7)","--tp-container-foreground-color":"var(--text)","--tp-groove-foreground-color":"var(--border)","--tp-input-background-color":"rgba(26, 35, 50, 0.5)","--tp-input-background-color-active":"rgba(26, 35, 50, 0.7)","--tp-input-background-color-focus":"rgba(26, 35, 50, 0.8)","--tp-input-background-color-hover":"rgba(26, 35, 50, 0.6)","--tp-input-foreground-color":"var(--text)","--tp-label-foreground-color":"var(--text-secondary)","--tp-monitor-background-color":"rgba(26, 35, 50, 0.5)","--tp-monitor-foreground-color":"var(--text)"}};function bH(){let H=document.createElement("style");H.id="hypertool-theme";let h=Object.entries({...xH.cssVariables,...xH.tweakpane}).map(([D,q])=>`  ${D}: ${q};`).join(`
-`);H.textContent=`
+var __defProp = Object.defineProperty;
+var __export = (target, all) => {
+  for (var name in all)
+    __defProp(target, name, {
+      get: all[name],
+      enumerable: true,
+      configurable: true,
+      set: (newValue) => all[name] = () => newValue
+    });
+};
+
+// src/controls/index.ts
+var exports_controls = {};
+__export(exports_controls, {
+  studioTheme: () => studioTheme,
+  injectThemeVariables: () => injectThemeVariables,
+  createControls: () => createControls,
+  createControlPanel: () => createControlPanel,
+  HypertoolControls: () => HypertoolControls
+});
+
+// ../node_modules/.bun/tweakpane@4.0.5/node_modules/tweakpane/dist/tweakpane.js
+/*! Tweakpane 4.0.5 (c) 2016 cocopon, licensed under the MIT license. */
+function forceCast(v) {
+  return v;
+}
+function isEmpty(value) {
+  return value === null || value === undefined;
+}
+function isObject$1(value) {
+  return value !== null && typeof value === "object";
+}
+function isRecord(value) {
+  return value !== null && typeof value === "object";
+}
+function deepEqualsArray(a1, a2) {
+  if (a1.length !== a2.length) {
+    return false;
+  }
+  for (let i = 0;i < a1.length; i++) {
+    if (a1[i] !== a2[i]) {
+      return false;
+    }
+  }
+  return true;
+}
+function deepMerge(r1, r2) {
+  const keys = Array.from(new Set([...Object.keys(r1), ...Object.keys(r2)]));
+  return keys.reduce((result, key) => {
+    const v1 = r1[key];
+    const v2 = r2[key];
+    return isRecord(v1) && isRecord(v2) ? Object.assign(Object.assign({}, result), { [key]: deepMerge(v1, v2) }) : Object.assign(Object.assign({}, result), { [key]: key in r2 ? v2 : v1 });
+  }, {});
+}
+function isBinding(value) {
+  if (!isObject$1(value)) {
+    return false;
+  }
+  return "target" in value;
+}
+var CREATE_MESSAGE_MAP = {
+  alreadydisposed: () => "View has been already disposed",
+  invalidparams: (context) => `Invalid parameters for '${context.name}'`,
+  nomatchingcontroller: (context) => `No matching controller for '${context.key}'`,
+  nomatchingview: (context) => `No matching view for '${JSON.stringify(context.params)}'`,
+  notbindable: () => `Value is not bindable`,
+  notcompatible: (context) => `Not compatible with  plugin '${context.id}'`,
+  propertynotfound: (context) => `Property '${context.name}' not found`,
+  shouldneverhappen: () => "This error should never happen"
+};
+
+class TpError {
+  static alreadyDisposed() {
+    return new TpError({ type: "alreadydisposed" });
+  }
+  static notBindable() {
+    return new TpError({
+      type: "notbindable"
+    });
+  }
+  static notCompatible(bundleId, id) {
+    return new TpError({
+      type: "notcompatible",
+      context: {
+        id: `${bundleId}.${id}`
+      }
+    });
+  }
+  static propertyNotFound(name) {
+    return new TpError({
+      type: "propertynotfound",
+      context: {
+        name
+      }
+    });
+  }
+  static shouldNeverHappen() {
+    return new TpError({ type: "shouldneverhappen" });
+  }
+  constructor(config) {
+    var _a;
+    this.message = (_a = CREATE_MESSAGE_MAP[config.type](forceCast(config.context))) !== null && _a !== undefined ? _a : "Unexpected error";
+    this.name = this.constructor.name;
+    this.stack = new Error(this.message).stack;
+    this.type = config.type;
+  }
+  toString() {
+    return this.message;
+  }
+}
+
+class BindingTarget {
+  constructor(obj, key) {
+    this.obj_ = obj;
+    this.key = key;
+  }
+  static isBindable(obj) {
+    if (obj === null) {
+      return false;
+    }
+    if (typeof obj !== "object" && typeof obj !== "function") {
+      return false;
+    }
+    return true;
+  }
+  read() {
+    return this.obj_[this.key];
+  }
+  write(value) {
+    this.obj_[this.key] = value;
+  }
+  writeProperty(name, value) {
+    const valueObj = this.read();
+    if (!BindingTarget.isBindable(valueObj)) {
+      throw TpError.notBindable();
+    }
+    if (!(name in valueObj)) {
+      throw TpError.propertyNotFound(name);
+    }
+    valueObj[name] = value;
+  }
+}
+
+class Emitter {
+  constructor() {
+    this.observers_ = {};
+  }
+  on(eventName, handler, opt_options) {
+    var _a;
+    let observers = this.observers_[eventName];
+    if (!observers) {
+      observers = this.observers_[eventName] = [];
+    }
+    observers.push({
+      handler,
+      key: (_a = opt_options === null || opt_options === undefined ? undefined : opt_options.key) !== null && _a !== undefined ? _a : handler
+    });
+    return this;
+  }
+  off(eventName, key) {
+    const observers = this.observers_[eventName];
+    if (observers) {
+      this.observers_[eventName] = observers.filter((observer) => {
+        return observer.key !== key;
+      });
+    }
+    return this;
+  }
+  emit(eventName, event) {
+    const observers = this.observers_[eventName];
+    if (!observers) {
+      return;
+    }
+    observers.forEach((observer) => {
+      observer.handler(event);
+    });
+  }
+}
+
+class ComplexValue {
+  constructor(initialValue, config) {
+    var _a;
+    this.constraint_ = config === null || config === undefined ? undefined : config.constraint;
+    this.equals_ = (_a = config === null || config === undefined ? undefined : config.equals) !== null && _a !== undefined ? _a : (v1, v2) => v1 === v2;
+    this.emitter = new Emitter;
+    this.rawValue_ = initialValue;
+  }
+  get constraint() {
+    return this.constraint_;
+  }
+  get rawValue() {
+    return this.rawValue_;
+  }
+  set rawValue(rawValue) {
+    this.setRawValue(rawValue, {
+      forceEmit: false,
+      last: true
+    });
+  }
+  setRawValue(rawValue, options) {
+    const opts = options !== null && options !== undefined ? options : {
+      forceEmit: false,
+      last: true
+    };
+    const constrainedValue = this.constraint_ ? this.constraint_.constrain(rawValue) : rawValue;
+    const prevValue = this.rawValue_;
+    const changed = !this.equals_(prevValue, constrainedValue);
+    if (!changed && !opts.forceEmit) {
+      return;
+    }
+    this.emitter.emit("beforechange", {
+      sender: this
+    });
+    this.rawValue_ = constrainedValue;
+    this.emitter.emit("change", {
+      options: opts,
+      previousRawValue: prevValue,
+      rawValue: constrainedValue,
+      sender: this
+    });
+  }
+}
+
+class PrimitiveValue {
+  constructor(initialValue) {
+    this.emitter = new Emitter;
+    this.value_ = initialValue;
+  }
+  get rawValue() {
+    return this.value_;
+  }
+  set rawValue(value) {
+    this.setRawValue(value, {
+      forceEmit: false,
+      last: true
+    });
+  }
+  setRawValue(value, options) {
+    const opts = options !== null && options !== undefined ? options : {
+      forceEmit: false,
+      last: true
+    };
+    const prevValue = this.value_;
+    if (prevValue === value && !opts.forceEmit) {
+      return;
+    }
+    this.emitter.emit("beforechange", {
+      sender: this
+    });
+    this.value_ = value;
+    this.emitter.emit("change", {
+      options: opts,
+      previousRawValue: prevValue,
+      rawValue: this.value_,
+      sender: this
+    });
+  }
+}
+
+class ReadonlyPrimitiveValue {
+  constructor(value) {
+    this.emitter = new Emitter;
+    this.onValueBeforeChange_ = this.onValueBeforeChange_.bind(this);
+    this.onValueChange_ = this.onValueChange_.bind(this);
+    this.value_ = value;
+    this.value_.emitter.on("beforechange", this.onValueBeforeChange_);
+    this.value_.emitter.on("change", this.onValueChange_);
+  }
+  get rawValue() {
+    return this.value_.rawValue;
+  }
+  onValueBeforeChange_(ev) {
+    this.emitter.emit("beforechange", Object.assign(Object.assign({}, ev), { sender: this }));
+  }
+  onValueChange_(ev) {
+    this.emitter.emit("change", Object.assign(Object.assign({}, ev), { sender: this }));
+  }
+}
+function createValue(initialValue, config) {
+  const constraint = config === null || config === undefined ? undefined : config.constraint;
+  const equals = config === null || config === undefined ? undefined : config.equals;
+  if (!constraint && !equals) {
+    return new PrimitiveValue(initialValue);
+  }
+  return new ComplexValue(initialValue, config);
+}
+function createReadonlyValue(value) {
+  return [
+    new ReadonlyPrimitiveValue(value),
+    (rawValue, options) => {
+      value.setRawValue(rawValue, options);
+    }
+  ];
+}
+
+class ValueMap {
+  constructor(valueMap) {
+    this.emitter = new Emitter;
+    this.valMap_ = valueMap;
+    for (const key in this.valMap_) {
+      const v = this.valMap_[key];
+      v.emitter.on("change", () => {
+        this.emitter.emit("change", {
+          key,
+          sender: this
+        });
+      });
+    }
+  }
+  static createCore(initialValue) {
+    const keys = Object.keys(initialValue);
+    return keys.reduce((o, key) => {
+      return Object.assign(o, {
+        [key]: createValue(initialValue[key])
+      });
+    }, {});
+  }
+  static fromObject(initialValue) {
+    const core = this.createCore(initialValue);
+    return new ValueMap(core);
+  }
+  get(key) {
+    return this.valMap_[key].rawValue;
+  }
+  set(key, value) {
+    this.valMap_[key].rawValue = value;
+  }
+  value(key) {
+    return this.valMap_[key];
+  }
+}
+
+class DefiniteRangeConstraint {
+  constructor(config) {
+    this.values = ValueMap.fromObject({
+      max: config.max,
+      min: config.min
+    });
+  }
+  constrain(value) {
+    const max = this.values.get("max");
+    const min = this.values.get("min");
+    return Math.min(Math.max(value, min), max);
+  }
+}
+
+class RangeConstraint {
+  constructor(config) {
+    this.values = ValueMap.fromObject({
+      max: config.max,
+      min: config.min
+    });
+  }
+  constrain(value) {
+    const max = this.values.get("max");
+    const min = this.values.get("min");
+    let result = value;
+    if (!isEmpty(min)) {
+      result = Math.max(result, min);
+    }
+    if (!isEmpty(max)) {
+      result = Math.min(result, max);
+    }
+    return result;
+  }
+}
+
+class StepConstraint {
+  constructor(step, origin = 0) {
+    this.step = step;
+    this.origin = origin;
+  }
+  constrain(value) {
+    const o = this.origin % this.step;
+    const r = Math.round((value - o) / this.step);
+    return o + r * this.step;
+  }
+}
+
+class NumberLiteralNode {
+  constructor(text) {
+    this.text = text;
+  }
+  evaluate() {
+    return Number(this.text);
+  }
+  toString() {
+    return this.text;
+  }
+}
+var BINARY_OPERATION_MAP = {
+  "**": (v1, v2) => Math.pow(v1, v2),
+  "*": (v1, v2) => v1 * v2,
+  "/": (v1, v2) => v1 / v2,
+  "%": (v1, v2) => v1 % v2,
+  "+": (v1, v2) => v1 + v2,
+  "-": (v1, v2) => v1 - v2,
+  "<<": (v1, v2) => v1 << v2,
+  ">>": (v1, v2) => v1 >> v2,
+  ">>>": (v1, v2) => v1 >>> v2,
+  "&": (v1, v2) => v1 & v2,
+  "^": (v1, v2) => v1 ^ v2,
+  "|": (v1, v2) => v1 | v2
+};
+
+class BinaryOperationNode {
+  constructor(operator, left, right) {
+    this.left = left;
+    this.operator = operator;
+    this.right = right;
+  }
+  evaluate() {
+    const op = BINARY_OPERATION_MAP[this.operator];
+    if (!op) {
+      throw new Error(`unexpected binary operator: '${this.operator}`);
+    }
+    return op(this.left.evaluate(), this.right.evaluate());
+  }
+  toString() {
+    return [
+      "b(",
+      this.left.toString(),
+      this.operator,
+      this.right.toString(),
+      ")"
+    ].join(" ");
+  }
+}
+var UNARY_OPERATION_MAP = {
+  "+": (v) => v,
+  "-": (v) => -v,
+  "~": (v) => ~v
+};
+
+class UnaryOperationNode {
+  constructor(operator, expr) {
+    this.operator = operator;
+    this.expression = expr;
+  }
+  evaluate() {
+    const op = UNARY_OPERATION_MAP[this.operator];
+    if (!op) {
+      throw new Error(`unexpected unary operator: '${this.operator}`);
+    }
+    return op(this.expression.evaluate());
+  }
+  toString() {
+    return ["u(", this.operator, this.expression.toString(), ")"].join(" ");
+  }
+}
+function combineReader(parsers) {
+  return (text, cursor) => {
+    for (let i = 0;i < parsers.length; i++) {
+      const result = parsers[i](text, cursor);
+      if (result !== "") {
+        return result;
+      }
+    }
+    return "";
+  };
+}
+function readWhitespace(text, cursor) {
+  var _a;
+  const m = text.substr(cursor).match(/^\s+/);
+  return (_a = m && m[0]) !== null && _a !== undefined ? _a : "";
+}
+function readNonZeroDigit(text, cursor) {
+  const ch = text.substr(cursor, 1);
+  return ch.match(/^[1-9]$/) ? ch : "";
+}
+function readDecimalDigits(text, cursor) {
+  var _a;
+  const m = text.substr(cursor).match(/^[0-9]+/);
+  return (_a = m && m[0]) !== null && _a !== undefined ? _a : "";
+}
+function readSignedInteger(text, cursor) {
+  const ds = readDecimalDigits(text, cursor);
+  if (ds !== "") {
+    return ds;
+  }
+  const sign = text.substr(cursor, 1);
+  cursor += 1;
+  if (sign !== "-" && sign !== "+") {
+    return "";
+  }
+  const sds = readDecimalDigits(text, cursor);
+  if (sds === "") {
+    return "";
+  }
+  return sign + sds;
+}
+function readExponentPart(text, cursor) {
+  const e = text.substr(cursor, 1);
+  cursor += 1;
+  if (e.toLowerCase() !== "e") {
+    return "";
+  }
+  const si = readSignedInteger(text, cursor);
+  if (si === "") {
+    return "";
+  }
+  return e + si;
+}
+function readDecimalIntegerLiteral(text, cursor) {
+  const ch = text.substr(cursor, 1);
+  if (ch === "0") {
+    return ch;
+  }
+  const nzd = readNonZeroDigit(text, cursor);
+  cursor += nzd.length;
+  if (nzd === "") {
+    return "";
+  }
+  return nzd + readDecimalDigits(text, cursor);
+}
+function readDecimalLiteral1(text, cursor) {
+  const dil = readDecimalIntegerLiteral(text, cursor);
+  cursor += dil.length;
+  if (dil === "") {
+    return "";
+  }
+  const dot = text.substr(cursor, 1);
+  cursor += dot.length;
+  if (dot !== ".") {
+    return "";
+  }
+  const dds = readDecimalDigits(text, cursor);
+  cursor += dds.length;
+  return dil + dot + dds + readExponentPart(text, cursor);
+}
+function readDecimalLiteral2(text, cursor) {
+  const dot = text.substr(cursor, 1);
+  cursor += dot.length;
+  if (dot !== ".") {
+    return "";
+  }
+  const dds = readDecimalDigits(text, cursor);
+  cursor += dds.length;
+  if (dds === "") {
+    return "";
+  }
+  return dot + dds + readExponentPart(text, cursor);
+}
+function readDecimalLiteral3(text, cursor) {
+  const dil = readDecimalIntegerLiteral(text, cursor);
+  cursor += dil.length;
+  if (dil === "") {
+    return "";
+  }
+  return dil + readExponentPart(text, cursor);
+}
+var readDecimalLiteral = combineReader([
+  readDecimalLiteral1,
+  readDecimalLiteral2,
+  readDecimalLiteral3
+]);
+function parseBinaryDigits(text, cursor) {
+  var _a;
+  const m = text.substr(cursor).match(/^[01]+/);
+  return (_a = m && m[0]) !== null && _a !== undefined ? _a : "";
+}
+function readBinaryIntegerLiteral(text, cursor) {
+  const prefix = text.substr(cursor, 2);
+  cursor += prefix.length;
+  if (prefix.toLowerCase() !== "0b") {
+    return "";
+  }
+  const bds = parseBinaryDigits(text, cursor);
+  if (bds === "") {
+    return "";
+  }
+  return prefix + bds;
+}
+function readOctalDigits(text, cursor) {
+  var _a;
+  const m = text.substr(cursor).match(/^[0-7]+/);
+  return (_a = m && m[0]) !== null && _a !== undefined ? _a : "";
+}
+function readOctalIntegerLiteral(text, cursor) {
+  const prefix = text.substr(cursor, 2);
+  cursor += prefix.length;
+  if (prefix.toLowerCase() !== "0o") {
+    return "";
+  }
+  const ods = readOctalDigits(text, cursor);
+  if (ods === "") {
+    return "";
+  }
+  return prefix + ods;
+}
+function readHexDigits(text, cursor) {
+  var _a;
+  const m = text.substr(cursor).match(/^[0-9a-f]+/i);
+  return (_a = m && m[0]) !== null && _a !== undefined ? _a : "";
+}
+function readHexIntegerLiteral(text, cursor) {
+  const prefix = text.substr(cursor, 2);
+  cursor += prefix.length;
+  if (prefix.toLowerCase() !== "0x") {
+    return "";
+  }
+  const hds = readHexDigits(text, cursor);
+  if (hds === "") {
+    return "";
+  }
+  return prefix + hds;
+}
+var readNonDecimalIntegerLiteral = combineReader([
+  readBinaryIntegerLiteral,
+  readOctalIntegerLiteral,
+  readHexIntegerLiteral
+]);
+var readNumericLiteral = combineReader([
+  readNonDecimalIntegerLiteral,
+  readDecimalLiteral
+]);
+function parseLiteral(text, cursor) {
+  const num = readNumericLiteral(text, cursor);
+  cursor += num.length;
+  if (num === "") {
+    return null;
+  }
+  return {
+    evaluable: new NumberLiteralNode(num),
+    cursor
+  };
+}
+function parseParenthesizedExpression(text, cursor) {
+  const op = text.substr(cursor, 1);
+  cursor += op.length;
+  if (op !== "(") {
+    return null;
+  }
+  const expr = parseExpression(text, cursor);
+  if (!expr) {
+    return null;
+  }
+  cursor = expr.cursor;
+  cursor += readWhitespace(text, cursor).length;
+  const cl = text.substr(cursor, 1);
+  cursor += cl.length;
+  if (cl !== ")") {
+    return null;
+  }
+  return {
+    evaluable: expr.evaluable,
+    cursor
+  };
+}
+function parsePrimaryExpression(text, cursor) {
+  var _a;
+  return (_a = parseLiteral(text, cursor)) !== null && _a !== undefined ? _a : parseParenthesizedExpression(text, cursor);
+}
+function parseUnaryExpression(text, cursor) {
+  const expr = parsePrimaryExpression(text, cursor);
+  if (expr) {
+    return expr;
+  }
+  const op = text.substr(cursor, 1);
+  cursor += op.length;
+  if (op !== "+" && op !== "-" && op !== "~") {
+    return null;
+  }
+  const num = parseUnaryExpression(text, cursor);
+  if (!num) {
+    return null;
+  }
+  cursor = num.cursor;
+  return {
+    cursor,
+    evaluable: new UnaryOperationNode(op, num.evaluable)
+  };
+}
+function readBinaryOperator(ops, text, cursor) {
+  cursor += readWhitespace(text, cursor).length;
+  const op = ops.filter((op2) => text.startsWith(op2, cursor))[0];
+  if (!op) {
+    return null;
+  }
+  cursor += op.length;
+  cursor += readWhitespace(text, cursor).length;
+  return {
+    cursor,
+    operator: op
+  };
+}
+function createBinaryOperationExpressionParser(exprParser, ops) {
+  return (text, cursor) => {
+    const firstExpr = exprParser(text, cursor);
+    if (!firstExpr) {
+      return null;
+    }
+    cursor = firstExpr.cursor;
+    let expr = firstExpr.evaluable;
+    for (;; ) {
+      const op = readBinaryOperator(ops, text, cursor);
+      if (!op) {
+        break;
+      }
+      cursor = op.cursor;
+      const nextExpr = exprParser(text, cursor);
+      if (!nextExpr) {
+        return null;
+      }
+      cursor = nextExpr.cursor;
+      expr = new BinaryOperationNode(op.operator, expr, nextExpr.evaluable);
+    }
+    return expr ? {
+      cursor,
+      evaluable: expr
+    } : null;
+  };
+}
+var parseBinaryOperationExpression = [
+  ["**"],
+  ["*", "/", "%"],
+  ["+", "-"],
+  ["<<", ">>>", ">>"],
+  ["&"],
+  ["^"],
+  ["|"]
+].reduce((parser, ops) => {
+  return createBinaryOperationExpressionParser(parser, ops);
+}, parseUnaryExpression);
+function parseExpression(text, cursor) {
+  cursor += readWhitespace(text, cursor).length;
+  return parseBinaryOperationExpression(text, cursor);
+}
+function parseEcmaNumberExpression(text) {
+  const expr = parseExpression(text, 0);
+  if (!expr) {
+    return null;
+  }
+  const cursor = expr.cursor + readWhitespace(text, expr.cursor).length;
+  if (cursor !== text.length) {
+    return null;
+  }
+  return expr.evaluable;
+}
+function parseNumber(text) {
+  var _a;
+  const r = parseEcmaNumberExpression(text);
+  return (_a = r === null || r === undefined ? undefined : r.evaluate()) !== null && _a !== undefined ? _a : null;
+}
+function numberFromUnknown(value) {
+  if (typeof value === "number") {
+    return value;
+  }
+  if (typeof value === "string") {
+    const pv = parseNumber(value);
+    if (!isEmpty(pv)) {
+      return pv;
+    }
+  }
+  return 0;
+}
+function numberToString(value) {
+  return String(value);
+}
+function createNumberFormatter(digits) {
+  return (value) => {
+    return value.toFixed(Math.max(Math.min(digits, 20), 0));
+  };
+}
+function mapRange(value, start1, end1, start2, end2) {
+  const p = (value - start1) / (end1 - start1);
+  return start2 + p * (end2 - start2);
+}
+function getDecimalDigits(value) {
+  const text = String(value.toFixed(10));
+  const frac = text.split(".")[1];
+  return frac.replace(/0+$/, "").length;
+}
+function constrainRange(value, min, max) {
+  return Math.min(Math.max(value, min), max);
+}
+function loopRange(value, max) {
+  return (value % max + max) % max;
+}
+function getSuitableDecimalDigits(params, rawValue) {
+  return !isEmpty(params.step) ? getDecimalDigits(params.step) : Math.max(getDecimalDigits(rawValue), 2);
+}
+function getSuitableKeyScale(params) {
+  var _a;
+  return (_a = params.step) !== null && _a !== undefined ? _a : 1;
+}
+function getSuitablePointerScale(params, rawValue) {
+  var _a;
+  const base = Math.abs((_a = params.step) !== null && _a !== undefined ? _a : rawValue);
+  return base === 0 ? 0.1 : Math.pow(10, Math.floor(Math.log10(base)) - 1);
+}
+function createStepConstraint(params, initialValue) {
+  if (!isEmpty(params.step)) {
+    return new StepConstraint(params.step, initialValue);
+  }
+  return null;
+}
+function createRangeConstraint(params) {
+  if (!isEmpty(params.max) && !isEmpty(params.min)) {
+    return new DefiniteRangeConstraint({
+      max: params.max,
+      min: params.min
+    });
+  }
+  if (!isEmpty(params.max) || !isEmpty(params.min)) {
+    return new RangeConstraint({
+      max: params.max,
+      min: params.min
+    });
+  }
+  return null;
+}
+function createNumberTextPropsObject(params, initialValue) {
+  var _a, _b, _c;
+  return {
+    formatter: (_a = params.format) !== null && _a !== undefined ? _a : createNumberFormatter(getSuitableDecimalDigits(params, initialValue)),
+    keyScale: (_b = params.keyScale) !== null && _b !== undefined ? _b : getSuitableKeyScale(params),
+    pointerScale: (_c = params.pointerScale) !== null && _c !== undefined ? _c : getSuitablePointerScale(params, initialValue)
+  };
+}
+function createNumberTextInputParamsParser(p) {
+  return {
+    format: p.optional.function,
+    keyScale: p.optional.number,
+    max: p.optional.number,
+    min: p.optional.number,
+    pointerScale: p.optional.number,
+    step: p.optional.number
+  };
+}
+function createPointAxis(config) {
+  return {
+    constraint: config.constraint,
+    textProps: ValueMap.fromObject(createNumberTextPropsObject(config.params, config.initialValue))
+  };
+}
+
+class BladeApi {
+  constructor(controller) {
+    this.controller = controller;
+  }
+  get element() {
+    return this.controller.view.element;
+  }
+  get disabled() {
+    return this.controller.viewProps.get("disabled");
+  }
+  set disabled(disabled) {
+    this.controller.viewProps.set("disabled", disabled);
+  }
+  get hidden() {
+    return this.controller.viewProps.get("hidden");
+  }
+  set hidden(hidden) {
+    this.controller.viewProps.set("hidden", hidden);
+  }
+  dispose() {
+    this.controller.viewProps.set("disposed", true);
+  }
+  importState(state) {
+    return this.controller.importState(state);
+  }
+  exportState() {
+    return this.controller.exportState();
+  }
+}
+
+class TpEvent {
+  constructor(target) {
+    this.target = target;
+  }
+}
+
+class TpChangeEvent extends TpEvent {
+  constructor(target, value, last) {
+    super(target);
+    this.value = value;
+    this.last = last !== null && last !== undefined ? last : true;
+  }
+}
+
+class TpFoldEvent extends TpEvent {
+  constructor(target, expanded) {
+    super(target);
+    this.expanded = expanded;
+  }
+}
+
+class TpTabSelectEvent extends TpEvent {
+  constructor(target, index) {
+    super(target);
+    this.index = index;
+  }
+}
+
+class TpMouseEvent extends TpEvent {
+  constructor(target, nativeEvent) {
+    super(target);
+    this.native = nativeEvent;
+  }
+}
+
+class BindingApi extends BladeApi {
+  constructor(controller) {
+    super(controller);
+    this.onValueChange_ = this.onValueChange_.bind(this);
+    this.emitter_ = new Emitter;
+    this.controller.value.emitter.on("change", this.onValueChange_);
+  }
+  get label() {
+    return this.controller.labelController.props.get("label");
+  }
+  set label(label) {
+    this.controller.labelController.props.set("label", label);
+  }
+  get key() {
+    return this.controller.value.binding.target.key;
+  }
+  get tag() {
+    return this.controller.tag;
+  }
+  set tag(tag) {
+    this.controller.tag = tag;
+  }
+  on(eventName, handler) {
+    const bh = handler.bind(this);
+    this.emitter_.on(eventName, (ev) => {
+      bh(ev);
+    }, {
+      key: handler
+    });
+    return this;
+  }
+  off(eventName, handler) {
+    this.emitter_.off(eventName, handler);
+    return this;
+  }
+  refresh() {
+    this.controller.value.fetch();
+  }
+  onValueChange_(ev) {
+    const value = this.controller.value;
+    this.emitter_.emit("change", new TpChangeEvent(this, forceCast(value.binding.target.read()), ev.options.last));
+  }
+}
+
+class InputBindingValue {
+  constructor(value, binding) {
+    this.onValueBeforeChange_ = this.onValueBeforeChange_.bind(this);
+    this.onValueChange_ = this.onValueChange_.bind(this);
+    this.binding = binding;
+    this.value_ = value;
+    this.value_.emitter.on("beforechange", this.onValueBeforeChange_);
+    this.value_.emitter.on("change", this.onValueChange_);
+    this.emitter = new Emitter;
+  }
+  get rawValue() {
+    return this.value_.rawValue;
+  }
+  set rawValue(rawValue) {
+    this.value_.rawValue = rawValue;
+  }
+  setRawValue(rawValue, options) {
+    this.value_.setRawValue(rawValue, options);
+  }
+  fetch() {
+    this.value_.rawValue = this.binding.read();
+  }
+  push() {
+    this.binding.write(this.value_.rawValue);
+  }
+  onValueBeforeChange_(ev) {
+    this.emitter.emit("beforechange", Object.assign(Object.assign({}, ev), { sender: this }));
+  }
+  onValueChange_(ev) {
+    this.push();
+    this.emitter.emit("change", Object.assign(Object.assign({}, ev), { sender: this }));
+  }
+}
+function isInputBindingValue(v) {
+  if (!("binding" in v)) {
+    return false;
+  }
+  const b = v["binding"];
+  return isBinding(b) && "read" in b && "write" in b;
+}
+function parseObject(value, keyToParserMap) {
+  const keys = Object.keys(keyToParserMap);
+  const result = keys.reduce((tmp, key) => {
+    if (tmp === undefined) {
+      return;
+    }
+    const parser = keyToParserMap[key];
+    const result2 = parser(value[key]);
+    return result2.succeeded ? Object.assign(Object.assign({}, tmp), { [key]: result2.value }) : undefined;
+  }, {});
+  return forceCast(result);
+}
+function parseArray(value, parseItem) {
+  return value.reduce((tmp, item) => {
+    if (tmp === undefined) {
+      return;
+    }
+    const result = parseItem(item);
+    if (!result.succeeded || result.value === undefined) {
+      return;
+    }
+    return [...tmp, result.value];
+  }, []);
+}
+function isObject(value) {
+  if (value === null) {
+    return false;
+  }
+  return typeof value === "object";
+}
+function createMicroParserBuilder(parse) {
+  return (optional) => (v) => {
+    if (!optional && v === undefined) {
+      return {
+        succeeded: false,
+        value: undefined
+      };
+    }
+    if (optional && v === undefined) {
+      return {
+        succeeded: true,
+        value: undefined
+      };
+    }
+    const result = parse(v);
+    return result !== undefined ? {
+      succeeded: true,
+      value: result
+    } : {
+      succeeded: false,
+      value: undefined
+    };
+  };
+}
+function createMicroParserBuilders(optional) {
+  return {
+    custom: (parse) => createMicroParserBuilder(parse)(optional),
+    boolean: createMicroParserBuilder((v) => typeof v === "boolean" ? v : undefined)(optional),
+    number: createMicroParserBuilder((v) => typeof v === "number" ? v : undefined)(optional),
+    string: createMicroParserBuilder((v) => typeof v === "string" ? v : undefined)(optional),
+    function: createMicroParserBuilder((v) => typeof v === "function" ? v : undefined)(optional),
+    constant: (value) => createMicroParserBuilder((v) => v === value ? value : undefined)(optional),
+    raw: createMicroParserBuilder((v) => v)(optional),
+    object: (keyToParserMap) => createMicroParserBuilder((v) => {
+      if (!isObject(v)) {
+        return;
+      }
+      return parseObject(v, keyToParserMap);
+    })(optional),
+    array: (itemParser) => createMicroParserBuilder((v) => {
+      if (!Array.isArray(v)) {
+        return;
+      }
+      return parseArray(v, itemParser);
+    })(optional)
+  };
+}
+var MicroParsers = {
+  optional: createMicroParserBuilders(true),
+  required: createMicroParserBuilders(false)
+};
+function parseRecord(value, keyToParserMap) {
+  const map = keyToParserMap(MicroParsers);
+  const result = MicroParsers.required.object(map)(value);
+  return result.succeeded ? result.value : undefined;
+}
+function importBladeState(state, superImport, parser, callback) {
+  if (superImport && !superImport(state)) {
+    return false;
+  }
+  const result = parseRecord(state, parser);
+  return result ? callback(result) : false;
+}
+function exportBladeState(superExport, thisState) {
+  var _a;
+  return deepMerge((_a = superExport === null || superExport === undefined ? undefined : superExport()) !== null && _a !== undefined ? _a : {}, thisState);
+}
+function isValueBladeController(bc) {
+  return "value" in bc;
+}
+function isBindingValue(v) {
+  if (!isObject$1(v) || !("binding" in v)) {
+    return false;
+  }
+  const b = v.binding;
+  return isBinding(b);
+}
+var SVG_NS = "http://www.w3.org/2000/svg";
+function forceReflow(element) {
+  element.offsetHeight;
+}
+function disableTransitionTemporarily(element, callback) {
+  const t = element.style.transition;
+  element.style.transition = "none";
+  callback();
+  element.style.transition = t;
+}
+function supportsTouch(doc) {
+  return doc.ontouchstart !== undefined;
+}
+function getGlobalObject() {
+  return globalThis;
+}
+function getWindowDocument() {
+  const globalObj = forceCast(getGlobalObject());
+  return globalObj.document;
+}
+function getCanvasContext(canvasElement) {
+  const win = canvasElement.ownerDocument.defaultView;
+  if (!win) {
+    return null;
+  }
+  const isBrowser = "document" in win;
+  return isBrowser ? canvasElement.getContext("2d", {
+    willReadFrequently: true
+  }) : null;
+}
+var ICON_ID_TO_INNER_HTML_MAP = {
+  check: '<path d="M2 8l4 4l8 -8"/>',
+  dropdown: '<path d="M5 7h6l-3 3 z"/>',
+  p2dpad: '<path d="M8 4v8"/><path d="M4 8h8"/><circle cx="12" cy="12" r="1.2"/>'
+};
+function createSvgIconElement(document2, iconId) {
+  const elem = document2.createElementNS(SVG_NS, "svg");
+  elem.innerHTML = ICON_ID_TO_INNER_HTML_MAP[iconId];
+  return elem;
+}
+function insertElementAt(parentElement, element, index) {
+  parentElement.insertBefore(element, parentElement.children[index]);
+}
+function removeElement(element) {
+  if (element.parentElement) {
+    element.parentElement.removeChild(element);
+  }
+}
+function removeChildElements(element) {
+  while (element.children.length > 0) {
+    element.removeChild(element.children[0]);
+  }
+}
+function removeChildNodes(element) {
+  while (element.childNodes.length > 0) {
+    element.removeChild(element.childNodes[0]);
+  }
+}
+function findNextTarget(ev) {
+  if (ev.relatedTarget) {
+    return forceCast(ev.relatedTarget);
+  }
+  if ("explicitOriginalTarget" in ev) {
+    return ev.explicitOriginalTarget;
+  }
+  return null;
+}
+function bindValue(value, applyValue) {
+  value.emitter.on("change", (ev) => {
+    applyValue(ev.rawValue);
+  });
+  applyValue(value.rawValue);
+}
+function bindValueMap(valueMap, key, applyValue) {
+  bindValue(valueMap.value(key), applyValue);
+}
+var PREFIX = "tp";
+function ClassName(viewName) {
+  const fn = (opt_elementName, opt_modifier) => {
+    return [
+      PREFIX,
+      "-",
+      viewName,
+      "v",
+      opt_elementName ? `_${opt_elementName}` : "",
+      opt_modifier ? `-${opt_modifier}` : ""
+    ].join("");
+  };
+  return fn;
+}
+var cn$r = ClassName("lbl");
+function createLabelNode(doc, label) {
+  const frag = doc.createDocumentFragment();
+  const lineNodes = label.split(`
+`).map((line) => {
+    return doc.createTextNode(line);
+  });
+  lineNodes.forEach((lineNode, index) => {
+    if (index > 0) {
+      frag.appendChild(doc.createElement("br"));
+    }
+    frag.appendChild(lineNode);
+  });
+  return frag;
+}
+
+class LabelView {
+  constructor(doc, config) {
+    this.element = doc.createElement("div");
+    this.element.classList.add(cn$r());
+    config.viewProps.bindClassModifiers(this.element);
+    const labelElem = doc.createElement("div");
+    labelElem.classList.add(cn$r("l"));
+    bindValueMap(config.props, "label", (value) => {
+      if (isEmpty(value)) {
+        this.element.classList.add(cn$r(undefined, "nol"));
+      } else {
+        this.element.classList.remove(cn$r(undefined, "nol"));
+        removeChildNodes(labelElem);
+        labelElem.appendChild(createLabelNode(doc, value));
+      }
+    });
+    this.element.appendChild(labelElem);
+    this.labelElement = labelElem;
+    const valueElem = doc.createElement("div");
+    valueElem.classList.add(cn$r("v"));
+    this.element.appendChild(valueElem);
+    this.valueElement = valueElem;
+  }
+}
+
+class LabelController {
+  constructor(doc, config) {
+    this.props = config.props;
+    this.valueController = config.valueController;
+    this.viewProps = config.valueController.viewProps;
+    this.view = new LabelView(doc, {
+      props: config.props,
+      viewProps: this.viewProps
+    });
+    this.view.valueElement.appendChild(this.valueController.view.element);
+  }
+  importProps(state) {
+    return importBladeState(state, null, (p) => ({
+      label: p.optional.string
+    }), (result) => {
+      this.props.set("label", result.label);
+      return true;
+    });
+  }
+  exportProps() {
+    return exportBladeState(null, {
+      label: this.props.get("label")
+    });
+  }
+}
+function getAllBladePositions() {
+  return ["veryfirst", "first", "last", "verylast"];
+}
+var cn$q = ClassName("");
+var POS_TO_CLASS_NAME_MAP = {
+  veryfirst: "vfst",
+  first: "fst",
+  last: "lst",
+  verylast: "vlst"
+};
+
+class BladeController {
+  constructor(config) {
+    this.parent_ = null;
+    this.blade = config.blade;
+    this.view = config.view;
+    this.viewProps = config.viewProps;
+    const elem = this.view.element;
+    this.blade.value("positions").emitter.on("change", () => {
+      getAllBladePositions().forEach((pos) => {
+        elem.classList.remove(cn$q(undefined, POS_TO_CLASS_NAME_MAP[pos]));
+      });
+      this.blade.get("positions").forEach((pos) => {
+        elem.classList.add(cn$q(undefined, POS_TO_CLASS_NAME_MAP[pos]));
+      });
+    });
+    this.viewProps.handleDispose(() => {
+      removeElement(elem);
+    });
+  }
+  get parent() {
+    return this.parent_;
+  }
+  set parent(parent) {
+    this.parent_ = parent;
+    this.viewProps.set("parent", this.parent_ ? this.parent_.viewProps : null);
+  }
+  importState(state) {
+    return importBladeState(state, null, (p) => ({
+      disabled: p.required.boolean,
+      hidden: p.required.boolean
+    }), (result) => {
+      this.viewProps.importState(result);
+      return true;
+    });
+  }
+  exportState() {
+    return exportBladeState(null, Object.assign({}, this.viewProps.exportState()));
+  }
+}
+
+class LabeledValueBladeController extends BladeController {
+  constructor(doc, config) {
+    if (config.value !== config.valueController.value) {
+      throw TpError.shouldNeverHappen();
+    }
+    const viewProps = config.valueController.viewProps;
+    const lc = new LabelController(doc, {
+      blade: config.blade,
+      props: config.props,
+      valueController: config.valueController
+    });
+    super(Object.assign(Object.assign({}, config), { view: new LabelView(doc, {
+      props: config.props,
+      viewProps
+    }), viewProps }));
+    this.labelController = lc;
+    this.value = config.value;
+    this.valueController = config.valueController;
+    this.view.valueElement.appendChild(this.valueController.view.element);
+  }
+  importState(state) {
+    return importBladeState(state, (s) => {
+      var _a, _b, _c;
+      return super.importState(s) && this.labelController.importProps(s) && ((_c = (_b = (_a = this.valueController).importProps) === null || _b === undefined ? undefined : _b.call(_a, state)) !== null && _c !== undefined ? _c : true);
+    }, (p) => ({
+      value: p.optional.raw
+    }), (result) => {
+      if (result.value) {
+        this.value.rawValue = result.value;
+      }
+      return true;
+    });
+  }
+  exportState() {
+    var _a, _b, _c;
+    return exportBladeState(() => super.exportState(), Object.assign(Object.assign({ value: this.value.rawValue }, this.labelController.exportProps()), (_c = (_b = (_a = this.valueController).exportProps) === null || _b === undefined ? undefined : _b.call(_a)) !== null && _c !== undefined ? _c : {}));
+  }
+}
+function excludeValue(state) {
+  const result = Object.assign({}, state);
+  delete result.value;
+  return result;
+}
+
+class BindingController extends LabeledValueBladeController {
+  constructor(doc, config) {
+    super(doc, config);
+    this.tag = config.tag;
+  }
+  importState(state) {
+    return importBladeState(state, (_s) => super.importState(excludeValue(state)), (p) => ({
+      tag: p.optional.string
+    }), (result) => {
+      this.tag = result.tag;
+      return true;
+    });
+  }
+  exportState() {
+    return exportBladeState(() => excludeValue(super.exportState()), {
+      binding: {
+        key: this.value.binding.target.key,
+        value: this.value.binding.target.read()
+      },
+      tag: this.tag
+    });
+  }
+}
+function isBindingController(bc) {
+  return isValueBladeController(bc) && isBindingValue(bc.value);
+}
+
+class InputBindingController extends BindingController {
+  importState(state) {
+    return importBladeState(state, (s) => super.importState(s), (p) => ({
+      binding: p.required.object({
+        value: p.required.raw
+      })
+    }), (result) => {
+      this.value.binding.inject(result.binding.value);
+      this.value.fetch();
+      return true;
+    });
+  }
+}
+function isInputBindingController(bc) {
+  return isValueBladeController(bc) && isInputBindingValue(bc.value);
+}
+function fillBuffer(buffer, bufferSize) {
+  while (buffer.length < bufferSize) {
+    buffer.push(undefined);
+  }
+}
+function initializeBuffer(bufferSize) {
+  const buffer = [];
+  fillBuffer(buffer, bufferSize);
+  return buffer;
+}
+function createTrimmedBuffer(buffer) {
+  const index = buffer.indexOf(undefined);
+  return forceCast(index < 0 ? buffer : buffer.slice(0, index));
+}
+function createPushedBuffer(buffer, newValue) {
+  const newBuffer = [...createTrimmedBuffer(buffer), newValue];
+  if (newBuffer.length > buffer.length) {
+    newBuffer.splice(0, newBuffer.length - buffer.length);
+  } else {
+    fillBuffer(newBuffer, buffer.length);
+  }
+  return newBuffer;
+}
+
+class MonitorBindingValue {
+  constructor(config) {
+    this.emitter = new Emitter;
+    this.onTick_ = this.onTick_.bind(this);
+    this.onValueBeforeChange_ = this.onValueBeforeChange_.bind(this);
+    this.onValueChange_ = this.onValueChange_.bind(this);
+    this.binding = config.binding;
+    this.value_ = createValue(initializeBuffer(config.bufferSize));
+    this.value_.emitter.on("beforechange", this.onValueBeforeChange_);
+    this.value_.emitter.on("change", this.onValueChange_);
+    this.ticker = config.ticker;
+    this.ticker.emitter.on("tick", this.onTick_);
+    this.fetch();
+  }
+  get rawValue() {
+    return this.value_.rawValue;
+  }
+  set rawValue(rawValue) {
+    this.value_.rawValue = rawValue;
+  }
+  setRawValue(rawValue, options) {
+    this.value_.setRawValue(rawValue, options);
+  }
+  fetch() {
+    this.value_.rawValue = createPushedBuffer(this.value_.rawValue, this.binding.read());
+  }
+  onTick_() {
+    this.fetch();
+  }
+  onValueBeforeChange_(ev) {
+    this.emitter.emit("beforechange", Object.assign(Object.assign({}, ev), { sender: this }));
+  }
+  onValueChange_(ev) {
+    this.emitter.emit("change", Object.assign(Object.assign({}, ev), { sender: this }));
+  }
+}
+function isMonitorBindingValue(v) {
+  if (!("binding" in v)) {
+    return false;
+  }
+  const b = v["binding"];
+  return isBinding(b) && "read" in b && !("write" in b);
+}
+
+class MonitorBindingController extends BindingController {
+  exportState() {
+    return exportBladeState(() => super.exportState(), {
+      binding: {
+        readonly: true
+      }
+    });
+  }
+}
+function isMonitorBindingController(bc) {
+  return isValueBladeController(bc) && isMonitorBindingValue(bc.value);
+}
+
+class ButtonApi extends BladeApi {
+  get label() {
+    return this.controller.labelController.props.get("label");
+  }
+  set label(label) {
+    this.controller.labelController.props.set("label", label);
+  }
+  get title() {
+    var _a;
+    return (_a = this.controller.buttonController.props.get("title")) !== null && _a !== undefined ? _a : "";
+  }
+  set title(title) {
+    this.controller.buttonController.props.set("title", title);
+  }
+  on(eventName, handler) {
+    const bh = handler.bind(this);
+    const emitter = this.controller.buttonController.emitter;
+    emitter.on(eventName, (ev) => {
+      bh(new TpMouseEvent(this, ev.nativeEvent));
+    });
+    return this;
+  }
+  off(eventName, handler) {
+    const emitter = this.controller.buttonController.emitter;
+    emitter.off(eventName, handler);
+    return this;
+  }
+}
+function applyClass(elem, className, active) {
+  if (active) {
+    elem.classList.add(className);
+  } else {
+    elem.classList.remove(className);
+  }
+}
+function valueToClassName(elem, className) {
+  return (value) => {
+    applyClass(elem, className, value);
+  };
+}
+function bindValueToTextContent(value, elem) {
+  bindValue(value, (text) => {
+    elem.textContent = text !== null && text !== undefined ? text : "";
+  });
+}
+var cn$p = ClassName("btn");
+
+class ButtonView {
+  constructor(doc, config) {
+    this.element = doc.createElement("div");
+    this.element.classList.add(cn$p());
+    config.viewProps.bindClassModifiers(this.element);
+    const buttonElem = doc.createElement("button");
+    buttonElem.classList.add(cn$p("b"));
+    config.viewProps.bindDisabled(buttonElem);
+    this.element.appendChild(buttonElem);
+    this.buttonElement = buttonElem;
+    const titleElem = doc.createElement("div");
+    titleElem.classList.add(cn$p("t"));
+    bindValueToTextContent(config.props.value("title"), titleElem);
+    this.buttonElement.appendChild(titleElem);
+  }
+}
+
+class ButtonController {
+  constructor(doc, config) {
+    this.emitter = new Emitter;
+    this.onClick_ = this.onClick_.bind(this);
+    this.props = config.props;
+    this.viewProps = config.viewProps;
+    this.view = new ButtonView(doc, {
+      props: this.props,
+      viewProps: this.viewProps
+    });
+    this.view.buttonElement.addEventListener("click", this.onClick_);
+  }
+  importProps(state) {
+    return importBladeState(state, null, (p) => ({
+      title: p.optional.string
+    }), (result) => {
+      this.props.set("title", result.title);
+      return true;
+    });
+  }
+  exportProps() {
+    return exportBladeState(null, {
+      title: this.props.get("title")
+    });
+  }
+  onClick_(ev) {
+    this.emitter.emit("click", {
+      nativeEvent: ev,
+      sender: this
+    });
+  }
+}
+
+class ButtonBladeController extends BladeController {
+  constructor(doc, config) {
+    const bc = new ButtonController(doc, {
+      props: config.buttonProps,
+      viewProps: config.viewProps
+    });
+    const lc = new LabelController(doc, {
+      blade: config.blade,
+      props: config.labelProps,
+      valueController: bc
+    });
+    super({
+      blade: config.blade,
+      view: lc.view,
+      viewProps: config.viewProps
+    });
+    this.buttonController = bc;
+    this.labelController = lc;
+  }
+  importState(state) {
+    return importBladeState(state, (s) => super.importState(s) && this.buttonController.importProps(s) && this.labelController.importProps(s), () => ({}), () => true);
+  }
+  exportState() {
+    return exportBladeState(() => super.exportState(), Object.assign(Object.assign({}, this.buttonController.exportProps()), this.labelController.exportProps()));
+  }
+}
+
+class Semver {
+  constructor(text) {
+    const [core, prerelease] = text.split("-");
+    const coreComps = core.split(".");
+    this.major = parseInt(coreComps[0], 10);
+    this.minor = parseInt(coreComps[1], 10);
+    this.patch = parseInt(coreComps[2], 10);
+    this.prerelease = prerelease !== null && prerelease !== undefined ? prerelease : null;
+  }
+  toString() {
+    const core = [this.major, this.minor, this.patch].join(".");
+    return this.prerelease !== null ? [core, this.prerelease].join("-") : core;
+  }
+}
+var VERSION$1 = new Semver("2.0.5");
+function createPlugin(plugin) {
+  return Object.assign({ core: VERSION$1 }, plugin);
+}
+var ButtonBladePlugin = createPlugin({
+  id: "button",
+  type: "blade",
+  accept(params) {
+    const result = parseRecord(params, (p) => ({
+      title: p.required.string,
+      view: p.required.constant("button"),
+      label: p.optional.string
+    }));
+    return result ? { params: result } : null;
+  },
+  controller(args) {
+    return new ButtonBladeController(args.document, {
+      blade: args.blade,
+      buttonProps: ValueMap.fromObject({
+        title: args.params.title
+      }),
+      labelProps: ValueMap.fromObject({
+        label: args.params.label
+      }),
+      viewProps: args.viewProps
+    });
+  },
+  api(args) {
+    if (args.controller instanceof ButtonBladeController) {
+      return new ButtonApi(args.controller);
+    }
+    return null;
+  }
+});
+function addButtonAsBlade(api, params) {
+  return api.addBlade(Object.assign(Object.assign({}, params), { view: "button" }));
+}
+function addFolderAsBlade(api, params) {
+  return api.addBlade(Object.assign(Object.assign({}, params), { view: "folder" }));
+}
+function addTabAsBlade(api, params) {
+  return api.addBlade(Object.assign(Object.assign({}, params), { view: "tab" }));
+}
+function isRefreshable(value) {
+  if (!isObject$1(value)) {
+    return false;
+  }
+  return "refresh" in value && typeof value.refresh === "function";
+}
+function createBindingTarget(obj, key) {
+  if (!BindingTarget.isBindable(obj)) {
+    throw TpError.notBindable();
+  }
+  return new BindingTarget(obj, key);
+}
+
+class RackApi {
+  constructor(controller, pool) {
+    this.onRackValueChange_ = this.onRackValueChange_.bind(this);
+    this.controller_ = controller;
+    this.emitter_ = new Emitter;
+    this.pool_ = pool;
+    const rack = this.controller_.rack;
+    rack.emitter.on("valuechange", this.onRackValueChange_);
+  }
+  get children() {
+    return this.controller_.rack.children.map((bc) => this.pool_.createApi(bc));
+  }
+  addBinding(object, key, opt_params) {
+    const params = opt_params !== null && opt_params !== undefined ? opt_params : {};
+    const doc = this.controller_.element.ownerDocument;
+    const bc = this.pool_.createBinding(doc, createBindingTarget(object, key), params);
+    const api = this.pool_.createBindingApi(bc);
+    return this.add(api, params.index);
+  }
+  addFolder(params) {
+    return addFolderAsBlade(this, params);
+  }
+  addButton(params) {
+    return addButtonAsBlade(this, params);
+  }
+  addTab(params) {
+    return addTabAsBlade(this, params);
+  }
+  add(api, opt_index) {
+    const bc = api.controller;
+    this.controller_.rack.add(bc, opt_index);
+    return api;
+  }
+  remove(api) {
+    this.controller_.rack.remove(api.controller);
+  }
+  addBlade(params) {
+    const doc = this.controller_.element.ownerDocument;
+    const bc = this.pool_.createBlade(doc, params);
+    const api = this.pool_.createApi(bc);
+    return this.add(api, params.index);
+  }
+  on(eventName, handler) {
+    const bh = handler.bind(this);
+    this.emitter_.on(eventName, (ev) => {
+      bh(ev);
+    }, {
+      key: handler
+    });
+    return this;
+  }
+  off(eventName, handler) {
+    this.emitter_.off(eventName, handler);
+    return this;
+  }
+  refresh() {
+    this.children.forEach((c) => {
+      if (isRefreshable(c)) {
+        c.refresh();
+      }
+    });
+  }
+  onRackValueChange_(ev) {
+    const bc = ev.bladeController;
+    const api = this.pool_.createApi(bc);
+    const binding = isBindingValue(bc.value) ? bc.value.binding : null;
+    this.emitter_.emit("change", new TpChangeEvent(api, binding ? binding.target.read() : bc.value.rawValue, ev.options.last));
+  }
+}
+
+class ContainerBladeApi extends BladeApi {
+  constructor(controller, pool) {
+    super(controller);
+    this.rackApi_ = new RackApi(controller.rackController, pool);
+  }
+  refresh() {
+    this.rackApi_.refresh();
+  }
+}
+
+class ContainerBladeController extends BladeController {
+  constructor(config) {
+    super({
+      blade: config.blade,
+      view: config.view,
+      viewProps: config.rackController.viewProps
+    });
+    this.rackController = config.rackController;
+  }
+  importState(state) {
+    return importBladeState(state, (s) => super.importState(s), (p) => ({
+      children: p.required.array(p.required.raw)
+    }), (result) => {
+      return this.rackController.rack.children.every((c, index) => {
+        return c.importState(result.children[index]);
+      });
+    });
+  }
+  exportState() {
+    return exportBladeState(() => super.exportState(), {
+      children: this.rackController.rack.children.map((c) => c.exportState())
+    });
+  }
+}
+function isContainerBladeController(bc) {
+  return "rackController" in bc;
+}
+
+class NestedOrderedSet {
+  constructor(extract) {
+    this.emitter = new Emitter;
+    this.items_ = [];
+    this.cache_ = new Set;
+    this.onSubListAdd_ = this.onSubListAdd_.bind(this);
+    this.onSubListRemove_ = this.onSubListRemove_.bind(this);
+    this.extract_ = extract;
+  }
+  get items() {
+    return this.items_;
+  }
+  allItems() {
+    return Array.from(this.cache_);
+  }
+  find(callback) {
+    for (const item of this.allItems()) {
+      if (callback(item)) {
+        return item;
+      }
+    }
+    return null;
+  }
+  includes(item) {
+    return this.cache_.has(item);
+  }
+  add(item, opt_index) {
+    if (this.includes(item)) {
+      throw TpError.shouldNeverHappen();
+    }
+    const index = opt_index !== undefined ? opt_index : this.items_.length;
+    this.items_.splice(index, 0, item);
+    this.cache_.add(item);
+    const subList = this.extract_(item);
+    if (subList) {
+      subList.emitter.on("add", this.onSubListAdd_);
+      subList.emitter.on("remove", this.onSubListRemove_);
+      subList.allItems().forEach((i) => {
+        this.cache_.add(i);
+      });
+    }
+    this.emitter.emit("add", {
+      index,
+      item,
+      root: this,
+      target: this
+    });
+  }
+  remove(item) {
+    const index = this.items_.indexOf(item);
+    if (index < 0) {
+      return;
+    }
+    this.items_.splice(index, 1);
+    this.cache_.delete(item);
+    const subList = this.extract_(item);
+    if (subList) {
+      subList.allItems().forEach((i) => {
+        this.cache_.delete(i);
+      });
+      subList.emitter.off("add", this.onSubListAdd_);
+      subList.emitter.off("remove", this.onSubListRemove_);
+    }
+    this.emitter.emit("remove", {
+      index,
+      item,
+      root: this,
+      target: this
+    });
+  }
+  onSubListAdd_(ev) {
+    this.cache_.add(ev.item);
+    this.emitter.emit("add", {
+      index: ev.index,
+      item: ev.item,
+      root: this,
+      target: ev.target
+    });
+  }
+  onSubListRemove_(ev) {
+    this.cache_.delete(ev.item);
+    this.emitter.emit("remove", {
+      index: ev.index,
+      item: ev.item,
+      root: this,
+      target: ev.target
+    });
+  }
+}
+function findValueBladeController(bcs, v) {
+  for (let i = 0;i < bcs.length; i++) {
+    const bc = bcs[i];
+    if (isValueBladeController(bc) && bc.value === v) {
+      return bc;
+    }
+  }
+  return null;
+}
+function findSubBladeControllerSet(bc) {
+  return isContainerBladeController(bc) ? bc.rackController.rack["bcSet_"] : null;
+}
+
+class Rack {
+  constructor(config) {
+    var _a, _b;
+    this.emitter = new Emitter;
+    this.onBladePositionsChange_ = this.onBladePositionsChange_.bind(this);
+    this.onSetAdd_ = this.onSetAdd_.bind(this);
+    this.onSetRemove_ = this.onSetRemove_.bind(this);
+    this.onChildDispose_ = this.onChildDispose_.bind(this);
+    this.onChildPositionsChange_ = this.onChildPositionsChange_.bind(this);
+    this.onChildValueChange_ = this.onChildValueChange_.bind(this);
+    this.onChildViewPropsChange_ = this.onChildViewPropsChange_.bind(this);
+    this.onRackLayout_ = this.onRackLayout_.bind(this);
+    this.onRackValueChange_ = this.onRackValueChange_.bind(this);
+    this.blade_ = (_a = config.blade) !== null && _a !== undefined ? _a : null;
+    (_b = this.blade_) === null || _b === undefined || _b.value("positions").emitter.on("change", this.onBladePositionsChange_);
+    this.viewProps = config.viewProps;
+    this.bcSet_ = new NestedOrderedSet(findSubBladeControllerSet);
+    this.bcSet_.emitter.on("add", this.onSetAdd_);
+    this.bcSet_.emitter.on("remove", this.onSetRemove_);
+  }
+  get children() {
+    return this.bcSet_.items;
+  }
+  add(bc, opt_index) {
+    var _a;
+    (_a = bc.parent) === null || _a === undefined || _a.remove(bc);
+    bc.parent = this;
+    this.bcSet_.add(bc, opt_index);
+  }
+  remove(bc) {
+    bc.parent = null;
+    this.bcSet_.remove(bc);
+  }
+  find(finder) {
+    return this.bcSet_.allItems().filter(finder);
+  }
+  onSetAdd_(ev) {
+    this.updatePositions_();
+    const root = ev.target === ev.root;
+    this.emitter.emit("add", {
+      bladeController: ev.item,
+      index: ev.index,
+      root,
+      sender: this
+    });
+    if (!root) {
+      return;
+    }
+    const bc = ev.item;
+    bc.viewProps.emitter.on("change", this.onChildViewPropsChange_);
+    bc.blade.value("positions").emitter.on("change", this.onChildPositionsChange_);
+    bc.viewProps.handleDispose(this.onChildDispose_);
+    if (isValueBladeController(bc)) {
+      bc.value.emitter.on("change", this.onChildValueChange_);
+    } else if (isContainerBladeController(bc)) {
+      const rack = bc.rackController.rack;
+      if (rack) {
+        const emitter = rack.emitter;
+        emitter.on("layout", this.onRackLayout_);
+        emitter.on("valuechange", this.onRackValueChange_);
+      }
+    }
+  }
+  onSetRemove_(ev) {
+    this.updatePositions_();
+    const root = ev.target === ev.root;
+    this.emitter.emit("remove", {
+      bladeController: ev.item,
+      root,
+      sender: this
+    });
+    if (!root) {
+      return;
+    }
+    const bc = ev.item;
+    if (isValueBladeController(bc)) {
+      bc.value.emitter.off("change", this.onChildValueChange_);
+    } else if (isContainerBladeController(bc)) {
+      const rack = bc.rackController.rack;
+      if (rack) {
+        const emitter = rack.emitter;
+        emitter.off("layout", this.onRackLayout_);
+        emitter.off("valuechange", this.onRackValueChange_);
+      }
+    }
+  }
+  updatePositions_() {
+    const visibleItems = this.bcSet_.items.filter((bc) => !bc.viewProps.get("hidden"));
+    const firstVisibleItem = visibleItems[0];
+    const lastVisibleItem = visibleItems[visibleItems.length - 1];
+    this.bcSet_.items.forEach((bc) => {
+      const ps = [];
+      if (bc === firstVisibleItem) {
+        ps.push("first");
+        if (!this.blade_ || this.blade_.get("positions").includes("veryfirst")) {
+          ps.push("veryfirst");
+        }
+      }
+      if (bc === lastVisibleItem) {
+        ps.push("last");
+        if (!this.blade_ || this.blade_.get("positions").includes("verylast")) {
+          ps.push("verylast");
+        }
+      }
+      bc.blade.set("positions", ps);
+    });
+  }
+  onChildPositionsChange_() {
+    this.updatePositions_();
+    this.emitter.emit("layout", {
+      sender: this
+    });
+  }
+  onChildViewPropsChange_(_ev) {
+    this.updatePositions_();
+    this.emitter.emit("layout", {
+      sender: this
+    });
+  }
+  onChildDispose_() {
+    const disposedUcs = this.bcSet_.items.filter((bc) => {
+      return bc.viewProps.get("disposed");
+    });
+    disposedUcs.forEach((bc) => {
+      this.bcSet_.remove(bc);
+    });
+  }
+  onChildValueChange_(ev) {
+    const bc = findValueBladeController(this.find(isValueBladeController), ev.sender);
+    if (!bc) {
+      throw TpError.alreadyDisposed();
+    }
+    this.emitter.emit("valuechange", {
+      bladeController: bc,
+      options: ev.options,
+      sender: this
+    });
+  }
+  onRackLayout_(_) {
+    this.updatePositions_();
+    this.emitter.emit("layout", {
+      sender: this
+    });
+  }
+  onRackValueChange_(ev) {
+    this.emitter.emit("valuechange", {
+      bladeController: ev.bladeController,
+      options: ev.options,
+      sender: this
+    });
+  }
+  onBladePositionsChange_() {
+    this.updatePositions_();
+  }
+}
+
+class RackController {
+  constructor(config) {
+    this.onRackAdd_ = this.onRackAdd_.bind(this);
+    this.onRackRemove_ = this.onRackRemove_.bind(this);
+    this.element = config.element;
+    this.viewProps = config.viewProps;
+    const rack = new Rack({
+      blade: config.root ? undefined : config.blade,
+      viewProps: config.viewProps
+    });
+    rack.emitter.on("add", this.onRackAdd_);
+    rack.emitter.on("remove", this.onRackRemove_);
+    this.rack = rack;
+    this.viewProps.handleDispose(() => {
+      for (let i = this.rack.children.length - 1;i >= 0; i--) {
+        const bc = this.rack.children[i];
+        bc.viewProps.set("disposed", true);
+      }
+    });
+  }
+  onRackAdd_(ev) {
+    if (!ev.root) {
+      return;
+    }
+    insertElementAt(this.element, ev.bladeController.view.element, ev.index);
+  }
+  onRackRemove_(ev) {
+    if (!ev.root) {
+      return;
+    }
+    removeElement(ev.bladeController.view.element);
+  }
+}
+function createBlade() {
+  return new ValueMap({
+    positions: createValue([], {
+      equals: deepEqualsArray
+    })
+  });
+}
+
+class Foldable extends ValueMap {
+  constructor(valueMap) {
+    super(valueMap);
+  }
+  static create(expanded) {
+    const coreObj = {
+      completed: true,
+      expanded,
+      expandedHeight: null,
+      shouldFixHeight: false,
+      temporaryExpanded: null
+    };
+    const core = ValueMap.createCore(coreObj);
+    return new Foldable(core);
+  }
+  get styleExpanded() {
+    var _a;
+    return (_a = this.get("temporaryExpanded")) !== null && _a !== undefined ? _a : this.get("expanded");
+  }
+  get styleHeight() {
+    if (!this.styleExpanded) {
+      return "0";
+    }
+    const exHeight = this.get("expandedHeight");
+    if (this.get("shouldFixHeight") && !isEmpty(exHeight)) {
+      return `${exHeight}px`;
+    }
+    return "auto";
+  }
+  bindExpandedClass(elem, expandedClassName) {
+    const onExpand = () => {
+      const expanded = this.styleExpanded;
+      if (expanded) {
+        elem.classList.add(expandedClassName);
+      } else {
+        elem.classList.remove(expandedClassName);
+      }
+    };
+    bindValueMap(this, "expanded", onExpand);
+    bindValueMap(this, "temporaryExpanded", onExpand);
+  }
+  cleanUpTransition() {
+    this.set("shouldFixHeight", false);
+    this.set("expandedHeight", null);
+    this.set("completed", true);
+  }
+}
+function computeExpandedFolderHeight(folder, containerElement) {
+  let height = 0;
+  disableTransitionTemporarily(containerElement, () => {
+    folder.set("expandedHeight", null);
+    folder.set("temporaryExpanded", true);
+    forceReflow(containerElement);
+    height = containerElement.clientHeight;
+    folder.set("temporaryExpanded", null);
+    forceReflow(containerElement);
+  });
+  return height;
+}
+function applyHeight(foldable, elem) {
+  elem.style.height = foldable.styleHeight;
+}
+function bindFoldable(foldable, elem) {
+  foldable.value("expanded").emitter.on("beforechange", () => {
+    foldable.set("completed", false);
+    if (isEmpty(foldable.get("expandedHeight"))) {
+      const h = computeExpandedFolderHeight(foldable, elem);
+      if (h > 0) {
+        foldable.set("expandedHeight", h);
+      }
+    }
+    foldable.set("shouldFixHeight", true);
+    forceReflow(elem);
+  });
+  foldable.emitter.on("change", () => {
+    applyHeight(foldable, elem);
+  });
+  applyHeight(foldable, elem);
+  elem.addEventListener("transitionend", (ev) => {
+    if (ev.propertyName !== "height") {
+      return;
+    }
+    foldable.cleanUpTransition();
+  });
+}
+
+class FolderApi extends ContainerBladeApi {
+  constructor(controller, pool) {
+    super(controller, pool);
+    this.emitter_ = new Emitter;
+    this.controller.foldable.value("expanded").emitter.on("change", (ev) => {
+      this.emitter_.emit("fold", new TpFoldEvent(this, ev.sender.rawValue));
+    });
+    this.rackApi_.on("change", (ev) => {
+      this.emitter_.emit("change", ev);
+    });
+  }
+  get expanded() {
+    return this.controller.foldable.get("expanded");
+  }
+  set expanded(expanded) {
+    this.controller.foldable.set("expanded", expanded);
+  }
+  get title() {
+    return this.controller.props.get("title");
+  }
+  set title(title) {
+    this.controller.props.set("title", title);
+  }
+  get children() {
+    return this.rackApi_.children;
+  }
+  addBinding(object, key, opt_params) {
+    return this.rackApi_.addBinding(object, key, opt_params);
+  }
+  addFolder(params) {
+    return this.rackApi_.addFolder(params);
+  }
+  addButton(params) {
+    return this.rackApi_.addButton(params);
+  }
+  addTab(params) {
+    return this.rackApi_.addTab(params);
+  }
+  add(api, opt_index) {
+    return this.rackApi_.add(api, opt_index);
+  }
+  remove(api) {
+    this.rackApi_.remove(api);
+  }
+  addBlade(params) {
+    return this.rackApi_.addBlade(params);
+  }
+  on(eventName, handler) {
+    const bh = handler.bind(this);
+    this.emitter_.on(eventName, (ev) => {
+      bh(ev);
+    }, {
+      key: handler
+    });
+    return this;
+  }
+  off(eventName, handler) {
+    this.emitter_.off(eventName, handler);
+    return this;
+  }
+}
+var bladeContainerClassName = ClassName("cnt");
+
+class FolderView {
+  constructor(doc, config) {
+    var _a;
+    this.className_ = ClassName((_a = config.viewName) !== null && _a !== undefined ? _a : "fld");
+    this.element = doc.createElement("div");
+    this.element.classList.add(this.className_(), bladeContainerClassName());
+    config.viewProps.bindClassModifiers(this.element);
+    this.foldable_ = config.foldable;
+    this.foldable_.bindExpandedClass(this.element, this.className_(undefined, "expanded"));
+    bindValueMap(this.foldable_, "completed", valueToClassName(this.element, this.className_(undefined, "cpl")));
+    const buttonElem = doc.createElement("button");
+    buttonElem.classList.add(this.className_("b"));
+    bindValueMap(config.props, "title", (title) => {
+      if (isEmpty(title)) {
+        this.element.classList.add(this.className_(undefined, "not"));
+      } else {
+        this.element.classList.remove(this.className_(undefined, "not"));
+      }
+    });
+    config.viewProps.bindDisabled(buttonElem);
+    this.element.appendChild(buttonElem);
+    this.buttonElement = buttonElem;
+    const indentElem = doc.createElement("div");
+    indentElem.classList.add(this.className_("i"));
+    this.element.appendChild(indentElem);
+    const titleElem = doc.createElement("div");
+    titleElem.classList.add(this.className_("t"));
+    bindValueToTextContent(config.props.value("title"), titleElem);
+    this.buttonElement.appendChild(titleElem);
+    this.titleElement = titleElem;
+    const markElem = doc.createElement("div");
+    markElem.classList.add(this.className_("m"));
+    this.buttonElement.appendChild(markElem);
+    const containerElem = doc.createElement("div");
+    containerElem.classList.add(this.className_("c"));
+    this.element.appendChild(containerElem);
+    this.containerElement = containerElem;
+  }
+}
+
+class FolderController extends ContainerBladeController {
+  constructor(doc, config) {
+    var _a;
+    const foldable = Foldable.create((_a = config.expanded) !== null && _a !== undefined ? _a : true);
+    const view = new FolderView(doc, {
+      foldable,
+      props: config.props,
+      viewName: config.root ? "rot" : undefined,
+      viewProps: config.viewProps
+    });
+    super(Object.assign(Object.assign({}, config), { rackController: new RackController({
+      blade: config.blade,
+      element: view.containerElement,
+      root: config.root,
+      viewProps: config.viewProps
+    }), view }));
+    this.onTitleClick_ = this.onTitleClick_.bind(this);
+    this.props = config.props;
+    this.foldable = foldable;
+    bindFoldable(this.foldable, this.view.containerElement);
+    this.rackController.rack.emitter.on("add", () => {
+      this.foldable.cleanUpTransition();
+    });
+    this.rackController.rack.emitter.on("remove", () => {
+      this.foldable.cleanUpTransition();
+    });
+    this.view.buttonElement.addEventListener("click", this.onTitleClick_);
+  }
+  get document() {
+    return this.view.element.ownerDocument;
+  }
+  importState(state) {
+    return importBladeState(state, (s) => super.importState(s), (p) => ({
+      expanded: p.required.boolean,
+      title: p.optional.string
+    }), (result) => {
+      this.foldable.set("expanded", result.expanded);
+      this.props.set("title", result.title);
+      return true;
+    });
+  }
+  exportState() {
+    return exportBladeState(() => super.exportState(), {
+      expanded: this.foldable.get("expanded"),
+      title: this.props.get("title")
+    });
+  }
+  onTitleClick_() {
+    this.foldable.set("expanded", !this.foldable.get("expanded"));
+  }
+}
+var FolderBladePlugin = createPlugin({
+  id: "folder",
+  type: "blade",
+  accept(params) {
+    const result = parseRecord(params, (p) => ({
+      title: p.required.string,
+      view: p.required.constant("folder"),
+      expanded: p.optional.boolean
+    }));
+    return result ? { params: result } : null;
+  },
+  controller(args) {
+    return new FolderController(args.document, {
+      blade: args.blade,
+      expanded: args.params.expanded,
+      props: ValueMap.fromObject({
+        title: args.params.title
+      }),
+      viewProps: args.viewProps
+    });
+  },
+  api(args) {
+    if (!(args.controller instanceof FolderController)) {
+      return null;
+    }
+    return new FolderApi(args.controller, args.pool);
+  }
+});
+var cn$o = ClassName("");
+function valueToModifier(elem, modifier) {
+  return valueToClassName(elem, cn$o(undefined, modifier));
+}
+
+class ViewProps extends ValueMap {
+  constructor(valueMap) {
+    var _a;
+    super(valueMap);
+    this.onDisabledChange_ = this.onDisabledChange_.bind(this);
+    this.onParentChange_ = this.onParentChange_.bind(this);
+    this.onParentGlobalDisabledChange_ = this.onParentGlobalDisabledChange_.bind(this);
+    [this.globalDisabled_, this.setGlobalDisabled_] = createReadonlyValue(createValue(this.getGlobalDisabled_()));
+    this.value("disabled").emitter.on("change", this.onDisabledChange_);
+    this.value("parent").emitter.on("change", this.onParentChange_);
+    (_a = this.get("parent")) === null || _a === undefined || _a.globalDisabled.emitter.on("change", this.onParentGlobalDisabledChange_);
+  }
+  static create(opt_initialValue) {
+    var _a, _b, _c;
+    const initialValue = opt_initialValue !== null && opt_initialValue !== undefined ? opt_initialValue : {};
+    return new ViewProps(ValueMap.createCore({
+      disabled: (_a = initialValue.disabled) !== null && _a !== undefined ? _a : false,
+      disposed: false,
+      hidden: (_b = initialValue.hidden) !== null && _b !== undefined ? _b : false,
+      parent: (_c = initialValue.parent) !== null && _c !== undefined ? _c : null
+    }));
+  }
+  get globalDisabled() {
+    return this.globalDisabled_;
+  }
+  bindClassModifiers(elem) {
+    bindValue(this.globalDisabled_, valueToModifier(elem, "disabled"));
+    bindValueMap(this, "hidden", valueToModifier(elem, "hidden"));
+  }
+  bindDisabled(target) {
+    bindValue(this.globalDisabled_, (disabled) => {
+      target.disabled = disabled;
+    });
+  }
+  bindTabIndex(elem) {
+    bindValue(this.globalDisabled_, (disabled) => {
+      elem.tabIndex = disabled ? -1 : 0;
+    });
+  }
+  handleDispose(callback) {
+    this.value("disposed").emitter.on("change", (disposed) => {
+      if (disposed) {
+        callback();
+      }
+    });
+  }
+  importState(state) {
+    this.set("disabled", state.disabled);
+    this.set("hidden", state.hidden);
+  }
+  exportState() {
+    return {
+      disabled: this.get("disabled"),
+      hidden: this.get("hidden")
+    };
+  }
+  getGlobalDisabled_() {
+    const parent = this.get("parent");
+    const parentDisabled = parent ? parent.globalDisabled.rawValue : false;
+    return parentDisabled || this.get("disabled");
+  }
+  updateGlobalDisabled_() {
+    this.setGlobalDisabled_(this.getGlobalDisabled_());
+  }
+  onDisabledChange_() {
+    this.updateGlobalDisabled_();
+  }
+  onParentGlobalDisabledChange_() {
+    this.updateGlobalDisabled_();
+  }
+  onParentChange_(ev) {
+    var _a;
+    const prevParent = ev.previousRawValue;
+    prevParent === null || prevParent === undefined || prevParent.globalDisabled.emitter.off("change", this.onParentGlobalDisabledChange_);
+    (_a = this.get("parent")) === null || _a === undefined || _a.globalDisabled.emitter.on("change", this.onParentGlobalDisabledChange_);
+    this.updateGlobalDisabled_();
+  }
+}
+var cn$n = ClassName("tbp");
+
+class TabPageView {
+  constructor(doc, config) {
+    this.element = doc.createElement("div");
+    this.element.classList.add(cn$n());
+    config.viewProps.bindClassModifiers(this.element);
+    const containerElem = doc.createElement("div");
+    containerElem.classList.add(cn$n("c"));
+    this.element.appendChild(containerElem);
+    this.containerElement = containerElem;
+  }
+}
+var cn$m = ClassName("tbi");
+
+class TabItemView {
+  constructor(doc, config) {
+    this.element = doc.createElement("div");
+    this.element.classList.add(cn$m());
+    config.viewProps.bindClassModifiers(this.element);
+    bindValueMap(config.props, "selected", (selected) => {
+      if (selected) {
+        this.element.classList.add(cn$m(undefined, "sel"));
+      } else {
+        this.element.classList.remove(cn$m(undefined, "sel"));
+      }
+    });
+    const buttonElem = doc.createElement("button");
+    buttonElem.classList.add(cn$m("b"));
+    config.viewProps.bindDisabled(buttonElem);
+    this.element.appendChild(buttonElem);
+    this.buttonElement = buttonElem;
+    const titleElem = doc.createElement("div");
+    titleElem.classList.add(cn$m("t"));
+    bindValueToTextContent(config.props.value("title"), titleElem);
+    this.buttonElement.appendChild(titleElem);
+    this.titleElement = titleElem;
+  }
+}
+
+class TabItemController {
+  constructor(doc, config) {
+    this.emitter = new Emitter;
+    this.onClick_ = this.onClick_.bind(this);
+    this.props = config.props;
+    this.viewProps = config.viewProps;
+    this.view = new TabItemView(doc, {
+      props: config.props,
+      viewProps: config.viewProps
+    });
+    this.view.buttonElement.addEventListener("click", this.onClick_);
+  }
+  onClick_() {
+    this.emitter.emit("click", {
+      sender: this
+    });
+  }
+}
+
+class TabPageController extends ContainerBladeController {
+  constructor(doc, config) {
+    const view = new TabPageView(doc, {
+      viewProps: config.viewProps
+    });
+    super(Object.assign(Object.assign({}, config), { rackController: new RackController({
+      blade: config.blade,
+      element: view.containerElement,
+      viewProps: config.viewProps
+    }), view }));
+    this.onItemClick_ = this.onItemClick_.bind(this);
+    this.ic_ = new TabItemController(doc, {
+      props: config.itemProps,
+      viewProps: ViewProps.create()
+    });
+    this.ic_.emitter.on("click", this.onItemClick_);
+    this.props = config.props;
+    bindValueMap(this.props, "selected", (selected) => {
+      this.itemController.props.set("selected", selected);
+      this.viewProps.set("hidden", !selected);
+    });
+  }
+  get itemController() {
+    return this.ic_;
+  }
+  importState(state) {
+    return importBladeState(state, (s) => super.importState(s), (p) => ({
+      selected: p.required.boolean,
+      title: p.required.string
+    }), (result) => {
+      this.ic_.props.set("selected", result.selected);
+      this.ic_.props.set("title", result.title);
+      return true;
+    });
+  }
+  exportState() {
+    return exportBladeState(() => super.exportState(), {
+      selected: this.ic_.props.get("selected"),
+      title: this.ic_.props.get("title")
+    });
+  }
+  onItemClick_() {
+    this.props.set("selected", true);
+  }
+}
+
+class TabApi extends ContainerBladeApi {
+  constructor(controller, pool) {
+    super(controller, pool);
+    this.emitter_ = new Emitter;
+    this.onSelect_ = this.onSelect_.bind(this);
+    this.pool_ = pool;
+    this.rackApi_.on("change", (ev) => {
+      this.emitter_.emit("change", ev);
+    });
+    this.controller.tab.selectedIndex.emitter.on("change", this.onSelect_);
+  }
+  get pages() {
+    return this.rackApi_.children;
+  }
+  addPage(params) {
+    const doc = this.controller.view.element.ownerDocument;
+    const pc = new TabPageController(doc, {
+      blade: createBlade(),
+      itemProps: ValueMap.fromObject({
+        selected: false,
+        title: params.title
+      }),
+      props: ValueMap.fromObject({
+        selected: false
+      }),
+      viewProps: ViewProps.create()
+    });
+    const papi = this.pool_.createApi(pc);
+    return this.rackApi_.add(papi, params.index);
+  }
+  removePage(index) {
+    this.rackApi_.remove(this.rackApi_.children[index]);
+  }
+  on(eventName, handler) {
+    const bh = handler.bind(this);
+    this.emitter_.on(eventName, (ev) => {
+      bh(ev);
+    }, {
+      key: handler
+    });
+    return this;
+  }
+  off(eventName, handler) {
+    this.emitter_.off(eventName, handler);
+    return this;
+  }
+  onSelect_(ev) {
+    this.emitter_.emit("select", new TpTabSelectEvent(this, ev.rawValue));
+  }
+}
+
+class TabPageApi extends ContainerBladeApi {
+  get title() {
+    var _a;
+    return (_a = this.controller.itemController.props.get("title")) !== null && _a !== undefined ? _a : "";
+  }
+  set title(title) {
+    this.controller.itemController.props.set("title", title);
+  }
+  get selected() {
+    return this.controller.props.get("selected");
+  }
+  set selected(selected) {
+    this.controller.props.set("selected", selected);
+  }
+  get children() {
+    return this.rackApi_.children;
+  }
+  addButton(params) {
+    return this.rackApi_.addButton(params);
+  }
+  addFolder(params) {
+    return this.rackApi_.addFolder(params);
+  }
+  addTab(params) {
+    return this.rackApi_.addTab(params);
+  }
+  add(api, opt_index) {
+    this.rackApi_.add(api, opt_index);
+  }
+  remove(api) {
+    this.rackApi_.remove(api);
+  }
+  addBinding(object, key, opt_params) {
+    return this.rackApi_.addBinding(object, key, opt_params);
+  }
+  addBlade(params) {
+    return this.rackApi_.addBlade(params);
+  }
+}
+var INDEX_NOT_SELECTED = -1;
+
+class Tab {
+  constructor() {
+    this.onItemSelectedChange_ = this.onItemSelectedChange_.bind(this);
+    this.empty = createValue(true);
+    this.selectedIndex = createValue(INDEX_NOT_SELECTED);
+    this.items_ = [];
+  }
+  add(item, opt_index) {
+    const index = opt_index !== null && opt_index !== undefined ? opt_index : this.items_.length;
+    this.items_.splice(index, 0, item);
+    item.emitter.on("change", this.onItemSelectedChange_);
+    this.keepSelection_();
+  }
+  remove(item) {
+    const index = this.items_.indexOf(item);
+    if (index < 0) {
+      return;
+    }
+    this.items_.splice(index, 1);
+    item.emitter.off("change", this.onItemSelectedChange_);
+    this.keepSelection_();
+  }
+  keepSelection_() {
+    if (this.items_.length === 0) {
+      this.selectedIndex.rawValue = INDEX_NOT_SELECTED;
+      this.empty.rawValue = true;
+      return;
+    }
+    const firstSelIndex = this.items_.findIndex((s) => s.rawValue);
+    if (firstSelIndex < 0) {
+      this.items_.forEach((s, i) => {
+        s.rawValue = i === 0;
+      });
+      this.selectedIndex.rawValue = 0;
+    } else {
+      this.items_.forEach((s, i) => {
+        s.rawValue = i === firstSelIndex;
+      });
+      this.selectedIndex.rawValue = firstSelIndex;
+    }
+    this.empty.rawValue = false;
+  }
+  onItemSelectedChange_(ev) {
+    if (ev.rawValue) {
+      const index = this.items_.findIndex((s) => s === ev.sender);
+      this.items_.forEach((s, i) => {
+        s.rawValue = i === index;
+      });
+      this.selectedIndex.rawValue = index;
+    } else {
+      this.keepSelection_();
+    }
+  }
+}
+var cn$l = ClassName("tab");
+
+class TabView {
+  constructor(doc, config) {
+    this.element = doc.createElement("div");
+    this.element.classList.add(cn$l(), bladeContainerClassName());
+    config.viewProps.bindClassModifiers(this.element);
+    bindValue(config.empty, valueToClassName(this.element, cn$l(undefined, "nop")));
+    const titleElem = doc.createElement("div");
+    titleElem.classList.add(cn$l("t"));
+    this.element.appendChild(titleElem);
+    this.itemsElement = titleElem;
+    const indentElem = doc.createElement("div");
+    indentElem.classList.add(cn$l("i"));
+    this.element.appendChild(indentElem);
+    const contentsElem = doc.createElement("div");
+    contentsElem.classList.add(cn$l("c"));
+    this.element.appendChild(contentsElem);
+    this.contentsElement = contentsElem;
+  }
+}
+
+class TabController extends ContainerBladeController {
+  constructor(doc, config) {
+    const tab = new Tab;
+    const view = new TabView(doc, {
+      empty: tab.empty,
+      viewProps: config.viewProps
+    });
+    super({
+      blade: config.blade,
+      rackController: new RackController({
+        blade: config.blade,
+        element: view.contentsElement,
+        viewProps: config.viewProps
+      }),
+      view
+    });
+    this.onRackAdd_ = this.onRackAdd_.bind(this);
+    this.onRackRemove_ = this.onRackRemove_.bind(this);
+    const rack = this.rackController.rack;
+    rack.emitter.on("add", this.onRackAdd_);
+    rack.emitter.on("remove", this.onRackRemove_);
+    this.tab = tab;
+  }
+  add(pc, opt_index) {
+    this.rackController.rack.add(pc, opt_index);
+  }
+  remove(index) {
+    this.rackController.rack.remove(this.rackController.rack.children[index]);
+  }
+  onRackAdd_(ev) {
+    if (!ev.root) {
+      return;
+    }
+    const pc = ev.bladeController;
+    insertElementAt(this.view.itemsElement, pc.itemController.view.element, ev.index);
+    pc.itemController.viewProps.set("parent", this.viewProps);
+    this.tab.add(pc.props.value("selected"));
+  }
+  onRackRemove_(ev) {
+    if (!ev.root) {
+      return;
+    }
+    const pc = ev.bladeController;
+    removeElement(pc.itemController.view.element);
+    pc.itemController.viewProps.set("parent", null);
+    this.tab.remove(pc.props.value("selected"));
+  }
+}
+var TabBladePlugin = createPlugin({
+  id: "tab",
+  type: "blade",
+  accept(params) {
+    const result = parseRecord(params, (p) => ({
+      pages: p.required.array(p.required.object({ title: p.required.string })),
+      view: p.required.constant("tab")
+    }));
+    if (!result || result.pages.length === 0) {
+      return null;
+    }
+    return { params: result };
+  },
+  controller(args) {
+    const c = new TabController(args.document, {
+      blade: args.blade,
+      viewProps: args.viewProps
+    });
+    args.params.pages.forEach((p) => {
+      const pc = new TabPageController(args.document, {
+        blade: createBlade(),
+        itemProps: ValueMap.fromObject({
+          selected: false,
+          title: p.title
+        }),
+        props: ValueMap.fromObject({
+          selected: false
+        }),
+        viewProps: ViewProps.create()
+      });
+      c.add(pc);
+    });
+    return c;
+  },
+  api(args) {
+    if (args.controller instanceof TabController) {
+      return new TabApi(args.controller, args.pool);
+    }
+    if (args.controller instanceof TabPageController) {
+      return new TabPageApi(args.controller, args.pool);
+    }
+    return null;
+  }
+});
+function createBladeController(plugin, args) {
+  const ac = plugin.accept(args.params);
+  if (!ac) {
+    return null;
+  }
+  const params = parseRecord(args.params, (p) => ({
+    disabled: p.optional.boolean,
+    hidden: p.optional.boolean
+  }));
+  return plugin.controller({
+    blade: createBlade(),
+    document: args.document,
+    params: forceCast(Object.assign(Object.assign({}, ac.params), { disabled: params === null || params === undefined ? undefined : params.disabled, hidden: params === null || params === undefined ? undefined : params.hidden })),
+    viewProps: ViewProps.create({
+      disabled: params === null || params === undefined ? undefined : params.disabled,
+      hidden: params === null || params === undefined ? undefined : params.hidden
+    })
+  });
+}
+
+class ListInputBindingApi extends BindingApi {
+  get options() {
+    return this.controller.valueController.props.get("options");
+  }
+  set options(options) {
+    this.controller.valueController.props.set("options", options);
+  }
+}
+
+class ManualTicker {
+  constructor() {
+    this.disabled = false;
+    this.emitter = new Emitter;
+  }
+  dispose() {}
+  tick() {
+    if (this.disabled) {
+      return;
+    }
+    this.emitter.emit("tick", {
+      sender: this
+    });
+  }
+}
+
+class IntervalTicker {
+  constructor(doc, interval) {
+    this.disabled_ = false;
+    this.timerId_ = null;
+    this.onTick_ = this.onTick_.bind(this);
+    this.doc_ = doc;
+    this.emitter = new Emitter;
+    this.interval_ = interval;
+    this.setTimer_();
+  }
+  get disabled() {
+    return this.disabled_;
+  }
+  set disabled(inactive) {
+    this.disabled_ = inactive;
+    if (this.disabled_) {
+      this.clearTimer_();
+    } else {
+      this.setTimer_();
+    }
+  }
+  dispose() {
+    this.clearTimer_();
+  }
+  clearTimer_() {
+    if (this.timerId_ === null) {
+      return;
+    }
+    const win = this.doc_.defaultView;
+    if (win) {
+      win.clearInterval(this.timerId_);
+    }
+    this.timerId_ = null;
+  }
+  setTimer_() {
+    this.clearTimer_();
+    if (this.interval_ <= 0) {
+      return;
+    }
+    const win = this.doc_.defaultView;
+    if (win) {
+      this.timerId_ = win.setInterval(this.onTick_, this.interval_);
+    }
+  }
+  onTick_() {
+    if (this.disabled_) {
+      return;
+    }
+    this.emitter.emit("tick", {
+      sender: this
+    });
+  }
+}
+
+class CompositeConstraint {
+  constructor(constraints) {
+    this.constraints = constraints;
+  }
+  constrain(value) {
+    return this.constraints.reduce((result, c) => {
+      return c.constrain(result);
+    }, value);
+  }
+}
+function findConstraint(c, constraintClass) {
+  if (c instanceof constraintClass) {
+    return c;
+  }
+  if (c instanceof CompositeConstraint) {
+    const result = c.constraints.reduce((tmpResult, sc) => {
+      if (tmpResult) {
+        return tmpResult;
+      }
+      return sc instanceof constraintClass ? sc : null;
+    }, null);
+    if (result) {
+      return result;
+    }
+  }
+  return null;
+}
+
+class ListConstraint {
+  constructor(options) {
+    this.values = ValueMap.fromObject({
+      options
+    });
+  }
+  constrain(value) {
+    const opts = this.values.get("options");
+    if (opts.length === 0) {
+      return value;
+    }
+    const matched = opts.filter((item) => {
+      return item.value === value;
+    }).length > 0;
+    return matched ? value : opts[0].value;
+  }
+}
+function parseListOptions(value) {
+  var _a;
+  const p = MicroParsers;
+  if (Array.isArray(value)) {
+    return (_a = parseRecord({ items: value }, (p2) => ({
+      items: p2.required.array(p2.required.object({
+        text: p2.required.string,
+        value: p2.required.raw
+      }))
+    }))) === null || _a === undefined ? undefined : _a.items;
+  }
+  if (typeof value === "object") {
+    return p.required.raw(value).value;
+  }
+  return;
+}
+function normalizeListOptions(options) {
+  if (Array.isArray(options)) {
+    return options;
+  }
+  const items = [];
+  Object.keys(options).forEach((text) => {
+    items.push({ text, value: options[text] });
+  });
+  return items;
+}
+function createListConstraint(options) {
+  return !isEmpty(options) ? new ListConstraint(normalizeListOptions(forceCast(options))) : null;
+}
+var cn$k = ClassName("lst");
+
+class ListView {
+  constructor(doc, config) {
+    this.onValueChange_ = this.onValueChange_.bind(this);
+    this.props_ = config.props;
+    this.element = doc.createElement("div");
+    this.element.classList.add(cn$k());
+    config.viewProps.bindClassModifiers(this.element);
+    const selectElem = doc.createElement("select");
+    selectElem.classList.add(cn$k("s"));
+    config.viewProps.bindDisabled(selectElem);
+    this.element.appendChild(selectElem);
+    this.selectElement = selectElem;
+    const markElem = doc.createElement("div");
+    markElem.classList.add(cn$k("m"));
+    markElem.appendChild(createSvgIconElement(doc, "dropdown"));
+    this.element.appendChild(markElem);
+    config.value.emitter.on("change", this.onValueChange_);
+    this.value_ = config.value;
+    bindValueMap(this.props_, "options", (opts) => {
+      removeChildElements(this.selectElement);
+      opts.forEach((item) => {
+        const optionElem = doc.createElement("option");
+        optionElem.textContent = item.text;
+        this.selectElement.appendChild(optionElem);
+      });
+      this.update_();
+    });
+  }
+  update_() {
+    const values = this.props_.get("options").map((o) => o.value);
+    this.selectElement.selectedIndex = values.indexOf(this.value_.rawValue);
+  }
+  onValueChange_() {
+    this.update_();
+  }
+}
+
+class ListController {
+  constructor(doc, config) {
+    this.onSelectChange_ = this.onSelectChange_.bind(this);
+    this.props = config.props;
+    this.value = config.value;
+    this.viewProps = config.viewProps;
+    this.view = new ListView(doc, {
+      props: this.props,
+      value: this.value,
+      viewProps: this.viewProps
+    });
+    this.view.selectElement.addEventListener("change", this.onSelectChange_);
+  }
+  onSelectChange_(e) {
+    const selectElem = forceCast(e.currentTarget);
+    this.value.rawValue = this.props.get("options")[selectElem.selectedIndex].value;
+  }
+  importProps(state) {
+    return importBladeState(state, null, (p) => ({
+      options: p.required.custom(parseListOptions)
+    }), (result) => {
+      this.props.set("options", normalizeListOptions(result.options));
+      return true;
+    });
+  }
+  exportProps() {
+    return exportBladeState(null, {
+      options: this.props.get("options")
+    });
+  }
+}
+var cn$j = ClassName("pop");
+
+class PopupView {
+  constructor(doc, config) {
+    this.element = doc.createElement("div");
+    this.element.classList.add(cn$j());
+    config.viewProps.bindClassModifiers(this.element);
+    bindValue(config.shows, valueToClassName(this.element, cn$j(undefined, "v")));
+  }
+}
+
+class PopupController {
+  constructor(doc, config) {
+    this.shows = createValue(false);
+    this.viewProps = config.viewProps;
+    this.view = new PopupView(doc, {
+      shows: this.shows,
+      viewProps: this.viewProps
+    });
+  }
+}
+var cn$i = ClassName("txt");
+
+class TextView {
+  constructor(doc, config) {
+    this.onChange_ = this.onChange_.bind(this);
+    this.element = doc.createElement("div");
+    this.element.classList.add(cn$i());
+    config.viewProps.bindClassModifiers(this.element);
+    this.props_ = config.props;
+    this.props_.emitter.on("change", this.onChange_);
+    const inputElem = doc.createElement("input");
+    inputElem.classList.add(cn$i("i"));
+    inputElem.type = "text";
+    config.viewProps.bindDisabled(inputElem);
+    this.element.appendChild(inputElem);
+    this.inputElement = inputElem;
+    config.value.emitter.on("change", this.onChange_);
+    this.value_ = config.value;
+    this.refresh();
+  }
+  refresh() {
+    const formatter = this.props_.get("formatter");
+    this.inputElement.value = formatter(this.value_.rawValue);
+  }
+  onChange_() {
+    this.refresh();
+  }
+}
+
+class TextController {
+  constructor(doc, config) {
+    this.onInputChange_ = this.onInputChange_.bind(this);
+    this.parser_ = config.parser;
+    this.props = config.props;
+    this.value = config.value;
+    this.viewProps = config.viewProps;
+    this.view = new TextView(doc, {
+      props: config.props,
+      value: this.value,
+      viewProps: this.viewProps
+    });
+    this.view.inputElement.addEventListener("change", this.onInputChange_);
+  }
+  onInputChange_(e) {
+    const inputElem = forceCast(e.currentTarget);
+    const value = inputElem.value;
+    const parsedValue = this.parser_(value);
+    if (!isEmpty(parsedValue)) {
+      this.value.rawValue = parsedValue;
+    }
+    this.view.refresh();
+  }
+}
+function boolToString(value) {
+  return String(value);
+}
+function boolFromUnknown(value) {
+  if (value === "false") {
+    return false;
+  }
+  return !!value;
+}
+function BooleanFormatter(value) {
+  return boolToString(value);
+}
+function composeParsers(parsers) {
+  return (text) => {
+    return parsers.reduce((result, parser) => {
+      if (result !== null) {
+        return result;
+      }
+      return parser(text);
+    }, null);
+  };
+}
+var innerFormatter = createNumberFormatter(0);
+function formatPercentage(value) {
+  return innerFormatter(value) + "%";
+}
+function stringFromUnknown(value) {
+  return String(value);
+}
+function formatString(value) {
+  return value;
+}
+function connectValues({ primary, secondary, forward, backward }) {
+  let changing = false;
+  function preventFeedback(callback) {
+    if (changing) {
+      return;
+    }
+    changing = true;
+    callback();
+    changing = false;
+  }
+  primary.emitter.on("change", (ev) => {
+    preventFeedback(() => {
+      secondary.setRawValue(forward(primary.rawValue, secondary.rawValue), ev.options);
+    });
+  });
+  secondary.emitter.on("change", (ev) => {
+    preventFeedback(() => {
+      primary.setRawValue(backward(primary.rawValue, secondary.rawValue), ev.options);
+    });
+    preventFeedback(() => {
+      secondary.setRawValue(forward(primary.rawValue, secondary.rawValue), ev.options);
+    });
+  });
+  preventFeedback(() => {
+    secondary.setRawValue(forward(primary.rawValue, secondary.rawValue), {
+      forceEmit: false,
+      last: true
+    });
+  });
+}
+function getStepForKey(keyScale, keys) {
+  const step = keyScale * (keys.altKey ? 0.1 : 1) * (keys.shiftKey ? 10 : 1);
+  if (keys.upKey) {
+    return +step;
+  } else if (keys.downKey) {
+    return -step;
+  }
+  return 0;
+}
+function getVerticalStepKeys(ev) {
+  return {
+    altKey: ev.altKey,
+    downKey: ev.key === "ArrowDown",
+    shiftKey: ev.shiftKey,
+    upKey: ev.key === "ArrowUp"
+  };
+}
+function getHorizontalStepKeys(ev) {
+  return {
+    altKey: ev.altKey,
+    downKey: ev.key === "ArrowLeft",
+    shiftKey: ev.shiftKey,
+    upKey: ev.key === "ArrowRight"
+  };
+}
+function isVerticalArrowKey(key) {
+  return key === "ArrowUp" || key === "ArrowDown";
+}
+function isArrowKey(key) {
+  return isVerticalArrowKey(key) || key === "ArrowLeft" || key === "ArrowRight";
+}
+function computeOffset$1(ev, elem) {
+  var _a, _b;
+  const win = elem.ownerDocument.defaultView;
+  const rect = elem.getBoundingClientRect();
+  return {
+    x: ev.pageX - (((_a = win && win.scrollX) !== null && _a !== undefined ? _a : 0) + rect.left),
+    y: ev.pageY - (((_b = win && win.scrollY) !== null && _b !== undefined ? _b : 0) + rect.top)
+  };
+}
+
+class PointerHandler {
+  constructor(element) {
+    this.lastTouch_ = null;
+    this.onDocumentMouseMove_ = this.onDocumentMouseMove_.bind(this);
+    this.onDocumentMouseUp_ = this.onDocumentMouseUp_.bind(this);
+    this.onMouseDown_ = this.onMouseDown_.bind(this);
+    this.onTouchEnd_ = this.onTouchEnd_.bind(this);
+    this.onTouchMove_ = this.onTouchMove_.bind(this);
+    this.onTouchStart_ = this.onTouchStart_.bind(this);
+    this.elem_ = element;
+    this.emitter = new Emitter;
+    element.addEventListener("touchstart", this.onTouchStart_, {
+      passive: false
+    });
+    element.addEventListener("touchmove", this.onTouchMove_, {
+      passive: true
+    });
+    element.addEventListener("touchend", this.onTouchEnd_);
+    element.addEventListener("mousedown", this.onMouseDown_);
+  }
+  computePosition_(offset) {
+    const rect = this.elem_.getBoundingClientRect();
+    return {
+      bounds: {
+        width: rect.width,
+        height: rect.height
+      },
+      point: offset ? {
+        x: offset.x,
+        y: offset.y
+      } : null
+    };
+  }
+  onMouseDown_(ev) {
+    var _a;
+    ev.preventDefault();
+    (_a = ev.currentTarget) === null || _a === undefined || _a.focus();
+    const doc = this.elem_.ownerDocument;
+    doc.addEventListener("mousemove", this.onDocumentMouseMove_);
+    doc.addEventListener("mouseup", this.onDocumentMouseUp_);
+    this.emitter.emit("down", {
+      altKey: ev.altKey,
+      data: this.computePosition_(computeOffset$1(ev, this.elem_)),
+      sender: this,
+      shiftKey: ev.shiftKey
+    });
+  }
+  onDocumentMouseMove_(ev) {
+    this.emitter.emit("move", {
+      altKey: ev.altKey,
+      data: this.computePosition_(computeOffset$1(ev, this.elem_)),
+      sender: this,
+      shiftKey: ev.shiftKey
+    });
+  }
+  onDocumentMouseUp_(ev) {
+    const doc = this.elem_.ownerDocument;
+    doc.removeEventListener("mousemove", this.onDocumentMouseMove_);
+    doc.removeEventListener("mouseup", this.onDocumentMouseUp_);
+    this.emitter.emit("up", {
+      altKey: ev.altKey,
+      data: this.computePosition_(computeOffset$1(ev, this.elem_)),
+      sender: this,
+      shiftKey: ev.shiftKey
+    });
+  }
+  onTouchStart_(ev) {
+    ev.preventDefault();
+    const touch = ev.targetTouches.item(0);
+    const rect = this.elem_.getBoundingClientRect();
+    this.emitter.emit("down", {
+      altKey: ev.altKey,
+      data: this.computePosition_(touch ? {
+        x: touch.clientX - rect.left,
+        y: touch.clientY - rect.top
+      } : undefined),
+      sender: this,
+      shiftKey: ev.shiftKey
+    });
+    this.lastTouch_ = touch;
+  }
+  onTouchMove_(ev) {
+    const touch = ev.targetTouches.item(0);
+    const rect = this.elem_.getBoundingClientRect();
+    this.emitter.emit("move", {
+      altKey: ev.altKey,
+      data: this.computePosition_(touch ? {
+        x: touch.clientX - rect.left,
+        y: touch.clientY - rect.top
+      } : undefined),
+      sender: this,
+      shiftKey: ev.shiftKey
+    });
+    this.lastTouch_ = touch;
+  }
+  onTouchEnd_(ev) {
+    var _a;
+    const touch = (_a = ev.targetTouches.item(0)) !== null && _a !== undefined ? _a : this.lastTouch_;
+    const rect = this.elem_.getBoundingClientRect();
+    this.emitter.emit("up", {
+      altKey: ev.altKey,
+      data: this.computePosition_(touch ? {
+        x: touch.clientX - rect.left,
+        y: touch.clientY - rect.top
+      } : undefined),
+      sender: this,
+      shiftKey: ev.shiftKey
+    });
+  }
+}
+var cn$h = ClassName("txt");
+
+class NumberTextView {
+  constructor(doc, config) {
+    this.onChange_ = this.onChange_.bind(this);
+    this.props_ = config.props;
+    this.props_.emitter.on("change", this.onChange_);
+    this.element = doc.createElement("div");
+    this.element.classList.add(cn$h(), cn$h(undefined, "num"));
+    if (config.arrayPosition) {
+      this.element.classList.add(cn$h(undefined, config.arrayPosition));
+    }
+    config.viewProps.bindClassModifiers(this.element);
+    const inputElem = doc.createElement("input");
+    inputElem.classList.add(cn$h("i"));
+    inputElem.type = "text";
+    config.viewProps.bindDisabled(inputElem);
+    this.element.appendChild(inputElem);
+    this.inputElement = inputElem;
+    this.onDraggingChange_ = this.onDraggingChange_.bind(this);
+    this.dragging_ = config.dragging;
+    this.dragging_.emitter.on("change", this.onDraggingChange_);
+    this.element.classList.add(cn$h());
+    this.inputElement.classList.add(cn$h("i"));
+    const knobElem = doc.createElement("div");
+    knobElem.classList.add(cn$h("k"));
+    this.element.appendChild(knobElem);
+    this.knobElement = knobElem;
+    const guideElem = doc.createElementNS(SVG_NS, "svg");
+    guideElem.classList.add(cn$h("g"));
+    this.knobElement.appendChild(guideElem);
+    const bodyElem = doc.createElementNS(SVG_NS, "path");
+    bodyElem.classList.add(cn$h("gb"));
+    guideElem.appendChild(bodyElem);
+    this.guideBodyElem_ = bodyElem;
+    const headElem = doc.createElementNS(SVG_NS, "path");
+    headElem.classList.add(cn$h("gh"));
+    guideElem.appendChild(headElem);
+    this.guideHeadElem_ = headElem;
+    const tooltipElem = doc.createElement("div");
+    tooltipElem.classList.add(ClassName("tt")());
+    this.knobElement.appendChild(tooltipElem);
+    this.tooltipElem_ = tooltipElem;
+    config.value.emitter.on("change", this.onChange_);
+    this.value = config.value;
+    this.refresh();
+  }
+  onDraggingChange_(ev) {
+    if (ev.rawValue === null) {
+      this.element.classList.remove(cn$h(undefined, "drg"));
+      return;
+    }
+    this.element.classList.add(cn$h(undefined, "drg"));
+    const x = ev.rawValue / this.props_.get("pointerScale");
+    const aox = x + (x > 0 ? -1 : x < 0 ? 1 : 0);
+    const adx = constrainRange(-aox, -4, 4);
+    this.guideHeadElem_.setAttributeNS(null, "d", [`M ${aox + adx},0 L${aox},4 L${aox + adx},8`, `M ${x},-1 L${x},9`].join(" "));
+    this.guideBodyElem_.setAttributeNS(null, "d", `M 0,4 L${x},4`);
+    const formatter = this.props_.get("formatter");
+    this.tooltipElem_.textContent = formatter(this.value.rawValue);
+    this.tooltipElem_.style.left = `${x}px`;
+  }
+  refresh() {
+    const formatter = this.props_.get("formatter");
+    this.inputElement.value = formatter(this.value.rawValue);
+  }
+  onChange_() {
+    this.refresh();
+  }
+}
+
+class NumberTextController {
+  constructor(doc, config) {
+    var _a;
+    this.originRawValue_ = 0;
+    this.onInputChange_ = this.onInputChange_.bind(this);
+    this.onInputKeyDown_ = this.onInputKeyDown_.bind(this);
+    this.onInputKeyUp_ = this.onInputKeyUp_.bind(this);
+    this.onPointerDown_ = this.onPointerDown_.bind(this);
+    this.onPointerMove_ = this.onPointerMove_.bind(this);
+    this.onPointerUp_ = this.onPointerUp_.bind(this);
+    this.parser_ = config.parser;
+    this.props = config.props;
+    this.sliderProps_ = (_a = config.sliderProps) !== null && _a !== undefined ? _a : null;
+    this.value = config.value;
+    this.viewProps = config.viewProps;
+    this.dragging_ = createValue(null);
+    this.view = new NumberTextView(doc, {
+      arrayPosition: config.arrayPosition,
+      dragging: this.dragging_,
+      props: this.props,
+      value: this.value,
+      viewProps: this.viewProps
+    });
+    this.view.inputElement.addEventListener("change", this.onInputChange_);
+    this.view.inputElement.addEventListener("keydown", this.onInputKeyDown_);
+    this.view.inputElement.addEventListener("keyup", this.onInputKeyUp_);
+    const ph = new PointerHandler(this.view.knobElement);
+    ph.emitter.on("down", this.onPointerDown_);
+    ph.emitter.on("move", this.onPointerMove_);
+    ph.emitter.on("up", this.onPointerUp_);
+  }
+  constrainValue_(value) {
+    var _a, _b;
+    const min = (_a = this.sliderProps_) === null || _a === undefined ? undefined : _a.get("min");
+    const max = (_b = this.sliderProps_) === null || _b === undefined ? undefined : _b.get("max");
+    let v = value;
+    if (min !== undefined) {
+      v = Math.max(v, min);
+    }
+    if (max !== undefined) {
+      v = Math.min(v, max);
+    }
+    return v;
+  }
+  onInputChange_(e) {
+    const inputElem = forceCast(e.currentTarget);
+    const value = inputElem.value;
+    const parsedValue = this.parser_(value);
+    if (!isEmpty(parsedValue)) {
+      this.value.rawValue = this.constrainValue_(parsedValue);
+    }
+    this.view.refresh();
+  }
+  onInputKeyDown_(ev) {
+    const step = getStepForKey(this.props.get("keyScale"), getVerticalStepKeys(ev));
+    if (step === 0) {
+      return;
+    }
+    this.value.setRawValue(this.constrainValue_(this.value.rawValue + step), {
+      forceEmit: false,
+      last: false
+    });
+  }
+  onInputKeyUp_(ev) {
+    const step = getStepForKey(this.props.get("keyScale"), getVerticalStepKeys(ev));
+    if (step === 0) {
+      return;
+    }
+    this.value.setRawValue(this.value.rawValue, {
+      forceEmit: true,
+      last: true
+    });
+  }
+  onPointerDown_() {
+    this.originRawValue_ = this.value.rawValue;
+    this.dragging_.rawValue = 0;
+  }
+  computeDraggingValue_(data) {
+    if (!data.point) {
+      return null;
+    }
+    const dx = data.point.x - data.bounds.width / 2;
+    return this.constrainValue_(this.originRawValue_ + dx * this.props.get("pointerScale"));
+  }
+  onPointerMove_(ev) {
+    const v = this.computeDraggingValue_(ev.data);
+    if (v === null) {
+      return;
+    }
+    this.value.setRawValue(v, {
+      forceEmit: false,
+      last: false
+    });
+    this.dragging_.rawValue = this.value.rawValue - this.originRawValue_;
+  }
+  onPointerUp_(ev) {
+    const v = this.computeDraggingValue_(ev.data);
+    if (v === null) {
+      return;
+    }
+    this.value.setRawValue(v, {
+      forceEmit: true,
+      last: true
+    });
+    this.dragging_.rawValue = null;
+  }
+}
+var cn$g = ClassName("sld");
+
+class SliderView {
+  constructor(doc, config) {
+    this.onChange_ = this.onChange_.bind(this);
+    this.props_ = config.props;
+    this.props_.emitter.on("change", this.onChange_);
+    this.element = doc.createElement("div");
+    this.element.classList.add(cn$g());
+    config.viewProps.bindClassModifiers(this.element);
+    const trackElem = doc.createElement("div");
+    trackElem.classList.add(cn$g("t"));
+    config.viewProps.bindTabIndex(trackElem);
+    this.element.appendChild(trackElem);
+    this.trackElement = trackElem;
+    const knobElem = doc.createElement("div");
+    knobElem.classList.add(cn$g("k"));
+    this.trackElement.appendChild(knobElem);
+    this.knobElement = knobElem;
+    config.value.emitter.on("change", this.onChange_);
+    this.value = config.value;
+    this.update_();
+  }
+  update_() {
+    const p = constrainRange(mapRange(this.value.rawValue, this.props_.get("min"), this.props_.get("max"), 0, 100), 0, 100);
+    this.knobElement.style.width = `${p}%`;
+  }
+  onChange_() {
+    this.update_();
+  }
+}
+
+class SliderController {
+  constructor(doc, config) {
+    this.onKeyDown_ = this.onKeyDown_.bind(this);
+    this.onKeyUp_ = this.onKeyUp_.bind(this);
+    this.onPointerDownOrMove_ = this.onPointerDownOrMove_.bind(this);
+    this.onPointerUp_ = this.onPointerUp_.bind(this);
+    this.value = config.value;
+    this.viewProps = config.viewProps;
+    this.props = config.props;
+    this.view = new SliderView(doc, {
+      props: this.props,
+      value: this.value,
+      viewProps: this.viewProps
+    });
+    this.ptHandler_ = new PointerHandler(this.view.trackElement);
+    this.ptHandler_.emitter.on("down", this.onPointerDownOrMove_);
+    this.ptHandler_.emitter.on("move", this.onPointerDownOrMove_);
+    this.ptHandler_.emitter.on("up", this.onPointerUp_);
+    this.view.trackElement.addEventListener("keydown", this.onKeyDown_);
+    this.view.trackElement.addEventListener("keyup", this.onKeyUp_);
+  }
+  handlePointerEvent_(d, opts) {
+    if (!d.point) {
+      return;
+    }
+    this.value.setRawValue(mapRange(constrainRange(d.point.x, 0, d.bounds.width), 0, d.bounds.width, this.props.get("min"), this.props.get("max")), opts);
+  }
+  onPointerDownOrMove_(ev) {
+    this.handlePointerEvent_(ev.data, {
+      forceEmit: false,
+      last: false
+    });
+  }
+  onPointerUp_(ev) {
+    this.handlePointerEvent_(ev.data, {
+      forceEmit: true,
+      last: true
+    });
+  }
+  onKeyDown_(ev) {
+    const step = getStepForKey(this.props.get("keyScale"), getHorizontalStepKeys(ev));
+    if (step === 0) {
+      return;
+    }
+    this.value.setRawValue(this.value.rawValue + step, {
+      forceEmit: false,
+      last: false
+    });
+  }
+  onKeyUp_(ev) {
+    const step = getStepForKey(this.props.get("keyScale"), getHorizontalStepKeys(ev));
+    if (step === 0) {
+      return;
+    }
+    this.value.setRawValue(this.value.rawValue, {
+      forceEmit: true,
+      last: true
+    });
+  }
+}
+var cn$f = ClassName("sldtxt");
+
+class SliderTextView {
+  constructor(doc, config) {
+    this.element = doc.createElement("div");
+    this.element.classList.add(cn$f());
+    const sliderElem = doc.createElement("div");
+    sliderElem.classList.add(cn$f("s"));
+    this.sliderView_ = config.sliderView;
+    sliderElem.appendChild(this.sliderView_.element);
+    this.element.appendChild(sliderElem);
+    const textElem = doc.createElement("div");
+    textElem.classList.add(cn$f("t"));
+    this.textView_ = config.textView;
+    textElem.appendChild(this.textView_.element);
+    this.element.appendChild(textElem);
+  }
+}
+
+class SliderTextController {
+  constructor(doc, config) {
+    this.value = config.value;
+    this.viewProps = config.viewProps;
+    this.sliderC_ = new SliderController(doc, {
+      props: config.sliderProps,
+      value: config.value,
+      viewProps: this.viewProps
+    });
+    this.textC_ = new NumberTextController(doc, {
+      parser: config.parser,
+      props: config.textProps,
+      sliderProps: config.sliderProps,
+      value: config.value,
+      viewProps: config.viewProps
+    });
+    this.view = new SliderTextView(doc, {
+      sliderView: this.sliderC_.view,
+      textView: this.textC_.view
+    });
+  }
+  get sliderController() {
+    return this.sliderC_;
+  }
+  get textController() {
+    return this.textC_;
+  }
+  importProps(state) {
+    return importBladeState(state, null, (p) => ({
+      max: p.required.number,
+      min: p.required.number
+    }), (result) => {
+      const sliderProps = this.sliderC_.props;
+      sliderProps.set("max", result.max);
+      sliderProps.set("min", result.min);
+      return true;
+    });
+  }
+  exportProps() {
+    const sliderProps = this.sliderC_.props;
+    return exportBladeState(null, {
+      max: sliderProps.get("max"),
+      min: sliderProps.get("min")
+    });
+  }
+}
+function createSliderTextProps(config) {
+  return {
+    sliderProps: new ValueMap({
+      keyScale: config.keyScale,
+      max: config.max,
+      min: config.min
+    }),
+    textProps: new ValueMap({
+      formatter: createValue(config.formatter),
+      keyScale: config.keyScale,
+      pointerScale: createValue(config.pointerScale)
+    })
+  };
+}
+var CSS_VAR_MAP = {
+  containerUnitSize: "cnt-usz"
+};
+function getCssVar(key) {
+  return `--${CSS_VAR_MAP[key]}`;
+}
+function createPointDimensionParser(p) {
+  return createNumberTextInputParamsParser(p);
+}
+function parsePointDimensionParams(value) {
+  if (!isRecord(value)) {
+    return;
+  }
+  return parseRecord(value, createPointDimensionParser);
+}
+function createDimensionConstraint(params, initialValue) {
+  if (!params) {
+    return;
+  }
+  const constraints = [];
+  const cs = createStepConstraint(params, initialValue);
+  if (cs) {
+    constraints.push(cs);
+  }
+  const rs = createRangeConstraint(params);
+  if (rs) {
+    constraints.push(rs);
+  }
+  return new CompositeConstraint(constraints);
+}
+function isCompatible(ver) {
+  if (!ver) {
+    return false;
+  }
+  return ver.major === VERSION$1.major;
+}
+function parsePickerLayout(value) {
+  if (value === "inline" || value === "popup") {
+    return value;
+  }
+  return;
+}
+function writePrimitive(target, value) {
+  target.write(value);
+}
+var cn$e = ClassName("ckb");
+
+class CheckboxView {
+  constructor(doc, config) {
+    this.onValueChange_ = this.onValueChange_.bind(this);
+    this.element = doc.createElement("div");
+    this.element.classList.add(cn$e());
+    config.viewProps.bindClassModifiers(this.element);
+    const labelElem = doc.createElement("label");
+    labelElem.classList.add(cn$e("l"));
+    this.element.appendChild(labelElem);
+    this.labelElement = labelElem;
+    const inputElem = doc.createElement("input");
+    inputElem.classList.add(cn$e("i"));
+    inputElem.type = "checkbox";
+    this.labelElement.appendChild(inputElem);
+    this.inputElement = inputElem;
+    config.viewProps.bindDisabled(this.inputElement);
+    const wrapperElem = doc.createElement("div");
+    wrapperElem.classList.add(cn$e("w"));
+    this.labelElement.appendChild(wrapperElem);
+    const markElem = createSvgIconElement(doc, "check");
+    wrapperElem.appendChild(markElem);
+    config.value.emitter.on("change", this.onValueChange_);
+    this.value = config.value;
+    this.update_();
+  }
+  update_() {
+    this.inputElement.checked = this.value.rawValue;
+  }
+  onValueChange_() {
+    this.update_();
+  }
+}
+
+class CheckboxController {
+  constructor(doc, config) {
+    this.onInputChange_ = this.onInputChange_.bind(this);
+    this.onLabelMouseDown_ = this.onLabelMouseDown_.bind(this);
+    this.value = config.value;
+    this.viewProps = config.viewProps;
+    this.view = new CheckboxView(doc, {
+      value: this.value,
+      viewProps: this.viewProps
+    });
+    this.view.inputElement.addEventListener("change", this.onInputChange_);
+    this.view.labelElement.addEventListener("mousedown", this.onLabelMouseDown_);
+  }
+  onInputChange_(ev) {
+    const inputElem = forceCast(ev.currentTarget);
+    this.value.rawValue = inputElem.checked;
+    ev.preventDefault();
+    ev.stopPropagation();
+  }
+  onLabelMouseDown_(ev) {
+    ev.preventDefault();
+  }
+}
+function createConstraint$6(params) {
+  const constraints = [];
+  const lc = createListConstraint(params.options);
+  if (lc) {
+    constraints.push(lc);
+  }
+  return new CompositeConstraint(constraints);
+}
+var BooleanInputPlugin = createPlugin({
+  id: "input-bool",
+  type: "input",
+  accept: (value, params) => {
+    if (typeof value !== "boolean") {
+      return null;
+    }
+    const result = parseRecord(params, (p) => ({
+      options: p.optional.custom(parseListOptions),
+      readonly: p.optional.constant(false)
+    }));
+    return result ? {
+      initialValue: value,
+      params: result
+    } : null;
+  },
+  binding: {
+    reader: (_args) => boolFromUnknown,
+    constraint: (args) => createConstraint$6(args.params),
+    writer: (_args) => writePrimitive
+  },
+  controller: (args) => {
+    const doc = args.document;
+    const value = args.value;
+    const c = args.constraint;
+    const lc = c && findConstraint(c, ListConstraint);
+    if (lc) {
+      return new ListController(doc, {
+        props: new ValueMap({
+          options: lc.values.value("options")
+        }),
+        value,
+        viewProps: args.viewProps
+      });
+    }
+    return new CheckboxController(doc, {
+      value,
+      viewProps: args.viewProps
+    });
+  },
+  api(args) {
+    if (typeof args.controller.value.rawValue !== "boolean") {
+      return null;
+    }
+    if (args.controller.valueController instanceof ListController) {
+      return new ListInputBindingApi(args.controller);
+    }
+    return null;
+  }
+});
+var cn$d = ClassName("col");
+
+class ColorView {
+  constructor(doc, config) {
+    this.element = doc.createElement("div");
+    this.element.classList.add(cn$d());
+    config.foldable.bindExpandedClass(this.element, cn$d(undefined, "expanded"));
+    bindValueMap(config.foldable, "completed", valueToClassName(this.element, cn$d(undefined, "cpl")));
+    const headElem = doc.createElement("div");
+    headElem.classList.add(cn$d("h"));
+    this.element.appendChild(headElem);
+    const swatchElem = doc.createElement("div");
+    swatchElem.classList.add(cn$d("s"));
+    headElem.appendChild(swatchElem);
+    this.swatchElement = swatchElem;
+    const textElem = doc.createElement("div");
+    textElem.classList.add(cn$d("t"));
+    headElem.appendChild(textElem);
+    this.textElement = textElem;
+    if (config.pickerLayout === "inline") {
+      const pickerElem = doc.createElement("div");
+      pickerElem.classList.add(cn$d("p"));
+      this.element.appendChild(pickerElem);
+      this.pickerElement = pickerElem;
+    } else {
+      this.pickerElement = null;
+    }
+  }
+}
+function rgbToHslInt(r, g, b) {
+  const rp = constrainRange(r / 255, 0, 1);
+  const gp = constrainRange(g / 255, 0, 1);
+  const bp = constrainRange(b / 255, 0, 1);
+  const cmax = Math.max(rp, gp, bp);
+  const cmin = Math.min(rp, gp, bp);
+  const c = cmax - cmin;
+  let h = 0;
+  let s = 0;
+  const l = (cmin + cmax) / 2;
+  if (c !== 0) {
+    s = c / (1 - Math.abs(cmax + cmin - 1));
+    if (rp === cmax) {
+      h = (gp - bp) / c;
+    } else if (gp === cmax) {
+      h = 2 + (bp - rp) / c;
+    } else {
+      h = 4 + (rp - gp) / c;
+    }
+    h = h / 6 + (h < 0 ? 1 : 0);
+  }
+  return [h * 360, s * 100, l * 100];
+}
+function hslToRgbInt(h, s, l) {
+  const hp = (h % 360 + 360) % 360;
+  const sp = constrainRange(s / 100, 0, 1);
+  const lp = constrainRange(l / 100, 0, 1);
+  const c = (1 - Math.abs(2 * lp - 1)) * sp;
+  const x = c * (1 - Math.abs(hp / 60 % 2 - 1));
+  const m = lp - c / 2;
+  let rp, gp, bp;
+  if (hp >= 0 && hp < 60) {
+    [rp, gp, bp] = [c, x, 0];
+  } else if (hp >= 60 && hp < 120) {
+    [rp, gp, bp] = [x, c, 0];
+  } else if (hp >= 120 && hp < 180) {
+    [rp, gp, bp] = [0, c, x];
+  } else if (hp >= 180 && hp < 240) {
+    [rp, gp, bp] = [0, x, c];
+  } else if (hp >= 240 && hp < 300) {
+    [rp, gp, bp] = [x, 0, c];
+  } else {
+    [rp, gp, bp] = [c, 0, x];
+  }
+  return [(rp + m) * 255, (gp + m) * 255, (bp + m) * 255];
+}
+function rgbToHsvInt(r, g, b) {
+  const rp = constrainRange(r / 255, 0, 1);
+  const gp = constrainRange(g / 255, 0, 1);
+  const bp = constrainRange(b / 255, 0, 1);
+  const cmax = Math.max(rp, gp, bp);
+  const cmin = Math.min(rp, gp, bp);
+  const d = cmax - cmin;
+  let h;
+  if (d === 0) {
+    h = 0;
+  } else if (cmax === rp) {
+    h = 60 * (((gp - bp) / d % 6 + 6) % 6);
+  } else if (cmax === gp) {
+    h = 60 * ((bp - rp) / d + 2);
+  } else {
+    h = 60 * ((rp - gp) / d + 4);
+  }
+  const s = cmax === 0 ? 0 : d / cmax;
+  const v = cmax;
+  return [h, s * 100, v * 100];
+}
+function hsvToRgbInt(h, s, v) {
+  const hp = loopRange(h, 360);
+  const sp = constrainRange(s / 100, 0, 1);
+  const vp = constrainRange(v / 100, 0, 1);
+  const c = vp * sp;
+  const x = c * (1 - Math.abs(hp / 60 % 2 - 1));
+  const m = vp - c;
+  let rp, gp, bp;
+  if (hp >= 0 && hp < 60) {
+    [rp, gp, bp] = [c, x, 0];
+  } else if (hp >= 60 && hp < 120) {
+    [rp, gp, bp] = [x, c, 0];
+  } else if (hp >= 120 && hp < 180) {
+    [rp, gp, bp] = [0, c, x];
+  } else if (hp >= 180 && hp < 240) {
+    [rp, gp, bp] = [0, x, c];
+  } else if (hp >= 240 && hp < 300) {
+    [rp, gp, bp] = [x, 0, c];
+  } else {
+    [rp, gp, bp] = [c, 0, x];
+  }
+  return [(rp + m) * 255, (gp + m) * 255, (bp + m) * 255];
+}
+function hslToHsvInt(h, s, l) {
+  const sd = l + s * (100 - Math.abs(2 * l - 100)) / (2 * 100);
+  return [
+    h,
+    sd !== 0 ? s * (100 - Math.abs(2 * l - 100)) / sd : 0,
+    l + s * (100 - Math.abs(2 * l - 100)) / (2 * 100)
+  ];
+}
+function hsvToHslInt(h, s, v) {
+  const sd = 100 - Math.abs(v * (200 - s) / 100 - 100);
+  return [h, sd !== 0 ? s * v / sd : 0, v * (200 - s) / (2 * 100)];
+}
+function removeAlphaComponent(comps) {
+  return [comps[0], comps[1], comps[2]];
+}
+function appendAlphaComponent(comps, alpha) {
+  return [comps[0], comps[1], comps[2], alpha];
+}
+var MODE_CONVERTER_MAP = {
+  hsl: {
+    hsl: (h, s, l) => [h, s, l],
+    hsv: hslToHsvInt,
+    rgb: hslToRgbInt
+  },
+  hsv: {
+    hsl: hsvToHslInt,
+    hsv: (h, s, v) => [h, s, v],
+    rgb: hsvToRgbInt
+  },
+  rgb: {
+    hsl: rgbToHslInt,
+    hsv: rgbToHsvInt,
+    rgb: (r, g, b) => [r, g, b]
+  }
+};
+function getColorMaxComponents(mode, type) {
+  return [
+    type === "float" ? 1 : mode === "rgb" ? 255 : 360,
+    type === "float" ? 1 : mode === "rgb" ? 255 : 100,
+    type === "float" ? 1 : mode === "rgb" ? 255 : 100
+  ];
+}
+function loopHueRange(hue, max) {
+  return hue === max ? max : loopRange(hue, max);
+}
+function constrainColorComponents(components, mode, type) {
+  var _a;
+  const ms = getColorMaxComponents(mode, type);
+  return [
+    mode === "rgb" ? constrainRange(components[0], 0, ms[0]) : loopHueRange(components[0], ms[0]),
+    constrainRange(components[1], 0, ms[1]),
+    constrainRange(components[2], 0, ms[2]),
+    constrainRange((_a = components[3]) !== null && _a !== undefined ? _a : 1, 0, 1)
+  ];
+}
+function convertColorType(comps, mode, from, to) {
+  const fms = getColorMaxComponents(mode, from);
+  const tms = getColorMaxComponents(mode, to);
+  return comps.map((c, index) => c / fms[index] * tms[index]);
+}
+function convertColor(components, from, to) {
+  const intComps = convertColorType(components, from.mode, from.type, "int");
+  const result = MODE_CONVERTER_MAP[from.mode][to.mode](...intComps);
+  return convertColorType(result, to.mode, "int", to.type);
+}
+
+class IntColor {
+  static black() {
+    return new IntColor([0, 0, 0], "rgb");
+  }
+  constructor(comps, mode) {
+    this.type = "int";
+    this.mode = mode;
+    this.comps_ = constrainColorComponents(comps, mode, this.type);
+  }
+  getComponents(opt_mode) {
+    return appendAlphaComponent(convertColor(removeAlphaComponent(this.comps_), { mode: this.mode, type: this.type }, { mode: opt_mode !== null && opt_mode !== undefined ? opt_mode : this.mode, type: this.type }), this.comps_[3]);
+  }
+  toRgbaObject() {
+    const rgbComps = this.getComponents("rgb");
+    return {
+      r: rgbComps[0],
+      g: rgbComps[1],
+      b: rgbComps[2],
+      a: rgbComps[3]
+    };
+  }
+}
+var cn$c = ClassName("colp");
+
+class ColorPickerView {
+  constructor(doc, config) {
+    this.alphaViews_ = null;
+    this.element = doc.createElement("div");
+    this.element.classList.add(cn$c());
+    config.viewProps.bindClassModifiers(this.element);
+    const hsvElem = doc.createElement("div");
+    hsvElem.classList.add(cn$c("hsv"));
+    const svElem = doc.createElement("div");
+    svElem.classList.add(cn$c("sv"));
+    this.svPaletteView_ = config.svPaletteView;
+    svElem.appendChild(this.svPaletteView_.element);
+    hsvElem.appendChild(svElem);
+    const hElem = doc.createElement("div");
+    hElem.classList.add(cn$c("h"));
+    this.hPaletteView_ = config.hPaletteView;
+    hElem.appendChild(this.hPaletteView_.element);
+    hsvElem.appendChild(hElem);
+    this.element.appendChild(hsvElem);
+    const rgbElem = doc.createElement("div");
+    rgbElem.classList.add(cn$c("rgb"));
+    this.textsView_ = config.textsView;
+    rgbElem.appendChild(this.textsView_.element);
+    this.element.appendChild(rgbElem);
+    if (config.alphaViews) {
+      this.alphaViews_ = {
+        palette: config.alphaViews.palette,
+        text: config.alphaViews.text
+      };
+      const aElem = doc.createElement("div");
+      aElem.classList.add(cn$c("a"));
+      const apElem = doc.createElement("div");
+      apElem.classList.add(cn$c("ap"));
+      apElem.appendChild(this.alphaViews_.palette.element);
+      aElem.appendChild(apElem);
+      const atElem = doc.createElement("div");
+      atElem.classList.add(cn$c("at"));
+      atElem.appendChild(this.alphaViews_.text.element);
+      aElem.appendChild(atElem);
+      this.element.appendChild(aElem);
+    }
+  }
+  get allFocusableElements() {
+    const elems = [
+      this.svPaletteView_.element,
+      this.hPaletteView_.element,
+      this.textsView_.modeSelectElement,
+      ...this.textsView_.inputViews.map((v) => v.inputElement)
+    ];
+    if (this.alphaViews_) {
+      elems.push(this.alphaViews_.palette.element, this.alphaViews_.text.inputElement);
+    }
+    return elems;
+  }
+}
+function parseColorType(value) {
+  return value === "int" ? "int" : value === "float" ? "float" : undefined;
+}
+function parseColorInputParams(params) {
+  return parseRecord(params, (p) => ({
+    color: p.optional.object({
+      alpha: p.optional.boolean,
+      type: p.optional.custom(parseColorType)
+    }),
+    expanded: p.optional.boolean,
+    picker: p.optional.custom(parsePickerLayout),
+    readonly: p.optional.constant(false)
+  }));
+}
+function getKeyScaleForColor(forAlpha) {
+  return forAlpha ? 0.1 : 1;
+}
+function extractColorType(params) {
+  var _a;
+  return (_a = params.color) === null || _a === undefined ? undefined : _a.type;
+}
+
+class FloatColor {
+  constructor(comps, mode) {
+    this.type = "float";
+    this.mode = mode;
+    this.comps_ = constrainColorComponents(comps, mode, this.type);
+  }
+  getComponents(opt_mode) {
+    return appendAlphaComponent(convertColor(removeAlphaComponent(this.comps_), { mode: this.mode, type: this.type }, { mode: opt_mode !== null && opt_mode !== undefined ? opt_mode : this.mode, type: this.type }), this.comps_[3]);
+  }
+  toRgbaObject() {
+    const rgbComps = this.getComponents("rgb");
+    return {
+      r: rgbComps[0],
+      g: rgbComps[1],
+      b: rgbComps[2],
+      a: rgbComps[3]
+    };
+  }
+}
+var TYPE_TO_CONSTRUCTOR_MAP = {
+  int: (comps, mode) => new IntColor(comps, mode),
+  float: (comps, mode) => new FloatColor(comps, mode)
+};
+function createColor(comps, mode, type) {
+  return TYPE_TO_CONSTRUCTOR_MAP[type](comps, mode);
+}
+function isFloatColor(c) {
+  return c.type === "float";
+}
+function isIntColor(c) {
+  return c.type === "int";
+}
+function convertFloatToInt(cf) {
+  const comps = cf.getComponents();
+  const ms = getColorMaxComponents(cf.mode, "int");
+  return new IntColor([
+    Math.round(mapRange(comps[0], 0, 1, 0, ms[0])),
+    Math.round(mapRange(comps[1], 0, 1, 0, ms[1])),
+    Math.round(mapRange(comps[2], 0, 1, 0, ms[2])),
+    comps[3]
+  ], cf.mode);
+}
+function convertIntToFloat(ci) {
+  const comps = ci.getComponents();
+  const ms = getColorMaxComponents(ci.mode, "int");
+  return new FloatColor([
+    mapRange(comps[0], 0, ms[0], 0, 1),
+    mapRange(comps[1], 0, ms[1], 0, 1),
+    mapRange(comps[2], 0, ms[2], 0, 1),
+    comps[3]
+  ], ci.mode);
+}
+function mapColorType(c, type) {
+  if (c.type === type) {
+    return c;
+  }
+  if (isIntColor(c) && type === "float") {
+    return convertIntToFloat(c);
+  }
+  if (isFloatColor(c) && type === "int") {
+    return convertFloatToInt(c);
+  }
+  throw TpError.shouldNeverHappen();
+}
+function equalsStringColorFormat(f1, f2) {
+  return f1.alpha === f2.alpha && f1.mode === f2.mode && f1.notation === f2.notation && f1.type === f2.type;
+}
+function parseCssNumberOrPercentage(text, max) {
+  const m = text.match(/^(.+)%$/);
+  if (!m) {
+    return Math.min(parseFloat(text), max);
+  }
+  return Math.min(parseFloat(m[1]) * 0.01 * max, max);
+}
+var ANGLE_TO_DEG_MAP = {
+  deg: (angle) => angle,
+  grad: (angle) => angle * 360 / 400,
+  rad: (angle) => angle * 360 / (2 * Math.PI),
+  turn: (angle) => angle * 360
+};
+function parseCssNumberOrAngle(text) {
+  const m = text.match(/^([0-9.]+?)(deg|grad|rad|turn)$/);
+  if (!m) {
+    return parseFloat(text);
+  }
+  const angle = parseFloat(m[1]);
+  const unit = m[2];
+  return ANGLE_TO_DEG_MAP[unit](angle);
+}
+function parseFunctionalRgbColorComponents(text) {
+  const m = text.match(/^rgb\(\s*([0-9A-Fa-f.]+%?)\s*,\s*([0-9A-Fa-f.]+%?)\s*,\s*([0-9A-Fa-f.]+%?)\s*\)$/);
+  if (!m) {
+    return null;
+  }
+  const comps = [
+    parseCssNumberOrPercentage(m[1], 255),
+    parseCssNumberOrPercentage(m[2], 255),
+    parseCssNumberOrPercentage(m[3], 255)
+  ];
+  if (isNaN(comps[0]) || isNaN(comps[1]) || isNaN(comps[2])) {
+    return null;
+  }
+  return comps;
+}
+function parseFunctionalRgbColor(text) {
+  const comps = parseFunctionalRgbColorComponents(text);
+  return comps ? new IntColor(comps, "rgb") : null;
+}
+function parseFunctionalRgbaColorComponents(text) {
+  const m = text.match(/^rgba\(\s*([0-9A-Fa-f.]+%?)\s*,\s*([0-9A-Fa-f.]+%?)\s*,\s*([0-9A-Fa-f.]+%?)\s*,\s*([0-9A-Fa-f.]+%?)\s*\)$/);
+  if (!m) {
+    return null;
+  }
+  const comps = [
+    parseCssNumberOrPercentage(m[1], 255),
+    parseCssNumberOrPercentage(m[2], 255),
+    parseCssNumberOrPercentage(m[3], 255),
+    parseCssNumberOrPercentage(m[4], 1)
+  ];
+  if (isNaN(comps[0]) || isNaN(comps[1]) || isNaN(comps[2]) || isNaN(comps[3])) {
+    return null;
+  }
+  return comps;
+}
+function parseFunctionalRgbaColor(text) {
+  const comps = parseFunctionalRgbaColorComponents(text);
+  return comps ? new IntColor(comps, "rgb") : null;
+}
+function parseFunctionalHslColorComponents(text) {
+  const m = text.match(/^hsl\(\s*([0-9A-Fa-f.]+(?:deg|grad|rad|turn)?)\s*,\s*([0-9A-Fa-f.]+%?)\s*,\s*([0-9A-Fa-f.]+%?)\s*\)$/);
+  if (!m) {
+    return null;
+  }
+  const comps = [
+    parseCssNumberOrAngle(m[1]),
+    parseCssNumberOrPercentage(m[2], 100),
+    parseCssNumberOrPercentage(m[3], 100)
+  ];
+  if (isNaN(comps[0]) || isNaN(comps[1]) || isNaN(comps[2])) {
+    return null;
+  }
+  return comps;
+}
+function parseFunctionalHslColor(text) {
+  const comps = parseFunctionalHslColorComponents(text);
+  return comps ? new IntColor(comps, "hsl") : null;
+}
+function parseHslaColorComponents(text) {
+  const m = text.match(/^hsla\(\s*([0-9A-Fa-f.]+(?:deg|grad|rad|turn)?)\s*,\s*([0-9A-Fa-f.]+%?)\s*,\s*([0-9A-Fa-f.]+%?)\s*,\s*([0-9A-Fa-f.]+%?)\s*\)$/);
+  if (!m) {
+    return null;
+  }
+  const comps = [
+    parseCssNumberOrAngle(m[1]),
+    parseCssNumberOrPercentage(m[2], 100),
+    parseCssNumberOrPercentage(m[3], 100),
+    parseCssNumberOrPercentage(m[4], 1)
+  ];
+  if (isNaN(comps[0]) || isNaN(comps[1]) || isNaN(comps[2]) || isNaN(comps[3])) {
+    return null;
+  }
+  return comps;
+}
+function parseFunctionalHslaColor(text) {
+  const comps = parseHslaColorComponents(text);
+  return comps ? new IntColor(comps, "hsl") : null;
+}
+function parseHexRgbColorComponents(text) {
+  const mRgb = text.match(/^#([0-9A-Fa-f])([0-9A-Fa-f])([0-9A-Fa-f])$/);
+  if (mRgb) {
+    return [
+      parseInt(mRgb[1] + mRgb[1], 16),
+      parseInt(mRgb[2] + mRgb[2], 16),
+      parseInt(mRgb[3] + mRgb[3], 16)
+    ];
+  }
+  const mRrggbb = text.match(/^(?:#|0x)([0-9A-Fa-f]{2})([0-9A-Fa-f]{2})([0-9A-Fa-f]{2})$/);
+  if (mRrggbb) {
+    return [
+      parseInt(mRrggbb[1], 16),
+      parseInt(mRrggbb[2], 16),
+      parseInt(mRrggbb[3], 16)
+    ];
+  }
+  return null;
+}
+function parseHexRgbColor(text) {
+  const comps = parseHexRgbColorComponents(text);
+  return comps ? new IntColor(comps, "rgb") : null;
+}
+function parseHexRgbaColorComponents(text) {
+  const mRgb = text.match(/^#([0-9A-Fa-f])([0-9A-Fa-f])([0-9A-Fa-f])([0-9A-Fa-f])$/);
+  if (mRgb) {
+    return [
+      parseInt(mRgb[1] + mRgb[1], 16),
+      parseInt(mRgb[2] + mRgb[2], 16),
+      parseInt(mRgb[3] + mRgb[3], 16),
+      mapRange(parseInt(mRgb[4] + mRgb[4], 16), 0, 255, 0, 1)
+    ];
+  }
+  const mRrggbb = text.match(/^(?:#|0x)?([0-9A-Fa-f]{2})([0-9A-Fa-f]{2})([0-9A-Fa-f]{2})([0-9A-Fa-f]{2})$/);
+  if (mRrggbb) {
+    return [
+      parseInt(mRrggbb[1], 16),
+      parseInt(mRrggbb[2], 16),
+      parseInt(mRrggbb[3], 16),
+      mapRange(parseInt(mRrggbb[4], 16), 0, 255, 0, 1)
+    ];
+  }
+  return null;
+}
+function parseHexRgbaColor(text) {
+  const comps = parseHexRgbaColorComponents(text);
+  return comps ? new IntColor(comps, "rgb") : null;
+}
+function parseObjectRgbColorComponents(text) {
+  const m = text.match(/^\{\s*r\s*:\s*([0-9A-Fa-f.]+%?)\s*,\s*g\s*:\s*([0-9A-Fa-f.]+%?)\s*,\s*b\s*:\s*([0-9A-Fa-f.]+%?)\s*\}$/);
+  if (!m) {
+    return null;
+  }
+  const comps = [
+    parseFloat(m[1]),
+    parseFloat(m[2]),
+    parseFloat(m[3])
+  ];
+  if (isNaN(comps[0]) || isNaN(comps[1]) || isNaN(comps[2])) {
+    return null;
+  }
+  return comps;
+}
+function createObjectRgbColorParser(type) {
+  return (text) => {
+    const comps = parseObjectRgbColorComponents(text);
+    return comps ? createColor(comps, "rgb", type) : null;
+  };
+}
+function parseObjectRgbaColorComponents(text) {
+  const m = text.match(/^\{\s*r\s*:\s*([0-9A-Fa-f.]+%?)\s*,\s*g\s*:\s*([0-9A-Fa-f.]+%?)\s*,\s*b\s*:\s*([0-9A-Fa-f.]+%?)\s*,\s*a\s*:\s*([0-9A-Fa-f.]+%?)\s*\}$/);
+  if (!m) {
+    return null;
+  }
+  const comps = [
+    parseFloat(m[1]),
+    parseFloat(m[2]),
+    parseFloat(m[3]),
+    parseFloat(m[4])
+  ];
+  if (isNaN(comps[0]) || isNaN(comps[1]) || isNaN(comps[2]) || isNaN(comps[3])) {
+    return null;
+  }
+  return comps;
+}
+function createObjectRgbaColorParser(type) {
+  return (text) => {
+    const comps = parseObjectRgbaColorComponents(text);
+    return comps ? createColor(comps, "rgb", type) : null;
+  };
+}
+var PARSER_AND_RESULT = [
+  {
+    parser: parseHexRgbColorComponents,
+    result: {
+      alpha: false,
+      mode: "rgb",
+      notation: "hex"
+    }
+  },
+  {
+    parser: parseHexRgbaColorComponents,
+    result: {
+      alpha: true,
+      mode: "rgb",
+      notation: "hex"
+    }
+  },
+  {
+    parser: parseFunctionalRgbColorComponents,
+    result: {
+      alpha: false,
+      mode: "rgb",
+      notation: "func"
+    }
+  },
+  {
+    parser: parseFunctionalRgbaColorComponents,
+    result: {
+      alpha: true,
+      mode: "rgb",
+      notation: "func"
+    }
+  },
+  {
+    parser: parseFunctionalHslColorComponents,
+    result: {
+      alpha: false,
+      mode: "hsl",
+      notation: "func"
+    }
+  },
+  {
+    parser: parseHslaColorComponents,
+    result: {
+      alpha: true,
+      mode: "hsl",
+      notation: "func"
+    }
+  },
+  {
+    parser: parseObjectRgbColorComponents,
+    result: {
+      alpha: false,
+      mode: "rgb",
+      notation: "object"
+    }
+  },
+  {
+    parser: parseObjectRgbaColorComponents,
+    result: {
+      alpha: true,
+      mode: "rgb",
+      notation: "object"
+    }
+  }
+];
+function detectStringColor(text) {
+  return PARSER_AND_RESULT.reduce((prev, { parser, result: detection }) => {
+    if (prev) {
+      return prev;
+    }
+    return parser(text) ? detection : null;
+  }, null);
+}
+function detectStringColorFormat(text, type = "int") {
+  const r = detectStringColor(text);
+  if (!r) {
+    return null;
+  }
+  if (r.notation === "hex" && type !== "float") {
+    return Object.assign(Object.assign({}, r), { type: "int" });
+  }
+  if (r.notation === "func") {
+    return Object.assign(Object.assign({}, r), { type });
+  }
+  return null;
+}
+function createColorStringParser(type) {
+  const parsers = [
+    parseHexRgbColor,
+    parseHexRgbaColor,
+    parseFunctionalRgbColor,
+    parseFunctionalRgbaColor,
+    parseFunctionalHslColor,
+    parseFunctionalHslaColor
+  ];
+  if (type === "int") {
+    parsers.push(createObjectRgbColorParser("int"), createObjectRgbaColorParser("int"));
+  }
+  if (type === "float") {
+    parsers.push(createObjectRgbColorParser("float"), createObjectRgbaColorParser("float"));
+  }
+  const parser = composeParsers(parsers);
+  return (text) => {
+    const result = parser(text);
+    return result ? mapColorType(result, type) : null;
+  };
+}
+function readIntColorString(value) {
+  const parser = createColorStringParser("int");
+  if (typeof value !== "string") {
+    return IntColor.black();
+  }
+  const result = parser(value);
+  return result !== null && result !== undefined ? result : IntColor.black();
+}
+function zerofill(comp) {
+  const hex = constrainRange(Math.floor(comp), 0, 255).toString(16);
+  return hex.length === 1 ? `0${hex}` : hex;
+}
+function colorToHexRgbString(value, prefix = "#") {
+  const hexes = removeAlphaComponent(value.getComponents("rgb")).map(zerofill).join("");
+  return `${prefix}${hexes}`;
+}
+function colorToHexRgbaString(value, prefix = "#") {
+  const rgbaComps = value.getComponents("rgb");
+  const hexes = [rgbaComps[0], rgbaComps[1], rgbaComps[2], rgbaComps[3] * 255].map(zerofill).join("");
+  return `${prefix}${hexes}`;
+}
+function colorToFunctionalRgbString(value) {
+  const formatter = createNumberFormatter(0);
+  const ci = mapColorType(value, "int");
+  const comps = removeAlphaComponent(ci.getComponents("rgb")).map((comp) => formatter(comp));
+  return `rgb(${comps.join(", ")})`;
+}
+function colorToFunctionalRgbaString(value) {
+  const aFormatter = createNumberFormatter(2);
+  const rgbFormatter = createNumberFormatter(0);
+  const ci = mapColorType(value, "int");
+  const comps = ci.getComponents("rgb").map((comp, index) => {
+    const formatter = index === 3 ? aFormatter : rgbFormatter;
+    return formatter(comp);
+  });
+  return `rgba(${comps.join(", ")})`;
+}
+function colorToFunctionalHslString(value) {
+  const formatters = [
+    createNumberFormatter(0),
+    formatPercentage,
+    formatPercentage
+  ];
+  const ci = mapColorType(value, "int");
+  const comps = removeAlphaComponent(ci.getComponents("hsl")).map((comp, index) => formatters[index](comp));
+  return `hsl(${comps.join(", ")})`;
+}
+function colorToFunctionalHslaString(value) {
+  const formatters = [
+    createNumberFormatter(0),
+    formatPercentage,
+    formatPercentage,
+    createNumberFormatter(2)
+  ];
+  const ci = mapColorType(value, "int");
+  const comps = ci.getComponents("hsl").map((comp, index) => formatters[index](comp));
+  return `hsla(${comps.join(", ")})`;
+}
+function colorToObjectRgbString(value, type) {
+  const formatter = createNumberFormatter(type === "float" ? 2 : 0);
+  const names = ["r", "g", "b"];
+  const cc = mapColorType(value, type);
+  const comps = removeAlphaComponent(cc.getComponents("rgb")).map((comp, index) => `${names[index]}: ${formatter(comp)}`);
+  return `{${comps.join(", ")}}`;
+}
+function createObjectRgbColorFormatter(type) {
+  return (value) => colorToObjectRgbString(value, type);
+}
+function colorToObjectRgbaString(value, type) {
+  const aFormatter = createNumberFormatter(2);
+  const rgbFormatter = createNumberFormatter(type === "float" ? 2 : 0);
+  const names = ["r", "g", "b", "a"];
+  const cc = mapColorType(value, type);
+  const comps = cc.getComponents("rgb").map((comp, index) => {
+    const formatter = index === 3 ? aFormatter : rgbFormatter;
+    return `${names[index]}: ${formatter(comp)}`;
+  });
+  return `{${comps.join(", ")}}`;
+}
+function createObjectRgbaColorFormatter(type) {
+  return (value) => colorToObjectRgbaString(value, type);
+}
+var FORMAT_AND_STRINGIFIERS = [
+  {
+    format: {
+      alpha: false,
+      mode: "rgb",
+      notation: "hex",
+      type: "int"
+    },
+    stringifier: colorToHexRgbString
+  },
+  {
+    format: {
+      alpha: true,
+      mode: "rgb",
+      notation: "hex",
+      type: "int"
+    },
+    stringifier: colorToHexRgbaString
+  },
+  {
+    format: {
+      alpha: false,
+      mode: "rgb",
+      notation: "func",
+      type: "int"
+    },
+    stringifier: colorToFunctionalRgbString
+  },
+  {
+    format: {
+      alpha: true,
+      mode: "rgb",
+      notation: "func",
+      type: "int"
+    },
+    stringifier: colorToFunctionalRgbaString
+  },
+  {
+    format: {
+      alpha: false,
+      mode: "hsl",
+      notation: "func",
+      type: "int"
+    },
+    stringifier: colorToFunctionalHslString
+  },
+  {
+    format: {
+      alpha: true,
+      mode: "hsl",
+      notation: "func",
+      type: "int"
+    },
+    stringifier: colorToFunctionalHslaString
+  },
+  ...["int", "float"].reduce((prev, type) => {
+    return [
+      ...prev,
+      {
+        format: {
+          alpha: false,
+          mode: "rgb",
+          notation: "object",
+          type
+        },
+        stringifier: createObjectRgbColorFormatter(type)
+      },
+      {
+        format: {
+          alpha: true,
+          mode: "rgb",
+          notation: "object",
+          type
+        },
+        stringifier: createObjectRgbaColorFormatter(type)
+      }
+    ];
+  }, [])
+];
+function findColorStringifier(format) {
+  return FORMAT_AND_STRINGIFIERS.reduce((prev, fas) => {
+    if (prev) {
+      return prev;
+    }
+    return equalsStringColorFormat(fas.format, format) ? fas.stringifier : null;
+  }, null);
+}
+var cn$b = ClassName("apl");
+
+class APaletteView {
+  constructor(doc, config) {
+    this.onValueChange_ = this.onValueChange_.bind(this);
+    this.value = config.value;
+    this.value.emitter.on("change", this.onValueChange_);
+    this.element = doc.createElement("div");
+    this.element.classList.add(cn$b());
+    config.viewProps.bindClassModifiers(this.element);
+    config.viewProps.bindTabIndex(this.element);
+    const barElem = doc.createElement("div");
+    barElem.classList.add(cn$b("b"));
+    this.element.appendChild(barElem);
+    const colorElem = doc.createElement("div");
+    colorElem.classList.add(cn$b("c"));
+    barElem.appendChild(colorElem);
+    this.colorElem_ = colorElem;
+    const markerElem = doc.createElement("div");
+    markerElem.classList.add(cn$b("m"));
+    this.element.appendChild(markerElem);
+    this.markerElem_ = markerElem;
+    const previewElem = doc.createElement("div");
+    previewElem.classList.add(cn$b("p"));
+    this.markerElem_.appendChild(previewElem);
+    this.previewElem_ = previewElem;
+    this.update_();
+  }
+  update_() {
+    const c = this.value.rawValue;
+    const rgbaComps = c.getComponents("rgb");
+    const leftColor = new IntColor([rgbaComps[0], rgbaComps[1], rgbaComps[2], 0], "rgb");
+    const rightColor = new IntColor([rgbaComps[0], rgbaComps[1], rgbaComps[2], 255], "rgb");
+    const gradientComps = [
+      "to right",
+      colorToFunctionalRgbaString(leftColor),
+      colorToFunctionalRgbaString(rightColor)
+    ];
+    this.colorElem_.style.background = `linear-gradient(${gradientComps.join(",")})`;
+    this.previewElem_.style.backgroundColor = colorToFunctionalRgbaString(c);
+    const left = mapRange(rgbaComps[3], 0, 1, 0, 100);
+    this.markerElem_.style.left = `${left}%`;
+  }
+  onValueChange_() {
+    this.update_();
+  }
+}
+
+class APaletteController {
+  constructor(doc, config) {
+    this.onKeyDown_ = this.onKeyDown_.bind(this);
+    this.onKeyUp_ = this.onKeyUp_.bind(this);
+    this.onPointerDown_ = this.onPointerDown_.bind(this);
+    this.onPointerMove_ = this.onPointerMove_.bind(this);
+    this.onPointerUp_ = this.onPointerUp_.bind(this);
+    this.value = config.value;
+    this.viewProps = config.viewProps;
+    this.view = new APaletteView(doc, {
+      value: this.value,
+      viewProps: this.viewProps
+    });
+    this.ptHandler_ = new PointerHandler(this.view.element);
+    this.ptHandler_.emitter.on("down", this.onPointerDown_);
+    this.ptHandler_.emitter.on("move", this.onPointerMove_);
+    this.ptHandler_.emitter.on("up", this.onPointerUp_);
+    this.view.element.addEventListener("keydown", this.onKeyDown_);
+    this.view.element.addEventListener("keyup", this.onKeyUp_);
+  }
+  handlePointerEvent_(d, opts) {
+    if (!d.point) {
+      return;
+    }
+    const alpha = d.point.x / d.bounds.width;
+    const c = this.value.rawValue;
+    const [h, s, v] = c.getComponents("hsv");
+    this.value.setRawValue(new IntColor([h, s, v, alpha], "hsv"), opts);
+  }
+  onPointerDown_(ev) {
+    this.handlePointerEvent_(ev.data, {
+      forceEmit: false,
+      last: false
+    });
+  }
+  onPointerMove_(ev) {
+    this.handlePointerEvent_(ev.data, {
+      forceEmit: false,
+      last: false
+    });
+  }
+  onPointerUp_(ev) {
+    this.handlePointerEvent_(ev.data, {
+      forceEmit: true,
+      last: true
+    });
+  }
+  onKeyDown_(ev) {
+    const step = getStepForKey(getKeyScaleForColor(true), getHorizontalStepKeys(ev));
+    if (step === 0) {
+      return;
+    }
+    const c = this.value.rawValue;
+    const [h, s, v, a] = c.getComponents("hsv");
+    this.value.setRawValue(new IntColor([h, s, v, a + step], "hsv"), {
+      forceEmit: false,
+      last: false
+    });
+  }
+  onKeyUp_(ev) {
+    const step = getStepForKey(getKeyScaleForColor(true), getHorizontalStepKeys(ev));
+    if (step === 0) {
+      return;
+    }
+    this.value.setRawValue(this.value.rawValue, {
+      forceEmit: true,
+      last: true
+    });
+  }
+}
+var cn$a = ClassName("coltxt");
+function createModeSelectElement(doc) {
+  const selectElem = doc.createElement("select");
+  const items = [
+    { text: "RGB", value: "rgb" },
+    { text: "HSL", value: "hsl" },
+    { text: "HSV", value: "hsv" },
+    { text: "HEX", value: "hex" }
+  ];
+  selectElem.appendChild(items.reduce((frag, item) => {
+    const optElem = doc.createElement("option");
+    optElem.textContent = item.text;
+    optElem.value = item.value;
+    frag.appendChild(optElem);
+    return frag;
+  }, doc.createDocumentFragment()));
+  return selectElem;
+}
+
+class ColorTextsView {
+  constructor(doc, config) {
+    this.element = doc.createElement("div");
+    this.element.classList.add(cn$a());
+    config.viewProps.bindClassModifiers(this.element);
+    const modeElem = doc.createElement("div");
+    modeElem.classList.add(cn$a("m"));
+    this.modeElem_ = createModeSelectElement(doc);
+    this.modeElem_.classList.add(cn$a("ms"));
+    modeElem.appendChild(this.modeSelectElement);
+    config.viewProps.bindDisabled(this.modeElem_);
+    const modeMarkerElem = doc.createElement("div");
+    modeMarkerElem.classList.add(cn$a("mm"));
+    modeMarkerElem.appendChild(createSvgIconElement(doc, "dropdown"));
+    modeElem.appendChild(modeMarkerElem);
+    this.element.appendChild(modeElem);
+    const inputsElem = doc.createElement("div");
+    inputsElem.classList.add(cn$a("w"));
+    this.element.appendChild(inputsElem);
+    this.inputsElem_ = inputsElem;
+    this.inputViews_ = config.inputViews;
+    this.applyInputViews_();
+    bindValue(config.mode, (mode) => {
+      this.modeElem_.value = mode;
+    });
+  }
+  get modeSelectElement() {
+    return this.modeElem_;
+  }
+  get inputViews() {
+    return this.inputViews_;
+  }
+  set inputViews(inputViews) {
+    this.inputViews_ = inputViews;
+    this.applyInputViews_();
+  }
+  applyInputViews_() {
+    removeChildElements(this.inputsElem_);
+    const doc = this.element.ownerDocument;
+    this.inputViews_.forEach((v) => {
+      const compElem = doc.createElement("div");
+      compElem.classList.add(cn$a("c"));
+      compElem.appendChild(v.element);
+      this.inputsElem_.appendChild(compElem);
+    });
+  }
+}
+function createFormatter$2(type) {
+  return createNumberFormatter(type === "float" ? 2 : 0);
+}
+function createConstraint$5(mode, type, index) {
+  const max = getColorMaxComponents(mode, type)[index];
+  return new DefiniteRangeConstraint({
+    min: 0,
+    max
+  });
+}
+function createComponentController(doc, config, index) {
+  return new NumberTextController(doc, {
+    arrayPosition: index === 0 ? "fst" : index === 3 - 1 ? "lst" : "mid",
+    parser: config.parser,
+    props: ValueMap.fromObject({
+      formatter: createFormatter$2(config.colorType),
+      keyScale: getKeyScaleForColor(false),
+      pointerScale: config.colorType === "float" ? 0.01 : 1
+    }),
+    value: createValue(0, {
+      constraint: createConstraint$5(config.colorMode, config.colorType, index)
+    }),
+    viewProps: config.viewProps
+  });
+}
+function createComponentControllers(doc, config) {
+  const cc = {
+    colorMode: config.colorMode,
+    colorType: config.colorType,
+    parser: parseNumber,
+    viewProps: config.viewProps
+  };
+  return [0, 1, 2].map((i) => {
+    const c = createComponentController(doc, cc, i);
+    connectValues({
+      primary: config.value,
+      secondary: c.value,
+      forward(p) {
+        const mc = mapColorType(p, config.colorType);
+        return mc.getComponents(config.colorMode)[i];
+      },
+      backward(p, s) {
+        const pickedMode = config.colorMode;
+        const mc = mapColorType(p, config.colorType);
+        const comps = mc.getComponents(pickedMode);
+        comps[i] = s;
+        const c2 = createColor(appendAlphaComponent(removeAlphaComponent(comps), comps[3]), pickedMode, config.colorType);
+        return mapColorType(c2, "int");
+      }
+    });
+    return c;
+  });
+}
+function createHexController(doc, config) {
+  const c = new TextController(doc, {
+    parser: createColorStringParser("int"),
+    props: ValueMap.fromObject({
+      formatter: colorToHexRgbString
+    }),
+    value: createValue(IntColor.black()),
+    viewProps: config.viewProps
+  });
+  connectValues({
+    primary: config.value,
+    secondary: c.value,
+    forward: (p) => new IntColor(removeAlphaComponent(p.getComponents()), p.mode),
+    backward: (p, s) => new IntColor(appendAlphaComponent(removeAlphaComponent(s.getComponents(p.mode)), p.getComponents()[3]), p.mode)
+  });
+  return [c];
+}
+function isColorMode(mode) {
+  return mode !== "hex";
+}
+
+class ColorTextsController {
+  constructor(doc, config) {
+    this.onModeSelectChange_ = this.onModeSelectChange_.bind(this);
+    this.colorType_ = config.colorType;
+    this.value = config.value;
+    this.viewProps = config.viewProps;
+    this.colorMode = createValue(this.value.rawValue.mode);
+    this.ccs_ = this.createComponentControllers_(doc);
+    this.view = new ColorTextsView(doc, {
+      mode: this.colorMode,
+      inputViews: [this.ccs_[0].view, this.ccs_[1].view, this.ccs_[2].view],
+      viewProps: this.viewProps
+    });
+    this.view.modeSelectElement.addEventListener("change", this.onModeSelectChange_);
+  }
+  createComponentControllers_(doc) {
+    const mode = this.colorMode.rawValue;
+    if (isColorMode(mode)) {
+      return createComponentControllers(doc, {
+        colorMode: mode,
+        colorType: this.colorType_,
+        value: this.value,
+        viewProps: this.viewProps
+      });
+    }
+    return createHexController(doc, {
+      value: this.value,
+      viewProps: this.viewProps
+    });
+  }
+  onModeSelectChange_(ev) {
+    const selectElem = ev.currentTarget;
+    this.colorMode.rawValue = selectElem.value;
+    this.ccs_ = this.createComponentControllers_(this.view.element.ownerDocument);
+    this.view.inputViews = this.ccs_.map((cc) => cc.view);
+  }
+}
+var cn$9 = ClassName("hpl");
+
+class HPaletteView {
+  constructor(doc, config) {
+    this.onValueChange_ = this.onValueChange_.bind(this);
+    this.value = config.value;
+    this.value.emitter.on("change", this.onValueChange_);
+    this.element = doc.createElement("div");
+    this.element.classList.add(cn$9());
+    config.viewProps.bindClassModifiers(this.element);
+    config.viewProps.bindTabIndex(this.element);
+    const colorElem = doc.createElement("div");
+    colorElem.classList.add(cn$9("c"));
+    this.element.appendChild(colorElem);
+    const markerElem = doc.createElement("div");
+    markerElem.classList.add(cn$9("m"));
+    this.element.appendChild(markerElem);
+    this.markerElem_ = markerElem;
+    this.update_();
+  }
+  update_() {
+    const c = this.value.rawValue;
+    const [h] = c.getComponents("hsv");
+    this.markerElem_.style.backgroundColor = colorToFunctionalRgbString(new IntColor([h, 100, 100], "hsv"));
+    const left = mapRange(h, 0, 360, 0, 100);
+    this.markerElem_.style.left = `${left}%`;
+  }
+  onValueChange_() {
+    this.update_();
+  }
+}
+
+class HPaletteController {
+  constructor(doc, config) {
+    this.onKeyDown_ = this.onKeyDown_.bind(this);
+    this.onKeyUp_ = this.onKeyUp_.bind(this);
+    this.onPointerDown_ = this.onPointerDown_.bind(this);
+    this.onPointerMove_ = this.onPointerMove_.bind(this);
+    this.onPointerUp_ = this.onPointerUp_.bind(this);
+    this.value = config.value;
+    this.viewProps = config.viewProps;
+    this.view = new HPaletteView(doc, {
+      value: this.value,
+      viewProps: this.viewProps
+    });
+    this.ptHandler_ = new PointerHandler(this.view.element);
+    this.ptHandler_.emitter.on("down", this.onPointerDown_);
+    this.ptHandler_.emitter.on("move", this.onPointerMove_);
+    this.ptHandler_.emitter.on("up", this.onPointerUp_);
+    this.view.element.addEventListener("keydown", this.onKeyDown_);
+    this.view.element.addEventListener("keyup", this.onKeyUp_);
+  }
+  handlePointerEvent_(d, opts) {
+    if (!d.point) {
+      return;
+    }
+    const hue = mapRange(constrainRange(d.point.x, 0, d.bounds.width), 0, d.bounds.width, 0, 360);
+    const c = this.value.rawValue;
+    const [, s, v, a] = c.getComponents("hsv");
+    this.value.setRawValue(new IntColor([hue, s, v, a], "hsv"), opts);
+  }
+  onPointerDown_(ev) {
+    this.handlePointerEvent_(ev.data, {
+      forceEmit: false,
+      last: false
+    });
+  }
+  onPointerMove_(ev) {
+    this.handlePointerEvent_(ev.data, {
+      forceEmit: false,
+      last: false
+    });
+  }
+  onPointerUp_(ev) {
+    this.handlePointerEvent_(ev.data, {
+      forceEmit: true,
+      last: true
+    });
+  }
+  onKeyDown_(ev) {
+    const step = getStepForKey(getKeyScaleForColor(false), getHorizontalStepKeys(ev));
+    if (step === 0) {
+      return;
+    }
+    const c = this.value.rawValue;
+    const [h, s, v, a] = c.getComponents("hsv");
+    this.value.setRawValue(new IntColor([h + step, s, v, a], "hsv"), {
+      forceEmit: false,
+      last: false
+    });
+  }
+  onKeyUp_(ev) {
+    const step = getStepForKey(getKeyScaleForColor(false), getHorizontalStepKeys(ev));
+    if (step === 0) {
+      return;
+    }
+    this.value.setRawValue(this.value.rawValue, {
+      forceEmit: true,
+      last: true
+    });
+  }
+}
+var cn$8 = ClassName("svp");
+var CANVAS_RESOL = 64;
+
+class SvPaletteView {
+  constructor(doc, config) {
+    this.onValueChange_ = this.onValueChange_.bind(this);
+    this.value = config.value;
+    this.value.emitter.on("change", this.onValueChange_);
+    this.element = doc.createElement("div");
+    this.element.classList.add(cn$8());
+    config.viewProps.bindClassModifiers(this.element);
+    config.viewProps.bindTabIndex(this.element);
+    const canvasElem = doc.createElement("canvas");
+    canvasElem.height = CANVAS_RESOL;
+    canvasElem.width = CANVAS_RESOL;
+    canvasElem.classList.add(cn$8("c"));
+    this.element.appendChild(canvasElem);
+    this.canvasElement = canvasElem;
+    const markerElem = doc.createElement("div");
+    markerElem.classList.add(cn$8("m"));
+    this.element.appendChild(markerElem);
+    this.markerElem_ = markerElem;
+    this.update_();
+  }
+  update_() {
+    const ctx = getCanvasContext(this.canvasElement);
+    if (!ctx) {
+      return;
+    }
+    const c = this.value.rawValue;
+    const hsvComps = c.getComponents("hsv");
+    const width = this.canvasElement.width;
+    const height = this.canvasElement.height;
+    const imgData = ctx.getImageData(0, 0, width, height);
+    const data = imgData.data;
+    for (let iy = 0;iy < height; iy++) {
+      for (let ix = 0;ix < width; ix++) {
+        const s = mapRange(ix, 0, width, 0, 100);
+        const v = mapRange(iy, 0, height, 100, 0);
+        const rgbComps = hsvToRgbInt(hsvComps[0], s, v);
+        const i = (iy * width + ix) * 4;
+        data[i] = rgbComps[0];
+        data[i + 1] = rgbComps[1];
+        data[i + 2] = rgbComps[2];
+        data[i + 3] = 255;
+      }
+    }
+    ctx.putImageData(imgData, 0, 0);
+    const left = mapRange(hsvComps[1], 0, 100, 0, 100);
+    this.markerElem_.style.left = `${left}%`;
+    const top = mapRange(hsvComps[2], 0, 100, 100, 0);
+    this.markerElem_.style.top = `${top}%`;
+  }
+  onValueChange_() {
+    this.update_();
+  }
+}
+
+class SvPaletteController {
+  constructor(doc, config) {
+    this.onKeyDown_ = this.onKeyDown_.bind(this);
+    this.onKeyUp_ = this.onKeyUp_.bind(this);
+    this.onPointerDown_ = this.onPointerDown_.bind(this);
+    this.onPointerMove_ = this.onPointerMove_.bind(this);
+    this.onPointerUp_ = this.onPointerUp_.bind(this);
+    this.value = config.value;
+    this.viewProps = config.viewProps;
+    this.view = new SvPaletteView(doc, {
+      value: this.value,
+      viewProps: this.viewProps
+    });
+    this.ptHandler_ = new PointerHandler(this.view.element);
+    this.ptHandler_.emitter.on("down", this.onPointerDown_);
+    this.ptHandler_.emitter.on("move", this.onPointerMove_);
+    this.ptHandler_.emitter.on("up", this.onPointerUp_);
+    this.view.element.addEventListener("keydown", this.onKeyDown_);
+    this.view.element.addEventListener("keyup", this.onKeyUp_);
+  }
+  handlePointerEvent_(d, opts) {
+    if (!d.point) {
+      return;
+    }
+    const saturation = mapRange(d.point.x, 0, d.bounds.width, 0, 100);
+    const value = mapRange(d.point.y, 0, d.bounds.height, 100, 0);
+    const [h, , , a] = this.value.rawValue.getComponents("hsv");
+    this.value.setRawValue(new IntColor([h, saturation, value, a], "hsv"), opts);
+  }
+  onPointerDown_(ev) {
+    this.handlePointerEvent_(ev.data, {
+      forceEmit: false,
+      last: false
+    });
+  }
+  onPointerMove_(ev) {
+    this.handlePointerEvent_(ev.data, {
+      forceEmit: false,
+      last: false
+    });
+  }
+  onPointerUp_(ev) {
+    this.handlePointerEvent_(ev.data, {
+      forceEmit: true,
+      last: true
+    });
+  }
+  onKeyDown_(ev) {
+    if (isArrowKey(ev.key)) {
+      ev.preventDefault();
+    }
+    const [h, s, v, a] = this.value.rawValue.getComponents("hsv");
+    const keyScale = getKeyScaleForColor(false);
+    const ds = getStepForKey(keyScale, getHorizontalStepKeys(ev));
+    const dv = getStepForKey(keyScale, getVerticalStepKeys(ev));
+    if (ds === 0 && dv === 0) {
+      return;
+    }
+    this.value.setRawValue(new IntColor([h, s + ds, v + dv, a], "hsv"), {
+      forceEmit: false,
+      last: false
+    });
+  }
+  onKeyUp_(ev) {
+    const keyScale = getKeyScaleForColor(false);
+    const ds = getStepForKey(keyScale, getHorizontalStepKeys(ev));
+    const dv = getStepForKey(keyScale, getVerticalStepKeys(ev));
+    if (ds === 0 && dv === 0) {
+      return;
+    }
+    this.value.setRawValue(this.value.rawValue, {
+      forceEmit: true,
+      last: true
+    });
+  }
+}
+
+class ColorPickerController {
+  constructor(doc, config) {
+    this.value = config.value;
+    this.viewProps = config.viewProps;
+    this.hPaletteC_ = new HPaletteController(doc, {
+      value: this.value,
+      viewProps: this.viewProps
+    });
+    this.svPaletteC_ = new SvPaletteController(doc, {
+      value: this.value,
+      viewProps: this.viewProps
+    });
+    this.alphaIcs_ = config.supportsAlpha ? {
+      palette: new APaletteController(doc, {
+        value: this.value,
+        viewProps: this.viewProps
+      }),
+      text: new NumberTextController(doc, {
+        parser: parseNumber,
+        props: ValueMap.fromObject({
+          pointerScale: 0.01,
+          keyScale: 0.1,
+          formatter: createNumberFormatter(2)
+        }),
+        value: createValue(0, {
+          constraint: new DefiniteRangeConstraint({ min: 0, max: 1 })
+        }),
+        viewProps: this.viewProps
+      })
+    } : null;
+    if (this.alphaIcs_) {
+      connectValues({
+        primary: this.value,
+        secondary: this.alphaIcs_.text.value,
+        forward: (p) => p.getComponents()[3],
+        backward: (p, s) => {
+          const comps = p.getComponents();
+          comps[3] = s;
+          return new IntColor(comps, p.mode);
+        }
+      });
+    }
+    this.textsC_ = new ColorTextsController(doc, {
+      colorType: config.colorType,
+      value: this.value,
+      viewProps: this.viewProps
+    });
+    this.view = new ColorPickerView(doc, {
+      alphaViews: this.alphaIcs_ ? {
+        palette: this.alphaIcs_.palette.view,
+        text: this.alphaIcs_.text.view
+      } : null,
+      hPaletteView: this.hPaletteC_.view,
+      supportsAlpha: config.supportsAlpha,
+      svPaletteView: this.svPaletteC_.view,
+      textsView: this.textsC_.view,
+      viewProps: this.viewProps
+    });
+  }
+  get textsController() {
+    return this.textsC_;
+  }
+}
+var cn$7 = ClassName("colsw");
+
+class ColorSwatchView {
+  constructor(doc, config) {
+    this.onValueChange_ = this.onValueChange_.bind(this);
+    config.value.emitter.on("change", this.onValueChange_);
+    this.value = config.value;
+    this.element = doc.createElement("div");
+    this.element.classList.add(cn$7());
+    config.viewProps.bindClassModifiers(this.element);
+    const swatchElem = doc.createElement("div");
+    swatchElem.classList.add(cn$7("sw"));
+    this.element.appendChild(swatchElem);
+    this.swatchElem_ = swatchElem;
+    const buttonElem = doc.createElement("button");
+    buttonElem.classList.add(cn$7("b"));
+    config.viewProps.bindDisabled(buttonElem);
+    this.element.appendChild(buttonElem);
+    this.buttonElement = buttonElem;
+    this.update_();
+  }
+  update_() {
+    const value = this.value.rawValue;
+    this.swatchElem_.style.backgroundColor = colorToHexRgbaString(value);
+  }
+  onValueChange_() {
+    this.update_();
+  }
+}
+
+class ColorSwatchController {
+  constructor(doc, config) {
+    this.value = config.value;
+    this.viewProps = config.viewProps;
+    this.view = new ColorSwatchView(doc, {
+      value: this.value,
+      viewProps: this.viewProps
+    });
+  }
+}
+
+class ColorController {
+  constructor(doc, config) {
+    this.onButtonBlur_ = this.onButtonBlur_.bind(this);
+    this.onButtonClick_ = this.onButtonClick_.bind(this);
+    this.onPopupChildBlur_ = this.onPopupChildBlur_.bind(this);
+    this.onPopupChildKeydown_ = this.onPopupChildKeydown_.bind(this);
+    this.value = config.value;
+    this.viewProps = config.viewProps;
+    this.foldable_ = Foldable.create(config.expanded);
+    this.swatchC_ = new ColorSwatchController(doc, {
+      value: this.value,
+      viewProps: this.viewProps
+    });
+    const buttonElem = this.swatchC_.view.buttonElement;
+    buttonElem.addEventListener("blur", this.onButtonBlur_);
+    buttonElem.addEventListener("click", this.onButtonClick_);
+    this.textC_ = new TextController(doc, {
+      parser: config.parser,
+      props: ValueMap.fromObject({
+        formatter: config.formatter
+      }),
+      value: this.value,
+      viewProps: this.viewProps
+    });
+    this.view = new ColorView(doc, {
+      foldable: this.foldable_,
+      pickerLayout: config.pickerLayout
+    });
+    this.view.swatchElement.appendChild(this.swatchC_.view.element);
+    this.view.textElement.appendChild(this.textC_.view.element);
+    this.popC_ = config.pickerLayout === "popup" ? new PopupController(doc, {
+      viewProps: this.viewProps
+    }) : null;
+    const pickerC = new ColorPickerController(doc, {
+      colorType: config.colorType,
+      supportsAlpha: config.supportsAlpha,
+      value: this.value,
+      viewProps: this.viewProps
+    });
+    pickerC.view.allFocusableElements.forEach((elem) => {
+      elem.addEventListener("blur", this.onPopupChildBlur_);
+      elem.addEventListener("keydown", this.onPopupChildKeydown_);
+    });
+    this.pickerC_ = pickerC;
+    if (this.popC_) {
+      this.view.element.appendChild(this.popC_.view.element);
+      this.popC_.view.element.appendChild(pickerC.view.element);
+      connectValues({
+        primary: this.foldable_.value("expanded"),
+        secondary: this.popC_.shows,
+        forward: (p) => p,
+        backward: (_, s) => s
+      });
+    } else if (this.view.pickerElement) {
+      this.view.pickerElement.appendChild(this.pickerC_.view.element);
+      bindFoldable(this.foldable_, this.view.pickerElement);
+    }
+  }
+  get textController() {
+    return this.textC_;
+  }
+  onButtonBlur_(e) {
+    if (!this.popC_) {
+      return;
+    }
+    const elem = this.view.element;
+    const nextTarget = forceCast(e.relatedTarget);
+    if (!nextTarget || !elem.contains(nextTarget)) {
+      this.popC_.shows.rawValue = false;
+    }
+  }
+  onButtonClick_() {
+    this.foldable_.set("expanded", !this.foldable_.get("expanded"));
+    if (this.foldable_.get("expanded")) {
+      this.pickerC_.view.allFocusableElements[0].focus();
+    }
+  }
+  onPopupChildBlur_(ev) {
+    if (!this.popC_) {
+      return;
+    }
+    const elem = this.popC_.view.element;
+    const nextTarget = findNextTarget(ev);
+    if (nextTarget && elem.contains(nextTarget)) {
+      return;
+    }
+    if (nextTarget && nextTarget === this.swatchC_.view.buttonElement && !supportsTouch(elem.ownerDocument)) {
+      return;
+    }
+    this.popC_.shows.rawValue = false;
+  }
+  onPopupChildKeydown_(ev) {
+    if (this.popC_) {
+      if (ev.key === "Escape") {
+        this.popC_.shows.rawValue = false;
+      }
+    } else if (this.view.pickerElement) {
+      if (ev.key === "Escape") {
+        this.swatchC_.view.buttonElement.focus();
+      }
+    }
+  }
+}
+function colorToRgbNumber(value) {
+  return removeAlphaComponent(value.getComponents("rgb")).reduce((result, comp) => {
+    return result << 8 | Math.floor(comp) & 255;
+  }, 0);
+}
+function colorToRgbaNumber(value) {
+  return value.getComponents("rgb").reduce((result, comp, index) => {
+    const hex = Math.floor(index === 3 ? comp * 255 : comp) & 255;
+    return result << 8 | hex;
+  }, 0) >>> 0;
+}
+function numberToRgbColor(num) {
+  return new IntColor([num >> 16 & 255, num >> 8 & 255, num & 255], "rgb");
+}
+function numberToRgbaColor(num) {
+  return new IntColor([
+    num >> 24 & 255,
+    num >> 16 & 255,
+    num >> 8 & 255,
+    mapRange(num & 255, 0, 255, 0, 1)
+  ], "rgb");
+}
+function colorFromRgbNumber(value) {
+  if (typeof value !== "number") {
+    return IntColor.black();
+  }
+  return numberToRgbColor(value);
+}
+function colorFromRgbaNumber(value) {
+  if (typeof value !== "number") {
+    return IntColor.black();
+  }
+  return numberToRgbaColor(value);
+}
+function isRgbColorComponent(obj, key) {
+  if (typeof obj !== "object" || isEmpty(obj)) {
+    return false;
+  }
+  return key in obj && typeof obj[key] === "number";
+}
+function isRgbColorObject(obj) {
+  return isRgbColorComponent(obj, "r") && isRgbColorComponent(obj, "g") && isRgbColorComponent(obj, "b");
+}
+function isRgbaColorObject(obj) {
+  return isRgbColorObject(obj) && isRgbColorComponent(obj, "a");
+}
+function isColorObject(obj) {
+  return isRgbColorObject(obj);
+}
+function equalsColor(v1, v2) {
+  if (v1.mode !== v2.mode) {
+    return false;
+  }
+  if (v1.type !== v2.type) {
+    return false;
+  }
+  const comps1 = v1.getComponents();
+  const comps2 = v2.getComponents();
+  for (let i = 0;i < comps1.length; i++) {
+    if (comps1[i] !== comps2[i]) {
+      return false;
+    }
+  }
+  return true;
+}
+function createColorComponentsFromRgbObject(obj) {
+  return "a" in obj ? [obj.r, obj.g, obj.b, obj.a] : [obj.r, obj.g, obj.b];
+}
+function createColorStringWriter(format) {
+  const stringify = findColorStringifier(format);
+  return stringify ? (target, value) => {
+    writePrimitive(target, stringify(value));
+  } : null;
+}
+function createColorNumberWriter(supportsAlpha) {
+  const colorToNumber = supportsAlpha ? colorToRgbaNumber : colorToRgbNumber;
+  return (target, value) => {
+    writePrimitive(target, colorToNumber(value));
+  };
+}
+function writeRgbaColorObject(target, value, type) {
+  const cc = mapColorType(value, type);
+  const obj = cc.toRgbaObject();
+  target.writeProperty("r", obj.r);
+  target.writeProperty("g", obj.g);
+  target.writeProperty("b", obj.b);
+  target.writeProperty("a", obj.a);
+}
+function writeRgbColorObject(target, value, type) {
+  const cc = mapColorType(value, type);
+  const obj = cc.toRgbaObject();
+  target.writeProperty("r", obj.r);
+  target.writeProperty("g", obj.g);
+  target.writeProperty("b", obj.b);
+}
+function createColorObjectWriter(supportsAlpha, type) {
+  return (target, inValue) => {
+    if (supportsAlpha) {
+      writeRgbaColorObject(target, inValue, type);
+    } else {
+      writeRgbColorObject(target, inValue, type);
+    }
+  };
+}
+function shouldSupportAlpha$1(inputParams) {
+  var _a;
+  if ((_a = inputParams === null || inputParams === undefined ? undefined : inputParams.color) === null || _a === undefined ? undefined : _a.alpha) {
+    return true;
+  }
+  return false;
+}
+function createFormatter$1(supportsAlpha) {
+  return supportsAlpha ? (v) => colorToHexRgbaString(v, "0x") : (v) => colorToHexRgbString(v, "0x");
+}
+function isForColor(params) {
+  if ("color" in params) {
+    return true;
+  }
+  if (params.view === "color") {
+    return true;
+  }
+  return false;
+}
+var NumberColorInputPlugin = createPlugin({
+  id: "input-color-number",
+  type: "input",
+  accept: (value, params) => {
+    if (typeof value !== "number") {
+      return null;
+    }
+    if (!isForColor(params)) {
+      return null;
+    }
+    const result = parseColorInputParams(params);
+    return result ? {
+      initialValue: value,
+      params: Object.assign(Object.assign({}, result), { supportsAlpha: shouldSupportAlpha$1(params) })
+    } : null;
+  },
+  binding: {
+    reader: (args) => {
+      return args.params.supportsAlpha ? colorFromRgbaNumber : colorFromRgbNumber;
+    },
+    equals: equalsColor,
+    writer: (args) => {
+      return createColorNumberWriter(args.params.supportsAlpha);
+    }
+  },
+  controller: (args) => {
+    var _a, _b;
+    return new ColorController(args.document, {
+      colorType: "int",
+      expanded: (_a = args.params.expanded) !== null && _a !== undefined ? _a : false,
+      formatter: createFormatter$1(args.params.supportsAlpha),
+      parser: createColorStringParser("int"),
+      pickerLayout: (_b = args.params.picker) !== null && _b !== undefined ? _b : "popup",
+      supportsAlpha: args.params.supportsAlpha,
+      value: args.value,
+      viewProps: args.viewProps
+    });
+  }
+});
+function colorFromObject(value, type) {
+  if (!isColorObject(value)) {
+    return mapColorType(IntColor.black(), type);
+  }
+  if (type === "int") {
+    const comps = createColorComponentsFromRgbObject(value);
+    return new IntColor(comps, "rgb");
+  }
+  if (type === "float") {
+    const comps = createColorComponentsFromRgbObject(value);
+    return new FloatColor(comps, "rgb");
+  }
+  return mapColorType(IntColor.black(), "int");
+}
+function shouldSupportAlpha(initialValue) {
+  return isRgbaColorObject(initialValue);
+}
+function createColorObjectBindingReader(type) {
+  return (value) => {
+    const c = colorFromObject(value, type);
+    return mapColorType(c, "int");
+  };
+}
+function createColorObjectFormatter(supportsAlpha, type) {
+  return (value) => {
+    if (supportsAlpha) {
+      return colorToObjectRgbaString(value, type);
+    }
+    return colorToObjectRgbString(value, type);
+  };
+}
+var ObjectColorInputPlugin = createPlugin({
+  id: "input-color-object",
+  type: "input",
+  accept: (value, params) => {
+    var _a;
+    if (!isColorObject(value)) {
+      return null;
+    }
+    const result = parseColorInputParams(params);
+    return result ? {
+      initialValue: value,
+      params: Object.assign(Object.assign({}, result), { colorType: (_a = extractColorType(params)) !== null && _a !== undefined ? _a : "int" })
+    } : null;
+  },
+  binding: {
+    reader: (args) => createColorObjectBindingReader(args.params.colorType),
+    equals: equalsColor,
+    writer: (args) => createColorObjectWriter(shouldSupportAlpha(args.initialValue), args.params.colorType)
+  },
+  controller: (args) => {
+    var _a, _b;
+    const supportsAlpha = isRgbaColorObject(args.initialValue);
+    return new ColorController(args.document, {
+      colorType: args.params.colorType,
+      expanded: (_a = args.params.expanded) !== null && _a !== undefined ? _a : false,
+      formatter: createColorObjectFormatter(supportsAlpha, args.params.colorType),
+      parser: createColorStringParser("int"),
+      pickerLayout: (_b = args.params.picker) !== null && _b !== undefined ? _b : "popup",
+      supportsAlpha,
+      value: args.value,
+      viewProps: args.viewProps
+    });
+  }
+});
+var StringColorInputPlugin = createPlugin({
+  id: "input-color-string",
+  type: "input",
+  accept: (value, params) => {
+    if (typeof value !== "string") {
+      return null;
+    }
+    if (params.view === "text") {
+      return null;
+    }
+    const format = detectStringColorFormat(value, extractColorType(params));
+    if (!format) {
+      return null;
+    }
+    const stringifier = findColorStringifier(format);
+    if (!stringifier) {
+      return null;
+    }
+    const result = parseColorInputParams(params);
+    return result ? {
+      initialValue: value,
+      params: Object.assign(Object.assign({}, result), { format, stringifier })
+    } : null;
+  },
+  binding: {
+    reader: () => readIntColorString,
+    equals: equalsColor,
+    writer: (args) => {
+      const writer = createColorStringWriter(args.params.format);
+      if (!writer) {
+        throw TpError.notBindable();
+      }
+      return writer;
+    }
+  },
+  controller: (args) => {
+    var _a, _b;
+    return new ColorController(args.document, {
+      colorType: args.params.format.type,
+      expanded: (_a = args.params.expanded) !== null && _a !== undefined ? _a : false,
+      formatter: args.params.stringifier,
+      parser: createColorStringParser("int"),
+      pickerLayout: (_b = args.params.picker) !== null && _b !== undefined ? _b : "popup",
+      supportsAlpha: args.params.format.alpha,
+      value: args.value,
+      viewProps: args.viewProps
+    });
+  }
+});
+
+class PointNdConstraint {
+  constructor(config) {
+    this.components = config.components;
+    this.asm_ = config.assembly;
+  }
+  constrain(value) {
+    const comps = this.asm_.toComponents(value).map((comp, index) => {
+      var _a, _b;
+      return (_b = (_a = this.components[index]) === null || _a === undefined ? undefined : _a.constrain(comp)) !== null && _b !== undefined ? _b : comp;
+    });
+    return this.asm_.fromComponents(comps);
+  }
+}
+var cn$6 = ClassName("pndtxt");
+
+class PointNdTextView {
+  constructor(doc, config) {
+    this.textViews = config.textViews;
+    this.element = doc.createElement("div");
+    this.element.classList.add(cn$6());
+    this.textViews.forEach((v) => {
+      const axisElem = doc.createElement("div");
+      axisElem.classList.add(cn$6("a"));
+      axisElem.appendChild(v.element);
+      this.element.appendChild(axisElem);
+    });
+  }
+}
+function createAxisController(doc, config, index) {
+  return new NumberTextController(doc, {
+    arrayPosition: index === 0 ? "fst" : index === config.axes.length - 1 ? "lst" : "mid",
+    parser: config.parser,
+    props: config.axes[index].textProps,
+    value: createValue(0, {
+      constraint: config.axes[index].constraint
+    }),
+    viewProps: config.viewProps
+  });
+}
+
+class PointNdTextController {
+  constructor(doc, config) {
+    this.value = config.value;
+    this.viewProps = config.viewProps;
+    this.acs_ = config.axes.map((_, index) => createAxisController(doc, config, index));
+    this.acs_.forEach((c, index) => {
+      connectValues({
+        primary: this.value,
+        secondary: c.value,
+        forward: (p) => config.assembly.toComponents(p)[index],
+        backward: (p, s) => {
+          const comps = config.assembly.toComponents(p);
+          comps[index] = s;
+          return config.assembly.fromComponents(comps);
+        }
+      });
+    });
+    this.view = new PointNdTextView(doc, {
+      textViews: this.acs_.map((ac) => ac.view)
+    });
+  }
+  get textControllers() {
+    return this.acs_;
+  }
+}
+
+class SliderInputBindingApi extends BindingApi {
+  get max() {
+    return this.controller.valueController.sliderController.props.get("max");
+  }
+  set max(max) {
+    this.controller.valueController.sliderController.props.set("max", max);
+  }
+  get min() {
+    return this.controller.valueController.sliderController.props.get("min");
+  }
+  set min(max) {
+    this.controller.valueController.sliderController.props.set("min", max);
+  }
+}
+function createConstraint$4(params, initialValue) {
+  const constraints = [];
+  const sc = createStepConstraint(params, initialValue);
+  if (sc) {
+    constraints.push(sc);
+  }
+  const rc = createRangeConstraint(params);
+  if (rc) {
+    constraints.push(rc);
+  }
+  const lc = createListConstraint(params.options);
+  if (lc) {
+    constraints.push(lc);
+  }
+  return new CompositeConstraint(constraints);
+}
+var NumberInputPlugin = createPlugin({
+  id: "input-number",
+  type: "input",
+  accept: (value, params) => {
+    if (typeof value !== "number") {
+      return null;
+    }
+    const result = parseRecord(params, (p) => Object.assign(Object.assign({}, createNumberTextInputParamsParser(p)), { options: p.optional.custom(parseListOptions), readonly: p.optional.constant(false) }));
+    return result ? {
+      initialValue: value,
+      params: result
+    } : null;
+  },
+  binding: {
+    reader: (_args) => numberFromUnknown,
+    constraint: (args) => createConstraint$4(args.params, args.initialValue),
+    writer: (_args) => writePrimitive
+  },
+  controller: (args) => {
+    const value = args.value;
+    const c = args.constraint;
+    const lc = c && findConstraint(c, ListConstraint);
+    if (lc) {
+      return new ListController(args.document, {
+        props: new ValueMap({
+          options: lc.values.value("options")
+        }),
+        value,
+        viewProps: args.viewProps
+      });
+    }
+    const textPropsObj = createNumberTextPropsObject(args.params, value.rawValue);
+    const drc = c && findConstraint(c, DefiniteRangeConstraint);
+    if (drc) {
+      return new SliderTextController(args.document, Object.assign(Object.assign({}, createSliderTextProps(Object.assign(Object.assign({}, textPropsObj), { keyScale: createValue(textPropsObj.keyScale), max: drc.values.value("max"), min: drc.values.value("min") }))), { parser: parseNumber, value, viewProps: args.viewProps }));
+    }
+    return new NumberTextController(args.document, {
+      parser: parseNumber,
+      props: ValueMap.fromObject(textPropsObj),
+      value,
+      viewProps: args.viewProps
+    });
+  },
+  api(args) {
+    if (typeof args.controller.value.rawValue !== "number") {
+      return null;
+    }
+    if (args.controller.valueController instanceof SliderTextController) {
+      return new SliderInputBindingApi(args.controller);
+    }
+    if (args.controller.valueController instanceof ListController) {
+      return new ListInputBindingApi(args.controller);
+    }
+    return null;
+  }
+});
+
+class Point2d {
+  constructor(x = 0, y = 0) {
+    this.x = x;
+    this.y = y;
+  }
+  getComponents() {
+    return [this.x, this.y];
+  }
+  static isObject(obj) {
+    if (isEmpty(obj)) {
+      return false;
+    }
+    const x = obj.x;
+    const y = obj.y;
+    if (typeof x !== "number" || typeof y !== "number") {
+      return false;
+    }
+    return true;
+  }
+  static equals(v1, v2) {
+    return v1.x === v2.x && v1.y === v2.y;
+  }
+  toObject() {
+    return {
+      x: this.x,
+      y: this.y
+    };
+  }
+}
+var Point2dAssembly = {
+  toComponents: (p) => p.getComponents(),
+  fromComponents: (comps) => new Point2d(...comps)
+};
+var cn$5 = ClassName("p2d");
+
+class Point2dView {
+  constructor(doc, config) {
+    this.element = doc.createElement("div");
+    this.element.classList.add(cn$5());
+    config.viewProps.bindClassModifiers(this.element);
+    bindValue(config.expanded, valueToClassName(this.element, cn$5(undefined, "expanded")));
+    const headElem = doc.createElement("div");
+    headElem.classList.add(cn$5("h"));
+    this.element.appendChild(headElem);
+    const buttonElem = doc.createElement("button");
+    buttonElem.classList.add(cn$5("b"));
+    buttonElem.appendChild(createSvgIconElement(doc, "p2dpad"));
+    config.viewProps.bindDisabled(buttonElem);
+    headElem.appendChild(buttonElem);
+    this.buttonElement = buttonElem;
+    const textElem = doc.createElement("div");
+    textElem.classList.add(cn$5("t"));
+    headElem.appendChild(textElem);
+    this.textElement = textElem;
+    if (config.pickerLayout === "inline") {
+      const pickerElem = doc.createElement("div");
+      pickerElem.classList.add(cn$5("p"));
+      this.element.appendChild(pickerElem);
+      this.pickerElement = pickerElem;
+    } else {
+      this.pickerElement = null;
+    }
+  }
+}
+var cn$4 = ClassName("p2dp");
+
+class Point2dPickerView {
+  constructor(doc, config) {
+    this.onFoldableChange_ = this.onFoldableChange_.bind(this);
+    this.onPropsChange_ = this.onPropsChange_.bind(this);
+    this.onValueChange_ = this.onValueChange_.bind(this);
+    this.props_ = config.props;
+    this.props_.emitter.on("change", this.onPropsChange_);
+    this.element = doc.createElement("div");
+    this.element.classList.add(cn$4());
+    if (config.layout === "popup") {
+      this.element.classList.add(cn$4(undefined, "p"));
+    }
+    config.viewProps.bindClassModifiers(this.element);
+    const padElem = doc.createElement("div");
+    padElem.classList.add(cn$4("p"));
+    config.viewProps.bindTabIndex(padElem);
+    this.element.appendChild(padElem);
+    this.padElement = padElem;
+    const svgElem = doc.createElementNS(SVG_NS, "svg");
+    svgElem.classList.add(cn$4("g"));
+    this.padElement.appendChild(svgElem);
+    this.svgElem_ = svgElem;
+    const xAxisElem = doc.createElementNS(SVG_NS, "line");
+    xAxisElem.classList.add(cn$4("ax"));
+    xAxisElem.setAttributeNS(null, "x1", "0");
+    xAxisElem.setAttributeNS(null, "y1", "50%");
+    xAxisElem.setAttributeNS(null, "x2", "100%");
+    xAxisElem.setAttributeNS(null, "y2", "50%");
+    this.svgElem_.appendChild(xAxisElem);
+    const yAxisElem = doc.createElementNS(SVG_NS, "line");
+    yAxisElem.classList.add(cn$4("ax"));
+    yAxisElem.setAttributeNS(null, "x1", "50%");
+    yAxisElem.setAttributeNS(null, "y1", "0");
+    yAxisElem.setAttributeNS(null, "x2", "50%");
+    yAxisElem.setAttributeNS(null, "y2", "100%");
+    this.svgElem_.appendChild(yAxisElem);
+    const lineElem = doc.createElementNS(SVG_NS, "line");
+    lineElem.classList.add(cn$4("l"));
+    lineElem.setAttributeNS(null, "x1", "50%");
+    lineElem.setAttributeNS(null, "y1", "50%");
+    this.svgElem_.appendChild(lineElem);
+    this.lineElem_ = lineElem;
+    const markerElem = doc.createElement("div");
+    markerElem.classList.add(cn$4("m"));
+    this.padElement.appendChild(markerElem);
+    this.markerElem_ = markerElem;
+    config.value.emitter.on("change", this.onValueChange_);
+    this.value = config.value;
+    this.update_();
+  }
+  get allFocusableElements() {
+    return [this.padElement];
+  }
+  update_() {
+    const [x, y] = this.value.rawValue.getComponents();
+    const max = this.props_.get("max");
+    const px = mapRange(x, -max, +max, 0, 100);
+    const py = mapRange(y, -max, +max, 0, 100);
+    const ipy = this.props_.get("invertsY") ? 100 - py : py;
+    this.lineElem_.setAttributeNS(null, "x2", `${px}%`);
+    this.lineElem_.setAttributeNS(null, "y2", `${ipy}%`);
+    this.markerElem_.style.left = `${px}%`;
+    this.markerElem_.style.top = `${ipy}%`;
+  }
+  onValueChange_() {
+    this.update_();
+  }
+  onPropsChange_() {
+    this.update_();
+  }
+  onFoldableChange_() {
+    this.update_();
+  }
+}
+function computeOffset(ev, keyScales, invertsY) {
+  return [
+    getStepForKey(keyScales[0], getHorizontalStepKeys(ev)),
+    getStepForKey(keyScales[1], getVerticalStepKeys(ev)) * (invertsY ? 1 : -1)
+  ];
+}
+
+class Point2dPickerController {
+  constructor(doc, config) {
+    this.onPadKeyDown_ = this.onPadKeyDown_.bind(this);
+    this.onPadKeyUp_ = this.onPadKeyUp_.bind(this);
+    this.onPointerDown_ = this.onPointerDown_.bind(this);
+    this.onPointerMove_ = this.onPointerMove_.bind(this);
+    this.onPointerUp_ = this.onPointerUp_.bind(this);
+    this.props = config.props;
+    this.value = config.value;
+    this.viewProps = config.viewProps;
+    this.view = new Point2dPickerView(doc, {
+      layout: config.layout,
+      props: this.props,
+      value: this.value,
+      viewProps: this.viewProps
+    });
+    this.ptHandler_ = new PointerHandler(this.view.padElement);
+    this.ptHandler_.emitter.on("down", this.onPointerDown_);
+    this.ptHandler_.emitter.on("move", this.onPointerMove_);
+    this.ptHandler_.emitter.on("up", this.onPointerUp_);
+    this.view.padElement.addEventListener("keydown", this.onPadKeyDown_);
+    this.view.padElement.addEventListener("keyup", this.onPadKeyUp_);
+  }
+  handlePointerEvent_(d, opts) {
+    if (!d.point) {
+      return;
+    }
+    const max = this.props.get("max");
+    const px = mapRange(d.point.x, 0, d.bounds.width, -max, +max);
+    const py = mapRange(this.props.get("invertsY") ? d.bounds.height - d.point.y : d.point.y, 0, d.bounds.height, -max, +max);
+    this.value.setRawValue(new Point2d(px, py), opts);
+  }
+  onPointerDown_(ev) {
+    this.handlePointerEvent_(ev.data, {
+      forceEmit: false,
+      last: false
+    });
+  }
+  onPointerMove_(ev) {
+    this.handlePointerEvent_(ev.data, {
+      forceEmit: false,
+      last: false
+    });
+  }
+  onPointerUp_(ev) {
+    this.handlePointerEvent_(ev.data, {
+      forceEmit: true,
+      last: true
+    });
+  }
+  onPadKeyDown_(ev) {
+    if (isArrowKey(ev.key)) {
+      ev.preventDefault();
+    }
+    const [dx, dy] = computeOffset(ev, [this.props.get("xKeyScale"), this.props.get("yKeyScale")], this.props.get("invertsY"));
+    if (dx === 0 && dy === 0) {
+      return;
+    }
+    this.value.setRawValue(new Point2d(this.value.rawValue.x + dx, this.value.rawValue.y + dy), {
+      forceEmit: false,
+      last: false
+    });
+  }
+  onPadKeyUp_(ev) {
+    const [dx, dy] = computeOffset(ev, [this.props.get("xKeyScale"), this.props.get("yKeyScale")], this.props.get("invertsY"));
+    if (dx === 0 && dy === 0) {
+      return;
+    }
+    this.value.setRawValue(this.value.rawValue, {
+      forceEmit: true,
+      last: true
+    });
+  }
+}
+
+class Point2dController {
+  constructor(doc, config) {
+    var _a, _b;
+    this.onPopupChildBlur_ = this.onPopupChildBlur_.bind(this);
+    this.onPopupChildKeydown_ = this.onPopupChildKeydown_.bind(this);
+    this.onPadButtonBlur_ = this.onPadButtonBlur_.bind(this);
+    this.onPadButtonClick_ = this.onPadButtonClick_.bind(this);
+    this.value = config.value;
+    this.viewProps = config.viewProps;
+    this.foldable_ = Foldable.create(config.expanded);
+    this.popC_ = config.pickerLayout === "popup" ? new PopupController(doc, {
+      viewProps: this.viewProps
+    }) : null;
+    const padC = new Point2dPickerController(doc, {
+      layout: config.pickerLayout,
+      props: new ValueMap({
+        invertsY: createValue(config.invertsY),
+        max: createValue(config.max),
+        xKeyScale: config.axes[0].textProps.value("keyScale"),
+        yKeyScale: config.axes[1].textProps.value("keyScale")
+      }),
+      value: this.value,
+      viewProps: this.viewProps
+    });
+    padC.view.allFocusableElements.forEach((elem) => {
+      elem.addEventListener("blur", this.onPopupChildBlur_);
+      elem.addEventListener("keydown", this.onPopupChildKeydown_);
+    });
+    this.pickerC_ = padC;
+    this.textC_ = new PointNdTextController(doc, {
+      assembly: Point2dAssembly,
+      axes: config.axes,
+      parser: config.parser,
+      value: this.value,
+      viewProps: this.viewProps
+    });
+    this.view = new Point2dView(doc, {
+      expanded: this.foldable_.value("expanded"),
+      pickerLayout: config.pickerLayout,
+      viewProps: this.viewProps
+    });
+    this.view.textElement.appendChild(this.textC_.view.element);
+    (_a = this.view.buttonElement) === null || _a === undefined || _a.addEventListener("blur", this.onPadButtonBlur_);
+    (_b = this.view.buttonElement) === null || _b === undefined || _b.addEventListener("click", this.onPadButtonClick_);
+    if (this.popC_) {
+      this.view.element.appendChild(this.popC_.view.element);
+      this.popC_.view.element.appendChild(this.pickerC_.view.element);
+      connectValues({
+        primary: this.foldable_.value("expanded"),
+        secondary: this.popC_.shows,
+        forward: (p) => p,
+        backward: (_, s) => s
+      });
+    } else if (this.view.pickerElement) {
+      this.view.pickerElement.appendChild(this.pickerC_.view.element);
+      bindFoldable(this.foldable_, this.view.pickerElement);
+    }
+  }
+  get textController() {
+    return this.textC_;
+  }
+  onPadButtonBlur_(e) {
+    if (!this.popC_) {
+      return;
+    }
+    const elem = this.view.element;
+    const nextTarget = forceCast(e.relatedTarget);
+    if (!nextTarget || !elem.contains(nextTarget)) {
+      this.popC_.shows.rawValue = false;
+    }
+  }
+  onPadButtonClick_() {
+    this.foldable_.set("expanded", !this.foldable_.get("expanded"));
+    if (this.foldable_.get("expanded")) {
+      this.pickerC_.view.allFocusableElements[0].focus();
+    }
+  }
+  onPopupChildBlur_(ev) {
+    if (!this.popC_) {
+      return;
+    }
+    const elem = this.popC_.view.element;
+    const nextTarget = findNextTarget(ev);
+    if (nextTarget && elem.contains(nextTarget)) {
+      return;
+    }
+    if (nextTarget && nextTarget === this.view.buttonElement && !supportsTouch(elem.ownerDocument)) {
+      return;
+    }
+    this.popC_.shows.rawValue = false;
+  }
+  onPopupChildKeydown_(ev) {
+    if (this.popC_) {
+      if (ev.key === "Escape") {
+        this.popC_.shows.rawValue = false;
+      }
+    } else if (this.view.pickerElement) {
+      if (ev.key === "Escape") {
+        this.view.buttonElement.focus();
+      }
+    }
+  }
+}
+function point2dFromUnknown(value) {
+  return Point2d.isObject(value) ? new Point2d(value.x, value.y) : new Point2d;
+}
+function writePoint2d(target, value) {
+  target.writeProperty("x", value.x);
+  target.writeProperty("y", value.y);
+}
+function createConstraint$3(params, initialValue) {
+  return new PointNdConstraint({
+    assembly: Point2dAssembly,
+    components: [
+      createDimensionConstraint(Object.assign(Object.assign({}, params), params.x), initialValue.x),
+      createDimensionConstraint(Object.assign(Object.assign({}, params), params.y), initialValue.y)
+    ]
+  });
+}
+function getSuitableMaxDimensionValue(params, rawValue) {
+  var _a, _b;
+  if (!isEmpty(params.min) || !isEmpty(params.max)) {
+    return Math.max(Math.abs((_a = params.min) !== null && _a !== undefined ? _a : 0), Math.abs((_b = params.max) !== null && _b !== undefined ? _b : 0));
+  }
+  const step = getSuitableKeyScale(params);
+  return Math.max(Math.abs(step) * 10, Math.abs(rawValue) * 10);
+}
+function getSuitableMax(params, initialValue) {
+  var _a, _b;
+  const xr = getSuitableMaxDimensionValue(deepMerge(params, (_a = params.x) !== null && _a !== undefined ? _a : {}), initialValue.x);
+  const yr = getSuitableMaxDimensionValue(deepMerge(params, (_b = params.y) !== null && _b !== undefined ? _b : {}), initialValue.y);
+  return Math.max(xr, yr);
+}
+function shouldInvertY(params) {
+  if (!("y" in params)) {
+    return false;
+  }
+  const yParams = params.y;
+  if (!yParams) {
+    return false;
+  }
+  return "inverted" in yParams ? !!yParams.inverted : false;
+}
+var Point2dInputPlugin = createPlugin({
+  id: "input-point2d",
+  type: "input",
+  accept: (value, params) => {
+    if (!Point2d.isObject(value)) {
+      return null;
+    }
+    const result = parseRecord(params, (p) => Object.assign(Object.assign({}, createPointDimensionParser(p)), { expanded: p.optional.boolean, picker: p.optional.custom(parsePickerLayout), readonly: p.optional.constant(false), x: p.optional.custom(parsePointDimensionParams), y: p.optional.object(Object.assign(Object.assign({}, createPointDimensionParser(p)), { inverted: p.optional.boolean })) }));
+    return result ? {
+      initialValue: value,
+      params: result
+    } : null;
+  },
+  binding: {
+    reader: () => point2dFromUnknown,
+    constraint: (args) => createConstraint$3(args.params, args.initialValue),
+    equals: Point2d.equals,
+    writer: () => writePoint2d
+  },
+  controller: (args) => {
+    var _a, _b;
+    const doc = args.document;
+    const value = args.value;
+    const c = args.constraint;
+    const dParams = [args.params.x, args.params.y];
+    return new Point2dController(doc, {
+      axes: value.rawValue.getComponents().map((comp, i) => {
+        var _a2;
+        return createPointAxis({
+          constraint: c.components[i],
+          initialValue: comp,
+          params: deepMerge(args.params, (_a2 = dParams[i]) !== null && _a2 !== undefined ? _a2 : {})
+        });
+      }),
+      expanded: (_a = args.params.expanded) !== null && _a !== undefined ? _a : false,
+      invertsY: shouldInvertY(args.params),
+      max: getSuitableMax(args.params, value.rawValue),
+      parser: parseNumber,
+      pickerLayout: (_b = args.params.picker) !== null && _b !== undefined ? _b : "popup",
+      value,
+      viewProps: args.viewProps
+    });
+  }
+});
+
+class Point3d {
+  constructor(x = 0, y = 0, z = 0) {
+    this.x = x;
+    this.y = y;
+    this.z = z;
+  }
+  getComponents() {
+    return [this.x, this.y, this.z];
+  }
+  static isObject(obj) {
+    if (isEmpty(obj)) {
+      return false;
+    }
+    const x = obj.x;
+    const y = obj.y;
+    const z = obj.z;
+    if (typeof x !== "number" || typeof y !== "number" || typeof z !== "number") {
+      return false;
+    }
+    return true;
+  }
+  static equals(v1, v2) {
+    return v1.x === v2.x && v1.y === v2.y && v1.z === v2.z;
+  }
+  toObject() {
+    return {
+      x: this.x,
+      y: this.y,
+      z: this.z
+    };
+  }
+}
+var Point3dAssembly = {
+  toComponents: (p) => p.getComponents(),
+  fromComponents: (comps) => new Point3d(...comps)
+};
+function point3dFromUnknown(value) {
+  return Point3d.isObject(value) ? new Point3d(value.x, value.y, value.z) : new Point3d;
+}
+function writePoint3d(target, value) {
+  target.writeProperty("x", value.x);
+  target.writeProperty("y", value.y);
+  target.writeProperty("z", value.z);
+}
+function createConstraint$2(params, initialValue) {
+  return new PointNdConstraint({
+    assembly: Point3dAssembly,
+    components: [
+      createDimensionConstraint(Object.assign(Object.assign({}, params), params.x), initialValue.x),
+      createDimensionConstraint(Object.assign(Object.assign({}, params), params.y), initialValue.y),
+      createDimensionConstraint(Object.assign(Object.assign({}, params), params.z), initialValue.z)
+    ]
+  });
+}
+var Point3dInputPlugin = createPlugin({
+  id: "input-point3d",
+  type: "input",
+  accept: (value, params) => {
+    if (!Point3d.isObject(value)) {
+      return null;
+    }
+    const result = parseRecord(params, (p) => Object.assign(Object.assign({}, createPointDimensionParser(p)), { readonly: p.optional.constant(false), x: p.optional.custom(parsePointDimensionParams), y: p.optional.custom(parsePointDimensionParams), z: p.optional.custom(parsePointDimensionParams) }));
+    return result ? {
+      initialValue: value,
+      params: result
+    } : null;
+  },
+  binding: {
+    reader: (_args) => point3dFromUnknown,
+    constraint: (args) => createConstraint$2(args.params, args.initialValue),
+    equals: Point3d.equals,
+    writer: (_args) => writePoint3d
+  },
+  controller: (args) => {
+    const value = args.value;
+    const c = args.constraint;
+    const dParams = [args.params.x, args.params.y, args.params.z];
+    return new PointNdTextController(args.document, {
+      assembly: Point3dAssembly,
+      axes: value.rawValue.getComponents().map((comp, i) => {
+        var _a;
+        return createPointAxis({
+          constraint: c.components[i],
+          initialValue: comp,
+          params: deepMerge(args.params, (_a = dParams[i]) !== null && _a !== undefined ? _a : {})
+        });
+      }),
+      parser: parseNumber,
+      value,
+      viewProps: args.viewProps
+    });
+  }
+});
+
+class Point4d {
+  constructor(x = 0, y = 0, z = 0, w = 0) {
+    this.x = x;
+    this.y = y;
+    this.z = z;
+    this.w = w;
+  }
+  getComponents() {
+    return [this.x, this.y, this.z, this.w];
+  }
+  static isObject(obj) {
+    if (isEmpty(obj)) {
+      return false;
+    }
+    const x = obj.x;
+    const y = obj.y;
+    const z = obj.z;
+    const w = obj.w;
+    if (typeof x !== "number" || typeof y !== "number" || typeof z !== "number" || typeof w !== "number") {
+      return false;
+    }
+    return true;
+  }
+  static equals(v1, v2) {
+    return v1.x === v2.x && v1.y === v2.y && v1.z === v2.z && v1.w === v2.w;
+  }
+  toObject() {
+    return {
+      x: this.x,
+      y: this.y,
+      z: this.z,
+      w: this.w
+    };
+  }
+}
+var Point4dAssembly = {
+  toComponents: (p) => p.getComponents(),
+  fromComponents: (comps) => new Point4d(...comps)
+};
+function point4dFromUnknown(value) {
+  return Point4d.isObject(value) ? new Point4d(value.x, value.y, value.z, value.w) : new Point4d;
+}
+function writePoint4d(target, value) {
+  target.writeProperty("x", value.x);
+  target.writeProperty("y", value.y);
+  target.writeProperty("z", value.z);
+  target.writeProperty("w", value.w);
+}
+function createConstraint$1(params, initialValue) {
+  return new PointNdConstraint({
+    assembly: Point4dAssembly,
+    components: [
+      createDimensionConstraint(Object.assign(Object.assign({}, params), params.x), initialValue.x),
+      createDimensionConstraint(Object.assign(Object.assign({}, params), params.y), initialValue.y),
+      createDimensionConstraint(Object.assign(Object.assign({}, params), params.z), initialValue.z),
+      createDimensionConstraint(Object.assign(Object.assign({}, params), params.w), initialValue.w)
+    ]
+  });
+}
+var Point4dInputPlugin = createPlugin({
+  id: "input-point4d",
+  type: "input",
+  accept: (value, params) => {
+    if (!Point4d.isObject(value)) {
+      return null;
+    }
+    const result = parseRecord(params, (p) => Object.assign(Object.assign({}, createPointDimensionParser(p)), { readonly: p.optional.constant(false), w: p.optional.custom(parsePointDimensionParams), x: p.optional.custom(parsePointDimensionParams), y: p.optional.custom(parsePointDimensionParams), z: p.optional.custom(parsePointDimensionParams) }));
+    return result ? {
+      initialValue: value,
+      params: result
+    } : null;
+  },
+  binding: {
+    reader: (_args) => point4dFromUnknown,
+    constraint: (args) => createConstraint$1(args.params, args.initialValue),
+    equals: Point4d.equals,
+    writer: (_args) => writePoint4d
+  },
+  controller: (args) => {
+    const value = args.value;
+    const c = args.constraint;
+    const dParams = [
+      args.params.x,
+      args.params.y,
+      args.params.z,
+      args.params.w
+    ];
+    return new PointNdTextController(args.document, {
+      assembly: Point4dAssembly,
+      axes: value.rawValue.getComponents().map((comp, i) => {
+        var _a;
+        return createPointAxis({
+          constraint: c.components[i],
+          initialValue: comp,
+          params: deepMerge(args.params, (_a = dParams[i]) !== null && _a !== undefined ? _a : {})
+        });
+      }),
+      parser: parseNumber,
+      value,
+      viewProps: args.viewProps
+    });
+  }
+});
+function createConstraint(params) {
+  const constraints = [];
+  const lc = createListConstraint(params.options);
+  if (lc) {
+    constraints.push(lc);
+  }
+  return new CompositeConstraint(constraints);
+}
+var StringInputPlugin = createPlugin({
+  id: "input-string",
+  type: "input",
+  accept: (value, params) => {
+    if (typeof value !== "string") {
+      return null;
+    }
+    const result = parseRecord(params, (p) => ({
+      readonly: p.optional.constant(false),
+      options: p.optional.custom(parseListOptions)
+    }));
+    return result ? {
+      initialValue: value,
+      params: result
+    } : null;
+  },
+  binding: {
+    reader: (_args) => stringFromUnknown,
+    constraint: (args) => createConstraint(args.params),
+    writer: (_args) => writePrimitive
+  },
+  controller: (args) => {
+    const doc = args.document;
+    const value = args.value;
+    const c = args.constraint;
+    const lc = c && findConstraint(c, ListConstraint);
+    if (lc) {
+      return new ListController(doc, {
+        props: new ValueMap({
+          options: lc.values.value("options")
+        }),
+        value,
+        viewProps: args.viewProps
+      });
+    }
+    return new TextController(doc, {
+      parser: (v) => v,
+      props: ValueMap.fromObject({
+        formatter: formatString
+      }),
+      value,
+      viewProps: args.viewProps
+    });
+  },
+  api(args) {
+    if (typeof args.controller.value.rawValue !== "string") {
+      return null;
+    }
+    if (args.controller.valueController instanceof ListController) {
+      return new ListInputBindingApi(args.controller);
+    }
+    return null;
+  }
+});
+var Constants = {
+  monitor: {
+    defaultInterval: 200,
+    defaultRows: 3
+  }
+};
+var cn$3 = ClassName("mll");
+
+class MultiLogView {
+  constructor(doc, config) {
+    this.onValueUpdate_ = this.onValueUpdate_.bind(this);
+    this.formatter_ = config.formatter;
+    this.element = doc.createElement("div");
+    this.element.classList.add(cn$3());
+    config.viewProps.bindClassModifiers(this.element);
+    const textareaElem = doc.createElement("textarea");
+    textareaElem.classList.add(cn$3("i"));
+    textareaElem.style.height = `calc(var(${getCssVar("containerUnitSize")}) * ${config.rows})`;
+    textareaElem.readOnly = true;
+    config.viewProps.bindDisabled(textareaElem);
+    this.element.appendChild(textareaElem);
+    this.textareaElem_ = textareaElem;
+    config.value.emitter.on("change", this.onValueUpdate_);
+    this.value = config.value;
+    this.update_();
+  }
+  update_() {
+    const elem = this.textareaElem_;
+    const shouldScroll = elem.scrollTop === elem.scrollHeight - elem.clientHeight;
+    const lines = [];
+    this.value.rawValue.forEach((value) => {
+      if (value !== undefined) {
+        lines.push(this.formatter_(value));
+      }
+    });
+    elem.textContent = lines.join(`
+`);
+    if (shouldScroll) {
+      elem.scrollTop = elem.scrollHeight;
+    }
+  }
+  onValueUpdate_() {
+    this.update_();
+  }
+}
+
+class MultiLogController {
+  constructor(doc, config) {
+    this.value = config.value;
+    this.viewProps = config.viewProps;
+    this.view = new MultiLogView(doc, {
+      formatter: config.formatter,
+      rows: config.rows,
+      value: this.value,
+      viewProps: this.viewProps
+    });
+  }
+}
+var cn$2 = ClassName("sgl");
+
+class SingleLogView {
+  constructor(doc, config) {
+    this.onValueUpdate_ = this.onValueUpdate_.bind(this);
+    this.formatter_ = config.formatter;
+    this.element = doc.createElement("div");
+    this.element.classList.add(cn$2());
+    config.viewProps.bindClassModifiers(this.element);
+    const inputElem = doc.createElement("input");
+    inputElem.classList.add(cn$2("i"));
+    inputElem.readOnly = true;
+    inputElem.type = "text";
+    config.viewProps.bindDisabled(inputElem);
+    this.element.appendChild(inputElem);
+    this.inputElement = inputElem;
+    config.value.emitter.on("change", this.onValueUpdate_);
+    this.value = config.value;
+    this.update_();
+  }
+  update_() {
+    const values = this.value.rawValue;
+    const lastValue = values[values.length - 1];
+    this.inputElement.value = lastValue !== undefined ? this.formatter_(lastValue) : "";
+  }
+  onValueUpdate_() {
+    this.update_();
+  }
+}
+
+class SingleLogController {
+  constructor(doc, config) {
+    this.value = config.value;
+    this.viewProps = config.viewProps;
+    this.view = new SingleLogView(doc, {
+      formatter: config.formatter,
+      value: this.value,
+      viewProps: this.viewProps
+    });
+  }
+}
+var BooleanMonitorPlugin = createPlugin({
+  id: "monitor-bool",
+  type: "monitor",
+  accept: (value, params) => {
+    if (typeof value !== "boolean") {
+      return null;
+    }
+    const result = parseRecord(params, (p) => ({
+      readonly: p.required.constant(true),
+      rows: p.optional.number
+    }));
+    return result ? {
+      initialValue: value,
+      params: result
+    } : null;
+  },
+  binding: {
+    reader: (_args) => boolFromUnknown
+  },
+  controller: (args) => {
+    var _a;
+    if (args.value.rawValue.length === 1) {
+      return new SingleLogController(args.document, {
+        formatter: BooleanFormatter,
+        value: args.value,
+        viewProps: args.viewProps
+      });
+    }
+    return new MultiLogController(args.document, {
+      formatter: BooleanFormatter,
+      rows: (_a = args.params.rows) !== null && _a !== undefined ? _a : Constants.monitor.defaultRows,
+      value: args.value,
+      viewProps: args.viewProps
+    });
+  }
+});
+
+class GraphLogMonitorBindingApi extends BindingApi {
+  get max() {
+    return this.controller.valueController.props.get("max");
+  }
+  set max(max) {
+    this.controller.valueController.props.set("max", max);
+  }
+  get min() {
+    return this.controller.valueController.props.get("min");
+  }
+  set min(min) {
+    this.controller.valueController.props.set("min", min);
+  }
+}
+var cn$1 = ClassName("grl");
+
+class GraphLogView {
+  constructor(doc, config) {
+    this.onCursorChange_ = this.onCursorChange_.bind(this);
+    this.onValueUpdate_ = this.onValueUpdate_.bind(this);
+    this.element = doc.createElement("div");
+    this.element.classList.add(cn$1());
+    config.viewProps.bindClassModifiers(this.element);
+    this.formatter_ = config.formatter;
+    this.props_ = config.props;
+    this.cursor_ = config.cursor;
+    this.cursor_.emitter.on("change", this.onCursorChange_);
+    const svgElem = doc.createElementNS(SVG_NS, "svg");
+    svgElem.classList.add(cn$1("g"));
+    svgElem.style.height = `calc(var(${getCssVar("containerUnitSize")}) * ${config.rows})`;
+    this.element.appendChild(svgElem);
+    this.svgElem_ = svgElem;
+    const lineElem = doc.createElementNS(SVG_NS, "polyline");
+    this.svgElem_.appendChild(lineElem);
+    this.lineElem_ = lineElem;
+    const tooltipElem = doc.createElement("div");
+    tooltipElem.classList.add(cn$1("t"), ClassName("tt")());
+    this.element.appendChild(tooltipElem);
+    this.tooltipElem_ = tooltipElem;
+    config.value.emitter.on("change", this.onValueUpdate_);
+    this.value = config.value;
+    this.update_();
+  }
+  get graphElement() {
+    return this.svgElem_;
+  }
+  update_() {
+    const { clientWidth: w, clientHeight: h } = this.element;
+    const maxIndex = this.value.rawValue.length - 1;
+    const min = this.props_.get("min");
+    const max = this.props_.get("max");
+    const points = [];
+    this.value.rawValue.forEach((v, index) => {
+      if (v === undefined) {
+        return;
+      }
+      const x = mapRange(index, 0, maxIndex, 0, w);
+      const y = mapRange(v, min, max, h, 0);
+      points.push([x, y].join(","));
+    });
+    this.lineElem_.setAttributeNS(null, "points", points.join(" "));
+    const tooltipElem = this.tooltipElem_;
+    const value = this.value.rawValue[this.cursor_.rawValue];
+    if (value === undefined) {
+      tooltipElem.classList.remove(cn$1("t", "a"));
+      return;
+    }
+    const tx = mapRange(this.cursor_.rawValue, 0, maxIndex, 0, w);
+    const ty = mapRange(value, min, max, h, 0);
+    tooltipElem.style.left = `${tx}px`;
+    tooltipElem.style.top = `${ty}px`;
+    tooltipElem.textContent = `${this.formatter_(value)}`;
+    if (!tooltipElem.classList.contains(cn$1("t", "a"))) {
+      tooltipElem.classList.add(cn$1("t", "a"), cn$1("t", "in"));
+      forceReflow(tooltipElem);
+      tooltipElem.classList.remove(cn$1("t", "in"));
+    }
+  }
+  onValueUpdate_() {
+    this.update_();
+  }
+  onCursorChange_() {
+    this.update_();
+  }
+}
+
+class GraphLogController {
+  constructor(doc, config) {
+    this.onGraphMouseMove_ = this.onGraphMouseMove_.bind(this);
+    this.onGraphMouseLeave_ = this.onGraphMouseLeave_.bind(this);
+    this.onGraphPointerDown_ = this.onGraphPointerDown_.bind(this);
+    this.onGraphPointerMove_ = this.onGraphPointerMove_.bind(this);
+    this.onGraphPointerUp_ = this.onGraphPointerUp_.bind(this);
+    this.props = config.props;
+    this.value = config.value;
+    this.viewProps = config.viewProps;
+    this.cursor_ = createValue(-1);
+    this.view = new GraphLogView(doc, {
+      cursor: this.cursor_,
+      formatter: config.formatter,
+      rows: config.rows,
+      props: this.props,
+      value: this.value,
+      viewProps: this.viewProps
+    });
+    if (!supportsTouch(doc)) {
+      this.view.element.addEventListener("mousemove", this.onGraphMouseMove_);
+      this.view.element.addEventListener("mouseleave", this.onGraphMouseLeave_);
+    } else {
+      const ph = new PointerHandler(this.view.element);
+      ph.emitter.on("down", this.onGraphPointerDown_);
+      ph.emitter.on("move", this.onGraphPointerMove_);
+      ph.emitter.on("up", this.onGraphPointerUp_);
+    }
+  }
+  importProps(state) {
+    return importBladeState(state, null, (p) => ({
+      max: p.required.number,
+      min: p.required.number
+    }), (result) => {
+      this.props.set("max", result.max);
+      this.props.set("min", result.min);
+      return true;
+    });
+  }
+  exportProps() {
+    return exportBladeState(null, {
+      max: this.props.get("max"),
+      min: this.props.get("min")
+    });
+  }
+  onGraphMouseLeave_() {
+    this.cursor_.rawValue = -1;
+  }
+  onGraphMouseMove_(ev) {
+    const { clientWidth: w } = this.view.element;
+    this.cursor_.rawValue = Math.floor(mapRange(ev.offsetX, 0, w, 0, this.value.rawValue.length));
+  }
+  onGraphPointerDown_(ev) {
+    this.onGraphPointerMove_(ev);
+  }
+  onGraphPointerMove_(ev) {
+    if (!ev.data.point) {
+      this.cursor_.rawValue = -1;
+      return;
+    }
+    this.cursor_.rawValue = Math.floor(mapRange(ev.data.point.x, 0, ev.data.bounds.width, 0, this.value.rawValue.length));
+  }
+  onGraphPointerUp_() {
+    this.cursor_.rawValue = -1;
+  }
+}
+function createFormatter(params) {
+  return !isEmpty(params.format) ? params.format : createNumberFormatter(2);
+}
+function createTextMonitor(args) {
+  var _a;
+  if (args.value.rawValue.length === 1) {
+    return new SingleLogController(args.document, {
+      formatter: createFormatter(args.params),
+      value: args.value,
+      viewProps: args.viewProps
+    });
+  }
+  return new MultiLogController(args.document, {
+    formatter: createFormatter(args.params),
+    rows: (_a = args.params.rows) !== null && _a !== undefined ? _a : Constants.monitor.defaultRows,
+    value: args.value,
+    viewProps: args.viewProps
+  });
+}
+function createGraphMonitor(args) {
+  var _a, _b, _c;
+  return new GraphLogController(args.document, {
+    formatter: createFormatter(args.params),
+    rows: (_a = args.params.rows) !== null && _a !== undefined ? _a : Constants.monitor.defaultRows,
+    props: ValueMap.fromObject({
+      max: (_b = args.params.max) !== null && _b !== undefined ? _b : 100,
+      min: (_c = args.params.min) !== null && _c !== undefined ? _c : 0
+    }),
+    value: args.value,
+    viewProps: args.viewProps
+  });
+}
+function shouldShowGraph(params) {
+  return params.view === "graph";
+}
+var NumberMonitorPlugin = createPlugin({
+  id: "monitor-number",
+  type: "monitor",
+  accept: (value, params) => {
+    if (typeof value !== "number") {
+      return null;
+    }
+    const result = parseRecord(params, (p) => ({
+      format: p.optional.function,
+      max: p.optional.number,
+      min: p.optional.number,
+      readonly: p.required.constant(true),
+      rows: p.optional.number,
+      view: p.optional.string
+    }));
+    return result ? {
+      initialValue: value,
+      params: result
+    } : null;
+  },
+  binding: {
+    defaultBufferSize: (params) => shouldShowGraph(params) ? 64 : 1,
+    reader: (_args) => numberFromUnknown
+  },
+  controller: (args) => {
+    if (shouldShowGraph(args.params)) {
+      return createGraphMonitor(args);
+    }
+    return createTextMonitor(args);
+  },
+  api: (args) => {
+    if (args.controller.valueController instanceof GraphLogController) {
+      return new GraphLogMonitorBindingApi(args.controller);
+    }
+    return null;
+  }
+});
+var StringMonitorPlugin = createPlugin({
+  id: "monitor-string",
+  type: "monitor",
+  accept: (value, params) => {
+    if (typeof value !== "string") {
+      return null;
+    }
+    const result = parseRecord(params, (p) => ({
+      multiline: p.optional.boolean,
+      readonly: p.required.constant(true),
+      rows: p.optional.number
+    }));
+    return result ? {
+      initialValue: value,
+      params: result
+    } : null;
+  },
+  binding: {
+    reader: (_args) => stringFromUnknown
+  },
+  controller: (args) => {
+    var _a;
+    const value = args.value;
+    const multiline = value.rawValue.length > 1 || args.params.multiline;
+    if (multiline) {
+      return new MultiLogController(args.document, {
+        formatter: formatString,
+        rows: (_a = args.params.rows) !== null && _a !== undefined ? _a : Constants.monitor.defaultRows,
+        value,
+        viewProps: args.viewProps
+      });
+    }
+    return new SingleLogController(args.document, {
+      formatter: formatString,
+      value,
+      viewProps: args.viewProps
+    });
+  }
+});
+
+class BladeApiCache {
+  constructor() {
+    this.map_ = new Map;
+  }
+  get(bc) {
+    var _a;
+    return (_a = this.map_.get(bc)) !== null && _a !== undefined ? _a : null;
+  }
+  has(bc) {
+    return this.map_.has(bc);
+  }
+  add(bc, api) {
+    this.map_.set(bc, api);
+    bc.viewProps.handleDispose(() => {
+      this.map_.delete(bc);
+    });
+    return api;
+  }
+}
+
+class ReadWriteBinding {
+  constructor(config) {
+    this.target = config.target;
+    this.reader_ = config.reader;
+    this.writer_ = config.writer;
+  }
+  read() {
+    return this.reader_(this.target.read());
+  }
+  write(value) {
+    this.writer_(this.target, value);
+  }
+  inject(value) {
+    this.write(this.reader_(value));
+  }
+}
+function createInputBindingController(plugin, args) {
+  var _a;
+  const result = plugin.accept(args.target.read(), args.params);
+  if (isEmpty(result)) {
+    return null;
+  }
+  const valueArgs = {
+    target: args.target,
+    initialValue: result.initialValue,
+    params: result.params
+  };
+  const params = parseRecord(args.params, (p) => ({
+    disabled: p.optional.boolean,
+    hidden: p.optional.boolean,
+    label: p.optional.string,
+    tag: p.optional.string
+  }));
+  const reader = plugin.binding.reader(valueArgs);
+  const constraint = plugin.binding.constraint ? plugin.binding.constraint(valueArgs) : undefined;
+  const binding = new ReadWriteBinding({
+    reader,
+    target: args.target,
+    writer: plugin.binding.writer(valueArgs)
+  });
+  const value = new InputBindingValue(createValue(reader(result.initialValue), {
+    constraint,
+    equals: plugin.binding.equals
+  }), binding);
+  const controller = plugin.controller({
+    constraint,
+    document: args.document,
+    initialValue: result.initialValue,
+    params: result.params,
+    value,
+    viewProps: ViewProps.create({
+      disabled: params === null || params === undefined ? undefined : params.disabled,
+      hidden: params === null || params === undefined ? undefined : params.hidden
+    })
+  });
+  return new InputBindingController(args.document, {
+    blade: createBlade(),
+    props: ValueMap.fromObject({
+      label: "label" in args.params ? (_a = params === null || params === undefined ? undefined : params.label) !== null && _a !== undefined ? _a : null : args.target.key
+    }),
+    tag: params === null || params === undefined ? undefined : params.tag,
+    value,
+    valueController: controller
+  });
+}
+
+class ReadonlyBinding {
+  constructor(config) {
+    this.target = config.target;
+    this.reader_ = config.reader;
+  }
+  read() {
+    return this.reader_(this.target.read());
+  }
+}
+function createTicker(document2, interval) {
+  return interval === 0 ? new ManualTicker : new IntervalTicker(document2, interval !== null && interval !== undefined ? interval : Constants.monitor.defaultInterval);
+}
+function createMonitorBindingController(plugin, args) {
+  var _a, _b, _c;
+  const result = plugin.accept(args.target.read(), args.params);
+  if (isEmpty(result)) {
+    return null;
+  }
+  const bindingArgs = {
+    target: args.target,
+    initialValue: result.initialValue,
+    params: result.params
+  };
+  const params = parseRecord(args.params, (p) => ({
+    bufferSize: p.optional.number,
+    disabled: p.optional.boolean,
+    hidden: p.optional.boolean,
+    interval: p.optional.number,
+    label: p.optional.string
+  }));
+  const reader = plugin.binding.reader(bindingArgs);
+  const bufferSize = (_b = (_a = params === null || params === undefined ? undefined : params.bufferSize) !== null && _a !== undefined ? _a : plugin.binding.defaultBufferSize && plugin.binding.defaultBufferSize(result.params)) !== null && _b !== undefined ? _b : 1;
+  const value = new MonitorBindingValue({
+    binding: new ReadonlyBinding({
+      reader,
+      target: args.target
+    }),
+    bufferSize,
+    ticker: createTicker(args.document, params === null || params === undefined ? undefined : params.interval)
+  });
+  const controller = plugin.controller({
+    document: args.document,
+    params: result.params,
+    value,
+    viewProps: ViewProps.create({
+      disabled: params === null || params === undefined ? undefined : params.disabled,
+      hidden: params === null || params === undefined ? undefined : params.hidden
+    })
+  });
+  controller.viewProps.bindDisabled(value.ticker);
+  controller.viewProps.handleDispose(() => {
+    value.ticker.dispose();
+  });
+  return new MonitorBindingController(args.document, {
+    blade: createBlade(),
+    props: ValueMap.fromObject({
+      label: "label" in args.params ? (_c = params === null || params === undefined ? undefined : params.label) !== null && _c !== undefined ? _c : null : args.target.key
+    }),
+    value,
+    valueController: controller
+  });
+}
+
+class PluginPool {
+  constructor(apiCache) {
+    this.pluginsMap_ = {
+      blades: [],
+      inputs: [],
+      monitors: []
+    };
+    this.apiCache_ = apiCache;
+  }
+  getAll() {
+    return [
+      ...this.pluginsMap_.blades,
+      ...this.pluginsMap_.inputs,
+      ...this.pluginsMap_.monitors
+    ];
+  }
+  register(bundleId, r) {
+    if (!isCompatible(r.core)) {
+      throw TpError.notCompatible(bundleId, r.id);
+    }
+    if (r.type === "blade") {
+      this.pluginsMap_.blades.unshift(r);
+    } else if (r.type === "input") {
+      this.pluginsMap_.inputs.unshift(r);
+    } else if (r.type === "monitor") {
+      this.pluginsMap_.monitors.unshift(r);
+    }
+  }
+  createInput_(document2, target, params) {
+    return this.pluginsMap_.inputs.reduce((result, plugin) => result !== null && result !== undefined ? result : createInputBindingController(plugin, {
+      document: document2,
+      target,
+      params
+    }), null);
+  }
+  createMonitor_(document2, target, params) {
+    return this.pluginsMap_.monitors.reduce((result, plugin) => result !== null && result !== undefined ? result : createMonitorBindingController(plugin, {
+      document: document2,
+      params,
+      target
+    }), null);
+  }
+  createBinding(doc, target, params) {
+    const initialValue = target.read();
+    if (isEmpty(initialValue)) {
+      throw new TpError({
+        context: {
+          key: target.key
+        },
+        type: "nomatchingcontroller"
+      });
+    }
+    const ic = this.createInput_(doc, target, params);
+    if (ic) {
+      return ic;
+    }
+    const mc = this.createMonitor_(doc, target, params);
+    if (mc) {
+      return mc;
+    }
+    throw new TpError({
+      context: {
+        key: target.key
+      },
+      type: "nomatchingcontroller"
+    });
+  }
+  createBlade(document2, params) {
+    const bc = this.pluginsMap_.blades.reduce((result, plugin) => result !== null && result !== undefined ? result : createBladeController(plugin, {
+      document: document2,
+      params
+    }), null);
+    if (!bc) {
+      throw new TpError({
+        type: "nomatchingview",
+        context: {
+          params
+        }
+      });
+    }
+    return bc;
+  }
+  createInputBindingApi_(bc) {
+    const api = this.pluginsMap_.inputs.reduce((result, plugin) => {
+      var _a, _b;
+      if (result) {
+        return result;
+      }
+      return (_b = (_a = plugin.api) === null || _a === undefined ? undefined : _a.call(plugin, {
+        controller: bc
+      })) !== null && _b !== undefined ? _b : null;
+    }, null);
+    return this.apiCache_.add(bc, api !== null && api !== undefined ? api : new BindingApi(bc));
+  }
+  createMonitorBindingApi_(bc) {
+    const api = this.pluginsMap_.monitors.reduce((result, plugin) => {
+      var _a, _b;
+      if (result) {
+        return result;
+      }
+      return (_b = (_a = plugin.api) === null || _a === undefined ? undefined : _a.call(plugin, {
+        controller: bc
+      })) !== null && _b !== undefined ? _b : null;
+    }, null);
+    return this.apiCache_.add(bc, api !== null && api !== undefined ? api : new BindingApi(bc));
+  }
+  createBindingApi(bc) {
+    if (this.apiCache_.has(bc)) {
+      return this.apiCache_.get(bc);
+    }
+    if (isInputBindingController(bc)) {
+      return this.createInputBindingApi_(bc);
+    }
+    if (isMonitorBindingController(bc)) {
+      return this.createMonitorBindingApi_(bc);
+    }
+    throw TpError.shouldNeverHappen();
+  }
+  createApi(bc) {
+    if (this.apiCache_.has(bc)) {
+      return this.apiCache_.get(bc);
+    }
+    if (isBindingController(bc)) {
+      return this.createBindingApi(bc);
+    }
+    const api = this.pluginsMap_.blades.reduce((result, plugin) => result !== null && result !== undefined ? result : plugin.api({
+      controller: bc,
+      pool: this
+    }), null);
+    if (!api) {
+      throw TpError.shouldNeverHappen();
+    }
+    return this.apiCache_.add(bc, api);
+  }
+}
+var sharedCache = new BladeApiCache;
+function createDefaultPluginPool() {
+  const pool = new PluginPool(sharedCache);
+  [
+    Point2dInputPlugin,
+    Point3dInputPlugin,
+    Point4dInputPlugin,
+    StringInputPlugin,
+    NumberInputPlugin,
+    StringColorInputPlugin,
+    ObjectColorInputPlugin,
+    NumberColorInputPlugin,
+    BooleanInputPlugin,
+    BooleanMonitorPlugin,
+    StringMonitorPlugin,
+    NumberMonitorPlugin,
+    ButtonBladePlugin,
+    FolderBladePlugin,
+    TabBladePlugin
+  ].forEach((p) => {
+    pool.register("core", p);
+  });
+  return pool;
+}
+
+class ListBladeApi extends BladeApi {
+  constructor(controller) {
+    super(controller);
+    this.emitter_ = new Emitter;
+    this.controller.value.emitter.on("change", (ev) => {
+      this.emitter_.emit("change", new TpChangeEvent(this, ev.rawValue));
+    });
+  }
+  get label() {
+    return this.controller.labelController.props.get("label");
+  }
+  set label(label) {
+    this.controller.labelController.props.set("label", label);
+  }
+  get options() {
+    return this.controller.valueController.props.get("options");
+  }
+  set options(options) {
+    this.controller.valueController.props.set("options", options);
+  }
+  get value() {
+    return this.controller.value.rawValue;
+  }
+  set value(value) {
+    this.controller.value.rawValue = value;
+  }
+  on(eventName, handler) {
+    const bh = handler.bind(this);
+    this.emitter_.on(eventName, (ev) => {
+      bh(ev);
+    }, {
+      key: handler
+    });
+    return this;
+  }
+  off(eventName, handler) {
+    this.emitter_.off(eventName, handler);
+    return this;
+  }
+}
+
+class SeparatorBladeApi extends BladeApi {
+}
+
+class SliderBladeApi extends BladeApi {
+  constructor(controller) {
+    super(controller);
+    this.emitter_ = new Emitter;
+    this.controller.value.emitter.on("change", (ev) => {
+      this.emitter_.emit("change", new TpChangeEvent(this, ev.rawValue));
+    });
+  }
+  get label() {
+    return this.controller.labelController.props.get("label");
+  }
+  set label(label) {
+    this.controller.labelController.props.set("label", label);
+  }
+  get max() {
+    return this.controller.valueController.sliderController.props.get("max");
+  }
+  set max(max) {
+    this.controller.valueController.sliderController.props.set("max", max);
+  }
+  get min() {
+    return this.controller.valueController.sliderController.props.get("min");
+  }
+  set min(min) {
+    this.controller.valueController.sliderController.props.set("min", min);
+  }
+  get value() {
+    return this.controller.value.rawValue;
+  }
+  set value(value) {
+    this.controller.value.rawValue = value;
+  }
+  on(eventName, handler) {
+    const bh = handler.bind(this);
+    this.emitter_.on(eventName, (ev) => {
+      bh(ev);
+    }, {
+      key: handler
+    });
+    return this;
+  }
+  off(eventName, handler) {
+    this.emitter_.off(eventName, handler);
+    return this;
+  }
+}
+
+class TextBladeApi extends BladeApi {
+  constructor(controller) {
+    super(controller);
+    this.emitter_ = new Emitter;
+    this.controller.value.emitter.on("change", (ev) => {
+      this.emitter_.emit("change", new TpChangeEvent(this, ev.rawValue));
+    });
+  }
+  get label() {
+    return this.controller.labelController.props.get("label");
+  }
+  set label(label) {
+    this.controller.labelController.props.set("label", label);
+  }
+  get formatter() {
+    return this.controller.valueController.props.get("formatter");
+  }
+  set formatter(formatter) {
+    this.controller.valueController.props.set("formatter", formatter);
+  }
+  get value() {
+    return this.controller.value.rawValue;
+  }
+  set value(value) {
+    this.controller.value.rawValue = value;
+  }
+  on(eventName, handler) {
+    const bh = handler.bind(this);
+    this.emitter_.on(eventName, (ev) => {
+      bh(ev);
+    }, {
+      key: handler
+    });
+    return this;
+  }
+  off(eventName, handler) {
+    this.emitter_.off(eventName, handler);
+    return this;
+  }
+}
+var ListBladePlugin = function() {
+  return {
+    id: "list",
+    type: "blade",
+    core: VERSION$1,
+    accept(params) {
+      const result = parseRecord(params, (p) => ({
+        options: p.required.custom(parseListOptions),
+        value: p.required.raw,
+        view: p.required.constant("list"),
+        label: p.optional.string
+      }));
+      return result ? { params: result } : null;
+    },
+    controller(args) {
+      const lc = new ListConstraint(normalizeListOptions(args.params.options));
+      const value = createValue(args.params.value, {
+        constraint: lc
+      });
+      const ic = new ListController(args.document, {
+        props: new ValueMap({
+          options: lc.values.value("options")
+        }),
+        value,
+        viewProps: args.viewProps
+      });
+      return new LabeledValueBladeController(args.document, {
+        blade: args.blade,
+        props: ValueMap.fromObject({
+          label: args.params.label
+        }),
+        value,
+        valueController: ic
+      });
+    },
+    api(args) {
+      if (!(args.controller instanceof LabeledValueBladeController)) {
+        return null;
+      }
+      if (!(args.controller.valueController instanceof ListController)) {
+        return null;
+      }
+      return new ListBladeApi(args.controller);
+    }
+  };
+}();
+
+class RootApi extends FolderApi {
+  constructor(controller, pool) {
+    super(controller, pool);
+  }
+  get element() {
+    return this.controller.view.element;
+  }
+}
+
+class RootController extends FolderController {
+  constructor(doc, config) {
+    super(doc, {
+      expanded: config.expanded,
+      blade: config.blade,
+      props: config.props,
+      root: true,
+      viewProps: config.viewProps
+    });
+  }
+}
+var cn = ClassName("spr");
+
+class SeparatorView {
+  constructor(doc, config) {
+    this.element = doc.createElement("div");
+    this.element.classList.add(cn());
+    config.viewProps.bindClassModifiers(this.element);
+    const hrElem = doc.createElement("hr");
+    hrElem.classList.add(cn("r"));
+    this.element.appendChild(hrElem);
+  }
+}
+
+class SeparatorController extends BladeController {
+  constructor(doc, config) {
+    super(Object.assign(Object.assign({}, config), { view: new SeparatorView(doc, {
+      viewProps: config.viewProps
+    }) }));
+  }
+}
+var SeparatorBladePlugin = {
+  id: "separator",
+  type: "blade",
+  core: VERSION$1,
+  accept(params) {
+    const result = parseRecord(params, (p) => ({
+      view: p.required.constant("separator")
+    }));
+    return result ? { params: result } : null;
+  },
+  controller(args) {
+    return new SeparatorController(args.document, {
+      blade: args.blade,
+      viewProps: args.viewProps
+    });
+  },
+  api(args) {
+    if (!(args.controller instanceof SeparatorController)) {
+      return null;
+    }
+    return new SeparatorBladeApi(args.controller);
+  }
+};
+var SliderBladePlugin = {
+  id: "slider",
+  type: "blade",
+  core: VERSION$1,
+  accept(params) {
+    const result = parseRecord(params, (p) => ({
+      max: p.required.number,
+      min: p.required.number,
+      view: p.required.constant("slider"),
+      format: p.optional.function,
+      label: p.optional.string,
+      value: p.optional.number
+    }));
+    return result ? { params: result } : null;
+  },
+  controller(args) {
+    var _a, _b;
+    const initialValue = (_a = args.params.value) !== null && _a !== undefined ? _a : 0;
+    const drc = new DefiniteRangeConstraint({
+      max: args.params.max,
+      min: args.params.min
+    });
+    const v = createValue(initialValue, {
+      constraint: drc
+    });
+    const vc = new SliderTextController(args.document, Object.assign(Object.assign({}, createSliderTextProps({
+      formatter: (_b = args.params.format) !== null && _b !== undefined ? _b : numberToString,
+      keyScale: createValue(1),
+      max: drc.values.value("max"),
+      min: drc.values.value("min"),
+      pointerScale: getSuitablePointerScale(args.params, initialValue)
+    })), { parser: parseNumber, value: v, viewProps: args.viewProps }));
+    return new LabeledValueBladeController(args.document, {
+      blade: args.blade,
+      props: ValueMap.fromObject({
+        label: args.params.label
+      }),
+      value: v,
+      valueController: vc
+    });
+  },
+  api(args) {
+    if (!(args.controller instanceof LabeledValueBladeController)) {
+      return null;
+    }
+    if (!(args.controller.valueController instanceof SliderTextController)) {
+      return null;
+    }
+    return new SliderBladeApi(args.controller);
+  }
+};
+var TextBladePlugin = function() {
+  return {
+    id: "text",
+    type: "blade",
+    core: VERSION$1,
+    accept(params) {
+      const result = parseRecord(params, (p) => ({
+        parse: p.required.function,
+        value: p.required.raw,
+        view: p.required.constant("text"),
+        format: p.optional.function,
+        label: p.optional.string
+      }));
+      return result ? { params: result } : null;
+    },
+    controller(args) {
+      var _a;
+      const v = createValue(args.params.value);
+      const ic = new TextController(args.document, {
+        parser: args.params.parse,
+        props: ValueMap.fromObject({
+          formatter: (_a = args.params.format) !== null && _a !== undefined ? _a : (v2) => String(v2)
+        }),
+        value: v,
+        viewProps: args.viewProps
+      });
+      return new LabeledValueBladeController(args.document, {
+        blade: args.blade,
+        props: ValueMap.fromObject({
+          label: args.params.label
+        }),
+        value: v,
+        valueController: ic
+      });
+    },
+    api(args) {
+      if (!(args.controller instanceof LabeledValueBladeController)) {
+        return null;
+      }
+      if (!(args.controller.valueController instanceof TextController)) {
+        return null;
+      }
+      return new TextBladeApi(args.controller);
+    }
+  };
+}();
+function createDefaultWrapperElement(doc) {
+  const elem = doc.createElement("div");
+  elem.classList.add(ClassName("dfw")());
+  if (doc.body) {
+    doc.body.appendChild(elem);
+  }
+  return elem;
+}
+function embedStyle(doc, id, css) {
+  if (doc.querySelector(`style[data-tp-style=${id}]`)) {
+    return;
+  }
+  const styleElem = doc.createElement("style");
+  styleElem.dataset.tpStyle = id;
+  styleElem.textContent = css;
+  doc.head.appendChild(styleElem);
+}
+
+class Pane extends RootApi {
+  constructor(opt_config) {
+    var _a, _b;
+    const config = opt_config !== null && opt_config !== undefined ? opt_config : {};
+    const doc = (_a = config.document) !== null && _a !== undefined ? _a : getWindowDocument();
+    const pool = createDefaultPluginPool();
+    const rootController = new RootController(doc, {
+      expanded: config.expanded,
+      blade: createBlade(),
+      props: ValueMap.fromObject({
+        title: config.title
+      }),
+      viewProps: ViewProps.create()
+    });
+    super(rootController, pool);
+    this.pool_ = pool;
+    this.containerElem_ = (_b = config.container) !== null && _b !== undefined ? _b : createDefaultWrapperElement(doc);
+    this.containerElem_.appendChild(this.element);
+    this.doc_ = doc;
+    this.usesDefaultWrapper_ = !config.container;
+    this.setUpDefaultPlugins_();
+  }
+  get document() {
+    if (!this.doc_) {
+      throw TpError.alreadyDisposed();
+    }
+    return this.doc_;
+  }
+  dispose() {
+    const containerElem = this.containerElem_;
+    if (!containerElem) {
+      throw TpError.alreadyDisposed();
+    }
+    if (this.usesDefaultWrapper_) {
+      const parentElem = containerElem.parentElement;
+      if (parentElem) {
+        parentElem.removeChild(containerElem);
+      }
+    }
+    this.containerElem_ = null;
+    this.doc_ = null;
+    super.dispose();
+  }
+  registerPlugin(bundle) {
+    if (bundle.css) {
+      embedStyle(this.document, `plugin-${bundle.id}`, bundle.css);
+    }
+    const plugins = "plugin" in bundle ? [bundle.plugin] : ("plugins" in bundle) ? bundle.plugins : [];
+    plugins.forEach((p) => {
+      this.pool_.register(bundle.id, p);
+    });
+  }
+  setUpDefaultPlugins_() {
+    this.registerPlugin({
+      id: "default",
+      css: ".tp-tbiv_b,.tp-coltxtv_ms,.tp-colswv_b,.tp-ckbv_i,.tp-sglv_i,.tp-mllv_i,.tp-grlv_g,.tp-txtv_i,.tp-p2dpv_p,.tp-colswv_sw,.tp-rotv_b,.tp-fldv_b,.tp-p2dv_b,.tp-btnv_b,.tp-lstv_s{-webkit-appearance:none;-moz-appearance:none;appearance:none;background-color:rgba(0,0,0,0);border-width:0;font-family:inherit;font-size:inherit;font-weight:inherit;margin:0;outline:none;padding:0}.tp-p2dv_b,.tp-btnv_b,.tp-lstv_s{background-color:var(--btn-bg);border-radius:var(--bld-br);color:var(--btn-fg);cursor:pointer;display:block;font-weight:bold;height:var(--cnt-usz);line-height:var(--cnt-usz);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.tp-p2dv_b:hover,.tp-btnv_b:hover,.tp-lstv_s:hover{background-color:var(--btn-bg-h)}.tp-p2dv_b:focus,.tp-btnv_b:focus,.tp-lstv_s:focus{background-color:var(--btn-bg-f)}.tp-p2dv_b:active,.tp-btnv_b:active,.tp-lstv_s:active{background-color:var(--btn-bg-a)}.tp-p2dv_b:disabled,.tp-btnv_b:disabled,.tp-lstv_s:disabled{opacity:.5}.tp-rotv_c>.tp-cntv.tp-v-lst,.tp-tbpv_c>.tp-cntv.tp-v-lst,.tp-fldv_c>.tp-cntv.tp-v-lst{margin-bottom:calc(-1*var(--cnt-vp))}.tp-rotv_c>.tp-fldv.tp-v-lst .tp-fldv_c,.tp-tbpv_c>.tp-fldv.tp-v-lst .tp-fldv_c,.tp-fldv_c>.tp-fldv.tp-v-lst .tp-fldv_c{border-bottom-left-radius:0}.tp-rotv_c>.tp-fldv.tp-v-lst .tp-fldv_b,.tp-tbpv_c>.tp-fldv.tp-v-lst .tp-fldv_b,.tp-fldv_c>.tp-fldv.tp-v-lst .tp-fldv_b{border-bottom-left-radius:0}.tp-rotv_c>*:not(.tp-v-fst),.tp-tbpv_c>*:not(.tp-v-fst),.tp-fldv_c>*:not(.tp-v-fst){margin-top:var(--cnt-usp)}.tp-rotv_c>.tp-sprv:not(.tp-v-fst),.tp-tbpv_c>.tp-sprv:not(.tp-v-fst),.tp-fldv_c>.tp-sprv:not(.tp-v-fst),.tp-rotv_c>.tp-cntv:not(.tp-v-fst),.tp-tbpv_c>.tp-cntv:not(.tp-v-fst),.tp-fldv_c>.tp-cntv:not(.tp-v-fst){margin-top:var(--cnt-vp)}.tp-rotv_c>.tp-sprv+*:not(.tp-v-hidden),.tp-tbpv_c>.tp-sprv+*:not(.tp-v-hidden),.tp-fldv_c>.tp-sprv+*:not(.tp-v-hidden),.tp-rotv_c>.tp-cntv+*:not(.tp-v-hidden),.tp-tbpv_c>.tp-cntv+*:not(.tp-v-hidden),.tp-fldv_c>.tp-cntv+*:not(.tp-v-hidden){margin-top:var(--cnt-vp)}.tp-rotv_c>.tp-sprv:not(.tp-v-hidden)+.tp-sprv,.tp-tbpv_c>.tp-sprv:not(.tp-v-hidden)+.tp-sprv,.tp-fldv_c>.tp-sprv:not(.tp-v-hidden)+.tp-sprv,.tp-rotv_c>.tp-cntv:not(.tp-v-hidden)+.tp-cntv,.tp-tbpv_c>.tp-cntv:not(.tp-v-hidden)+.tp-cntv,.tp-fldv_c>.tp-cntv:not(.tp-v-hidden)+.tp-cntv{margin-top:0}.tp-tbpv_c>.tp-cntv,.tp-fldv_c>.tp-cntv{margin-left:4px}.tp-tbpv_c>.tp-fldv>.tp-fldv_b,.tp-fldv_c>.tp-fldv>.tp-fldv_b{border-top-left-radius:var(--bld-br);border-bottom-left-radius:var(--bld-br)}.tp-tbpv_c>.tp-fldv.tp-fldv-expanded>.tp-fldv_b,.tp-fldv_c>.tp-fldv.tp-fldv-expanded>.tp-fldv_b{border-bottom-left-radius:0}.tp-tbpv_c .tp-fldv>.tp-fldv_c,.tp-fldv_c .tp-fldv>.tp-fldv_c{border-bottom-left-radius:var(--bld-br)}.tp-tbpv_c>.tp-cntv+.tp-fldv>.tp-fldv_b,.tp-fldv_c>.tp-cntv+.tp-fldv>.tp-fldv_b{border-top-left-radius:0}.tp-tbpv_c>.tp-cntv+.tp-tabv>.tp-tabv_t,.tp-fldv_c>.tp-cntv+.tp-tabv>.tp-tabv_t{border-top-left-radius:0}.tp-tbpv_c>.tp-tabv>.tp-tabv_t,.tp-fldv_c>.tp-tabv>.tp-tabv_t{border-top-left-radius:var(--bld-br)}.tp-tbpv_c .tp-tabv>.tp-tabv_c,.tp-fldv_c .tp-tabv>.tp-tabv_c{border-bottom-left-radius:var(--bld-br)}.tp-rotv_b,.tp-fldv_b{background-color:var(--cnt-bg);color:var(--cnt-fg);cursor:pointer;display:block;height:calc(var(--cnt-usz) + 4px);line-height:calc(var(--cnt-usz) + 4px);overflow:hidden;padding-left:var(--cnt-hp);padding-right:calc(4px + var(--cnt-usz) + var(--cnt-hp));position:relative;text-align:left;text-overflow:ellipsis;white-space:nowrap;width:100%;transition:border-radius .2s ease-in-out .2s}.tp-rotv_b:hover,.tp-fldv_b:hover{background-color:var(--cnt-bg-h)}.tp-rotv_b:focus,.tp-fldv_b:focus{background-color:var(--cnt-bg-f)}.tp-rotv_b:active,.tp-fldv_b:active{background-color:var(--cnt-bg-a)}.tp-rotv_b:disabled,.tp-fldv_b:disabled{opacity:.5}.tp-rotv_m,.tp-fldv_m{background:linear-gradient(to left, var(--cnt-fg), var(--cnt-fg) 2px, transparent 2px, transparent 4px, var(--cnt-fg) 4px);border-radius:2px;bottom:0;content:\"\";display:block;height:6px;right:calc(var(--cnt-hp) + (var(--cnt-usz) + 4px - 6px)/2 - 2px);margin:auto;opacity:.5;position:absolute;top:0;transform:rotate(90deg);transition:transform .2s ease-in-out;width:6px}.tp-rotv.tp-rotv-expanded .tp-rotv_m,.tp-fldv.tp-fldv-expanded>.tp-fldv_b>.tp-fldv_m{transform:none}.tp-rotv_c,.tp-fldv_c{box-sizing:border-box;height:0;opacity:0;overflow:hidden;padding-bottom:0;padding-top:0;position:relative;transition:height .2s ease-in-out,opacity .2s linear,padding .2s ease-in-out}.tp-rotv.tp-rotv-cpl:not(.tp-rotv-expanded) .tp-rotv_c,.tp-fldv.tp-fldv-cpl:not(.tp-fldv-expanded)>.tp-fldv_c{display:none}.tp-rotv.tp-rotv-expanded .tp-rotv_c,.tp-fldv.tp-fldv-expanded>.tp-fldv_c{opacity:1;padding-bottom:var(--cnt-vp);padding-top:var(--cnt-vp);transform:none;overflow:visible;transition:height .2s ease-in-out,opacity .2s linear .2s,padding .2s ease-in-out}.tp-txtv_i,.tp-p2dpv_p,.tp-colswv_sw{background-color:var(--in-bg);border-radius:var(--bld-br);box-sizing:border-box;color:var(--in-fg);font-family:inherit;height:var(--cnt-usz);line-height:var(--cnt-usz);min-width:0;width:100%}.tp-txtv_i:hover,.tp-p2dpv_p:hover,.tp-colswv_sw:hover{background-color:var(--in-bg-h)}.tp-txtv_i:focus,.tp-p2dpv_p:focus,.tp-colswv_sw:focus{background-color:var(--in-bg-f)}.tp-txtv_i:active,.tp-p2dpv_p:active,.tp-colswv_sw:active{background-color:var(--in-bg-a)}.tp-txtv_i:disabled,.tp-p2dpv_p:disabled,.tp-colswv_sw:disabled{opacity:.5}.tp-lstv,.tp-coltxtv_m{position:relative}.tp-lstv_s{padding:0 20px 0 4px;width:100%}.tp-lstv_m,.tp-coltxtv_mm{bottom:0;margin:auto;pointer-events:none;position:absolute;right:2px;top:0}.tp-lstv_m svg,.tp-coltxtv_mm svg{bottom:0;height:16px;margin:auto;position:absolute;right:0;top:0;width:16px}.tp-lstv_m svg path,.tp-coltxtv_mm svg path{fill:currentColor}.tp-sglv_i,.tp-mllv_i,.tp-grlv_g{background-color:var(--mo-bg);border-radius:var(--bld-br);box-sizing:border-box;color:var(--mo-fg);height:var(--cnt-usz);scrollbar-color:currentColor rgba(0,0,0,0);scrollbar-width:thin;width:100%}.tp-sglv_i::-webkit-scrollbar,.tp-mllv_i::-webkit-scrollbar,.tp-grlv_g::-webkit-scrollbar{height:8px;width:8px}.tp-sglv_i::-webkit-scrollbar-corner,.tp-mllv_i::-webkit-scrollbar-corner,.tp-grlv_g::-webkit-scrollbar-corner{background-color:rgba(0,0,0,0)}.tp-sglv_i::-webkit-scrollbar-thumb,.tp-mllv_i::-webkit-scrollbar-thumb,.tp-grlv_g::-webkit-scrollbar-thumb{background-clip:padding-box;background-color:currentColor;border:rgba(0,0,0,0) solid 2px;border-radius:4px}.tp-pndtxtv,.tp-coltxtv_w{display:flex}.tp-pndtxtv_a,.tp-coltxtv_c{width:100%}.tp-pndtxtv_a+.tp-pndtxtv_a,.tp-coltxtv_c+.tp-pndtxtv_a,.tp-pndtxtv_a+.tp-coltxtv_c,.tp-coltxtv_c+.tp-coltxtv_c{margin-left:2px}.tp-rotv{--bs-bg: var(--tp-base-background-color, hsl(230, 7%, 17%));--bs-br: var(--tp-base-border-radius, 6px);--bs-ff: var(--tp-base-font-family, Roboto Mono, Source Code Pro, Menlo, Courier, monospace);--bs-sh: var(--tp-base-shadow-color, rgba(0, 0, 0, 0.2));--bld-br: var(--tp-blade-border-radius, 2px);--bld-hp: var(--tp-blade-horizontal-padding, 4px);--bld-vw: var(--tp-blade-value-width, 160px);--btn-bg: var(--tp-button-background-color, hsl(230, 7%, 70%));--btn-bg-a: var(--tp-button-background-color-active, #d6d7db);--btn-bg-f: var(--tp-button-background-color-focus, #c8cad0);--btn-bg-h: var(--tp-button-background-color-hover, #bbbcc4);--btn-fg: var(--tp-button-foreground-color, hsl(230, 7%, 17%));--cnt-bg: var(--tp-container-background-color, rgba(187, 188, 196, 0.1));--cnt-bg-a: var(--tp-container-background-color-active, rgba(187, 188, 196, 0.25));--cnt-bg-f: var(--tp-container-background-color-focus, rgba(187, 188, 196, 0.2));--cnt-bg-h: var(--tp-container-background-color-hover, rgba(187, 188, 196, 0.15));--cnt-fg: var(--tp-container-foreground-color, hsl(230, 7%, 75%));--cnt-hp: var(--tp-container-horizontal-padding, 4px);--cnt-vp: var(--tp-container-vertical-padding, 4px);--cnt-usp: var(--tp-container-unit-spacing, 4px);--cnt-usz: var(--tp-container-unit-size, 20px);--in-bg: var(--tp-input-background-color, rgba(187, 188, 196, 0.1));--in-bg-a: var(--tp-input-background-color-active, rgba(187, 188, 196, 0.25));--in-bg-f: var(--tp-input-background-color-focus, rgba(187, 188, 196, 0.2));--in-bg-h: var(--tp-input-background-color-hover, rgba(187, 188, 196, 0.15));--in-fg: var(--tp-input-foreground-color, hsl(230, 7%, 75%));--lbl-fg: var(--tp-label-foreground-color, rgba(187, 188, 196, 0.7));--mo-bg: var(--tp-monitor-background-color, rgba(0, 0, 0, 0.2));--mo-fg: var(--tp-monitor-foreground-color, rgba(187, 188, 196, 0.7));--grv-fg: var(--tp-groove-foreground-color, rgba(187, 188, 196, 0.1))}.tp-btnv_b{width:100%}.tp-btnv_t{text-align:center}.tp-ckbv_l{display:block;position:relative}.tp-ckbv_i{left:0;opacity:0;position:absolute;top:0}.tp-ckbv_w{background-color:var(--in-bg);border-radius:var(--bld-br);cursor:pointer;display:block;height:var(--cnt-usz);position:relative;width:var(--cnt-usz)}.tp-ckbv_w svg{display:block;height:16px;inset:0;margin:auto;opacity:0;position:absolute;width:16px}.tp-ckbv_w svg path{fill:none;stroke:var(--in-fg);stroke-width:2}.tp-ckbv_i:hover+.tp-ckbv_w{background-color:var(--in-bg-h)}.tp-ckbv_i:focus+.tp-ckbv_w{background-color:var(--in-bg-f)}.tp-ckbv_i:active+.tp-ckbv_w{background-color:var(--in-bg-a)}.tp-ckbv_i:checked+.tp-ckbv_w svg{opacity:1}.tp-ckbv.tp-v-disabled .tp-ckbv_w{opacity:.5}.tp-colv{position:relative}.tp-colv_h{display:flex}.tp-colv_s{flex-grow:0;flex-shrink:0;width:var(--cnt-usz)}.tp-colv_t{flex:1;margin-left:4px}.tp-colv_p{height:0;margin-top:0;opacity:0;overflow:hidden;transition:height .2s ease-in-out,opacity .2s linear,margin .2s ease-in-out}.tp-colv.tp-colv-expanded.tp-colv-cpl .tp-colv_p{overflow:visible}.tp-colv.tp-colv-expanded .tp-colv_p{margin-top:var(--cnt-usp);opacity:1}.tp-colv .tp-popv{left:calc(-1*var(--cnt-hp));right:calc(-1*var(--cnt-hp));top:var(--cnt-usz)}.tp-colpv_h,.tp-colpv_ap{margin-left:6px;margin-right:6px}.tp-colpv_h{margin-top:var(--cnt-usp)}.tp-colpv_rgb{display:flex;margin-top:var(--cnt-usp);width:100%}.tp-colpv_a{display:flex;margin-top:var(--cnt-vp);padding-top:calc(var(--cnt-vp) + 2px);position:relative}.tp-colpv_a::before{background-color:var(--grv-fg);content:\"\";height:2px;left:calc(-1*var(--cnt-hp));position:absolute;right:calc(-1*var(--cnt-hp));top:0}.tp-colpv.tp-v-disabled .tp-colpv_a::before{opacity:.5}.tp-colpv_ap{align-items:center;display:flex;flex:3}.tp-colpv_at{flex:1;margin-left:4px}.tp-svpv{border-radius:var(--bld-br);outline:none;overflow:hidden;position:relative}.tp-svpv.tp-v-disabled{opacity:.5}.tp-svpv_c{cursor:crosshair;display:block;height:calc(var(--cnt-usz)*4);width:100%}.tp-svpv_m{border-radius:100%;border:rgba(255,255,255,.75) solid 2px;box-sizing:border-box;filter:drop-shadow(0 0 1px rgba(0, 0, 0, 0.3));height:12px;margin-left:-6px;margin-top:-6px;pointer-events:none;position:absolute;width:12px}.tp-svpv:focus .tp-svpv_m{border-color:#fff}.tp-hplv{cursor:pointer;height:var(--cnt-usz);outline:none;position:relative}.tp-hplv.tp-v-disabled{opacity:.5}.tp-hplv_c{background-image:url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAAABCAYAAABubagXAAAAQ0lEQVQoU2P8z8Dwn0GCgQEDi2OK/RBgYHjBgIpfovFh8j8YBIgzFGQxuqEgPhaDOT5gOhPkdCxOZeBg+IDFZZiGAgCaSSMYtcRHLgAAAABJRU5ErkJggg==);background-position:left top;background-repeat:no-repeat;background-size:100% 100%;border-radius:2px;display:block;height:4px;left:0;margin-top:-2px;position:absolute;top:50%;width:100%}.tp-hplv_m{border-radius:var(--bld-br);border:rgba(255,255,255,.75) solid 2px;box-shadow:0 0 2px rgba(0,0,0,.1);box-sizing:border-box;height:12px;left:50%;margin-left:-6px;margin-top:-6px;position:absolute;top:50%;width:12px}.tp-hplv:focus .tp-hplv_m{border-color:#fff}.tp-aplv{cursor:pointer;height:var(--cnt-usz);outline:none;position:relative;width:100%}.tp-aplv.tp-v-disabled{opacity:.5}.tp-aplv_b{background-color:#fff;background-image:linear-gradient(to top right, #ddd 25%, transparent 25%, transparent 75%, #ddd 75%),linear-gradient(to top right, #ddd 25%, transparent 25%, transparent 75%, #ddd 75%);background-size:4px 4px;background-position:0 0,2px 2px;border-radius:2px;display:block;height:4px;left:0;margin-top:-2px;overflow:hidden;position:absolute;top:50%;width:100%}.tp-aplv_c{inset:0;position:absolute}.tp-aplv_m{background-color:#fff;background-image:linear-gradient(to top right, #ddd 25%, transparent 25%, transparent 75%, #ddd 75%),linear-gradient(to top right, #ddd 25%, transparent 25%, transparent 75%, #ddd 75%);background-size:12px 12px;background-position:0 0,6px 6px;border-radius:var(--bld-br);box-shadow:0 0 2px rgba(0,0,0,.1);height:12px;left:50%;margin-left:-6px;margin-top:-6px;overflow:hidden;position:absolute;top:50%;width:12px}.tp-aplv_p{border-radius:var(--bld-br);border:rgba(255,255,255,.75) solid 2px;box-sizing:border-box;inset:0;position:absolute}.tp-aplv:focus .tp-aplv_p{border-color:#fff}.tp-colswv{background-color:#fff;background-image:linear-gradient(to top right, #ddd 25%, transparent 25%, transparent 75%, #ddd 75%),linear-gradient(to top right, #ddd 25%, transparent 25%, transparent 75%, #ddd 75%);background-size:10px 10px;background-position:0 0,5px 5px;border-radius:var(--bld-br);overflow:hidden}.tp-colswv.tp-v-disabled{opacity:.5}.tp-colswv_sw{border-radius:0}.tp-colswv_b{cursor:pointer;display:block;height:var(--cnt-usz);left:0;position:absolute;top:0;width:var(--cnt-usz)}.tp-colswv_b:focus::after{border:rgba(255,255,255,.75) solid 2px;border-radius:var(--bld-br);content:\"\";display:block;inset:0;position:absolute}.tp-coltxtv{display:flex;width:100%}.tp-coltxtv_m{margin-right:4px}.tp-coltxtv_ms{border-radius:var(--bld-br);color:var(--lbl-fg);cursor:pointer;height:var(--cnt-usz);line-height:var(--cnt-usz);padding:0 18px 0 4px}.tp-coltxtv_ms:hover{background-color:var(--in-bg-h)}.tp-coltxtv_ms:focus{background-color:var(--in-bg-f)}.tp-coltxtv_ms:active{background-color:var(--in-bg-a)}.tp-coltxtv_mm{color:var(--lbl-fg)}.tp-coltxtv.tp-v-disabled .tp-coltxtv_mm{opacity:.5}.tp-coltxtv_w{flex:1}.tp-dfwv{position:absolute;top:8px;right:8px;width:256px}.tp-fldv{position:relative}.tp-fldv_t{padding-left:4px}.tp-fldv_b:disabled .tp-fldv_m{display:none}.tp-fldv_c{padding-left:4px}.tp-fldv_i{bottom:0;color:var(--cnt-bg);left:0;overflow:hidden;position:absolute;top:calc(var(--cnt-usz) + 4px);width:max(var(--bs-br),4px)}.tp-fldv_i::before{background-color:currentColor;bottom:0;content:\"\";left:0;position:absolute;top:0;width:4px}.tp-fldv_b:hover+.tp-fldv_i{color:var(--cnt-bg-h)}.tp-fldv_b:focus+.tp-fldv_i{color:var(--cnt-bg-f)}.tp-fldv_b:active+.tp-fldv_i{color:var(--cnt-bg-a)}.tp-fldv.tp-v-disabled>.tp-fldv_i{opacity:.5}.tp-grlv{position:relative}.tp-grlv_g{display:block;height:calc(var(--cnt-usz)*3)}.tp-grlv_g polyline{fill:none;stroke:var(--mo-fg);stroke-linejoin:round}.tp-grlv_t{margin-top:-4px;transition:left .05s,top .05s;visibility:hidden}.tp-grlv_t.tp-grlv_t-a{visibility:visible}.tp-grlv_t.tp-grlv_t-in{transition:none}.tp-grlv.tp-v-disabled .tp-grlv_g{opacity:.5}.tp-grlv .tp-ttv{background-color:var(--mo-fg)}.tp-grlv .tp-ttv::before{border-top-color:var(--mo-fg)}.tp-lblv{align-items:center;display:flex;line-height:1.3;padding-left:var(--cnt-hp);padding-right:var(--cnt-hp)}.tp-lblv.tp-lblv-nol{display:block}.tp-lblv_l{color:var(--lbl-fg);flex:1;-webkit-hyphens:auto;hyphens:auto;overflow:hidden;padding-left:4px;padding-right:16px}.tp-lblv.tp-v-disabled .tp-lblv_l{opacity:.5}.tp-lblv.tp-lblv-nol .tp-lblv_l{display:none}.tp-lblv_v{align-self:flex-start;flex-grow:0;flex-shrink:0;width:var(--bld-vw)}.tp-lblv.tp-lblv-nol .tp-lblv_v{width:100%}.tp-lstv_s{padding:0 20px 0 var(--bld-hp);width:100%}.tp-lstv_m{color:var(--btn-fg)}.tp-sglv_i{padding-left:var(--bld-hp);padding-right:var(--bld-hp)}.tp-sglv.tp-v-disabled .tp-sglv_i{opacity:.5}.tp-mllv_i{display:block;height:calc(var(--cnt-usz)*3);line-height:var(--cnt-usz);padding-left:var(--bld-hp);padding-right:var(--bld-hp);resize:none;white-space:pre}.tp-mllv.tp-v-disabled .tp-mllv_i{opacity:.5}.tp-p2dv{position:relative}.tp-p2dv_h{display:flex}.tp-p2dv_b{height:var(--cnt-usz);margin-right:4px;position:relative;width:var(--cnt-usz)}.tp-p2dv_b svg{display:block;height:16px;left:50%;margin-left:-8px;margin-top:-8px;position:absolute;top:50%;width:16px}.tp-p2dv_b svg path{stroke:currentColor;stroke-width:2}.tp-p2dv_b svg circle{fill:currentColor}.tp-p2dv_t{flex:1}.tp-p2dv_p{height:0;margin-top:0;opacity:0;overflow:hidden;transition:height .2s ease-in-out,opacity .2s linear,margin .2s ease-in-out}.tp-p2dv.tp-p2dv-expanded .tp-p2dv_p{margin-top:var(--cnt-usp);opacity:1}.tp-p2dv .tp-popv{left:calc(-1*var(--cnt-hp));right:calc(-1*var(--cnt-hp));top:var(--cnt-usz)}.tp-p2dpv{padding-left:calc(var(--cnt-usz) + 4px)}.tp-p2dpv_p{cursor:crosshair;height:0;overflow:hidden;padding-bottom:100%;position:relative}.tp-p2dpv.tp-v-disabled .tp-p2dpv_p{opacity:.5}.tp-p2dpv_g{display:block;height:100%;left:0;pointer-events:none;position:absolute;top:0;width:100%}.tp-p2dpv_ax{opacity:.1;stroke:var(--in-fg);stroke-dasharray:1}.tp-p2dpv_l{opacity:.5;stroke:var(--in-fg);stroke-dasharray:1}.tp-p2dpv_m{border:var(--in-fg) solid 1px;border-radius:50%;box-sizing:border-box;height:4px;margin-left:-2px;margin-top:-2px;position:absolute;width:4px}.tp-p2dpv_p:focus .tp-p2dpv_m{background-color:var(--in-fg);border-width:0}.tp-popv{background-color:var(--bs-bg);border-radius:var(--bs-br);box-shadow:0 2px 4px var(--bs-sh);display:none;max-width:var(--bld-vw);padding:var(--cnt-vp) var(--cnt-hp);position:absolute;visibility:hidden;z-index:1000}.tp-popv.tp-popv-v{display:block;visibility:visible}.tp-sldv.tp-v-disabled{opacity:.5}.tp-sldv_t{box-sizing:border-box;cursor:pointer;height:var(--cnt-usz);margin:0 6px;outline:none;position:relative}.tp-sldv_t::before{background-color:var(--in-bg);border-radius:1px;content:\"\";display:block;height:2px;inset:0;margin:auto;position:absolute}.tp-sldv_k{height:100%;left:0;position:absolute;top:0}.tp-sldv_k::before{background-color:var(--in-fg);border-radius:1px;content:\"\";display:block;height:2px;inset:0;margin-bottom:auto;margin-top:auto;position:absolute}.tp-sldv_k::after{background-color:var(--btn-bg);border-radius:var(--bld-br);bottom:0;content:\"\";display:block;height:12px;margin-bottom:auto;margin-top:auto;position:absolute;right:-6px;top:0;width:12px}.tp-sldv_t:hover .tp-sldv_k::after{background-color:var(--btn-bg-h)}.tp-sldv_t:focus .tp-sldv_k::after{background-color:var(--btn-bg-f)}.tp-sldv_t:active .tp-sldv_k::after{background-color:var(--btn-bg-a)}.tp-sldtxtv{display:flex}.tp-sldtxtv_s{flex:2}.tp-sldtxtv_t{flex:1;margin-left:4px}.tp-tabv{position:relative}.tp-tabv_t{align-items:flex-end;color:var(--cnt-bg);display:flex;overflow:hidden;position:relative}.tp-tabv_t:hover{color:var(--cnt-bg-h)}.tp-tabv_t:has(*:focus){color:var(--cnt-bg-f)}.tp-tabv_t:has(*:active){color:var(--cnt-bg-a)}.tp-tabv_t::before{background-color:currentColor;bottom:0;content:\"\";height:2px;left:0;pointer-events:none;position:absolute;right:0}.tp-tabv.tp-v-disabled .tp-tabv_t::before{opacity:.5}.tp-tabv.tp-tabv-nop .tp-tabv_t{height:calc(var(--cnt-usz) + 4px);position:relative}.tp-tabv.tp-tabv-nop .tp-tabv_t::before{background-color:var(--cnt-bg);bottom:0;content:\"\";height:2px;left:0;position:absolute;right:0}.tp-tabv_i{bottom:0;color:var(--cnt-bg);left:0;overflow:hidden;position:absolute;top:calc(var(--cnt-usz) + 4px);width:max(var(--bs-br),4px)}.tp-tabv_i::before{background-color:currentColor;bottom:0;content:\"\";left:0;position:absolute;top:0;width:4px}.tp-tabv_t:hover+.tp-tabv_i{color:var(--cnt-bg-h)}.tp-tabv_t:has(*:focus)+.tp-tabv_i{color:var(--cnt-bg-f)}.tp-tabv_t:has(*:active)+.tp-tabv_i{color:var(--cnt-bg-a)}.tp-tabv.tp-v-disabled>.tp-tabv_i{opacity:.5}.tp-tbiv{flex:1;min-width:0;position:relative}.tp-tbiv+.tp-tbiv{margin-left:2px}.tp-tbiv+.tp-tbiv.tp-v-disabled::before{opacity:.5}.tp-tbiv_b{display:block;padding-left:calc(var(--cnt-hp) + 4px);padding-right:calc(var(--cnt-hp) + 4px);position:relative;width:100%}.tp-tbiv_b:disabled{opacity:.5}.tp-tbiv_b::before{background-color:var(--cnt-bg);content:\"\";inset:0 0 2px;pointer-events:none;position:absolute}.tp-tbiv_b:hover::before{background-color:var(--cnt-bg-h)}.tp-tbiv_b:focus::before{background-color:var(--cnt-bg-f)}.tp-tbiv_b:active::before{background-color:var(--cnt-bg-a)}.tp-tbiv_t{color:var(--cnt-fg);height:calc(var(--cnt-usz) + 4px);line-height:calc(var(--cnt-usz) + 4px);opacity:.5;overflow:hidden;position:relative;text-overflow:ellipsis}.tp-tbiv.tp-tbiv-sel .tp-tbiv_t{opacity:1}.tp-tbpv_c{padding-bottom:var(--cnt-vp);padding-left:4px;padding-top:var(--cnt-vp)}.tp-txtv{position:relative}.tp-txtv_i{padding-left:var(--bld-hp);padding-right:var(--bld-hp)}.tp-txtv.tp-txtv-fst .tp-txtv_i{border-bottom-right-radius:0;border-top-right-radius:0}.tp-txtv.tp-txtv-mid .tp-txtv_i{border-radius:0}.tp-txtv.tp-txtv-lst .tp-txtv_i{border-bottom-left-radius:0;border-top-left-radius:0}.tp-txtv.tp-txtv-num .tp-txtv_i{text-align:right}.tp-txtv.tp-txtv-drg .tp-txtv_i{opacity:.3}.tp-txtv_k{cursor:pointer;height:100%;left:calc(var(--bld-hp) - 5px);position:absolute;top:0;width:12px}.tp-txtv_k::before{background-color:var(--in-fg);border-radius:1px;bottom:0;content:\"\";height:calc(var(--cnt-usz) - 4px);left:50%;margin-bottom:auto;margin-left:-1px;margin-top:auto;opacity:.1;position:absolute;top:0;transition:border-radius .1s,height .1s,transform .1s,width .1s;width:2px}.tp-txtv_k:hover::before,.tp-txtv.tp-txtv-drg .tp-txtv_k::before{opacity:1}.tp-txtv.tp-txtv-drg .tp-txtv_k::before{border-radius:50%;height:4px;transform:translateX(-1px);width:4px}.tp-txtv_g{bottom:0;display:block;height:8px;left:50%;margin:auto;overflow:visible;pointer-events:none;position:absolute;top:0;visibility:hidden;width:100%}.tp-txtv.tp-txtv-drg .tp-txtv_g{visibility:visible}.tp-txtv_gb{fill:none;stroke:var(--in-fg);stroke-dasharray:1}.tp-txtv_gh{fill:none;stroke:var(--in-fg)}.tp-txtv .tp-ttv{margin-left:6px;visibility:hidden}.tp-txtv.tp-txtv-drg .tp-ttv{visibility:visible}.tp-ttv{background-color:var(--in-fg);border-radius:var(--bld-br);color:var(--bs-bg);padding:2px 4px;pointer-events:none;position:absolute;transform:translate(-50%, -100%)}.tp-ttv::before{border-color:var(--in-fg) rgba(0,0,0,0) rgba(0,0,0,0) rgba(0,0,0,0);border-style:solid;border-width:2px;box-sizing:border-box;content:\"\";font-size:.9em;height:4px;left:50%;margin-left:-2px;position:absolute;top:100%;width:4px}.tp-rotv{background-color:var(--bs-bg);border-radius:var(--bs-br);box-shadow:0 2px 4px var(--bs-sh);font-family:var(--bs-ff);font-size:11px;font-weight:500;line-height:1;text-align:left}.tp-rotv_b{border-bottom-left-radius:var(--bs-br);border-bottom-right-radius:var(--bs-br);border-top-left-radius:var(--bs-br);border-top-right-radius:var(--bs-br);padding-left:calc(4px + var(--cnt-usz) + var(--cnt-hp));text-align:center}.tp-rotv.tp-rotv-expanded .tp-rotv_b{border-bottom-left-radius:0;border-bottom-right-radius:0;transition-delay:0s;transition-duration:0s}.tp-rotv.tp-rotv-not>.tp-rotv_b{display:none}.tp-rotv_b:disabled .tp-rotv_m{display:none}.tp-rotv_c>.tp-fldv.tp-v-lst>.tp-fldv_c{border-bottom-left-radius:var(--bs-br);border-bottom-right-radius:var(--bs-br)}.tp-rotv_c>.tp-fldv.tp-v-lst>.tp-fldv_i{border-bottom-left-radius:var(--bs-br)}.tp-rotv_c>.tp-fldv.tp-v-lst:not(.tp-fldv-expanded)>.tp-fldv_b{border-bottom-left-radius:var(--bs-br);border-bottom-right-radius:var(--bs-br)}.tp-rotv_c>.tp-fldv.tp-v-lst.tp-fldv-expanded>.tp-fldv_b{transition-delay:0s;transition-duration:0s}.tp-rotv_c .tp-fldv.tp-v-vlst:not(.tp-fldv-expanded)>.tp-fldv_b{border-bottom-right-radius:var(--bs-br)}.tp-rotv.tp-rotv-not .tp-rotv_c>.tp-fldv.tp-v-fst{margin-top:calc(-1*var(--cnt-vp))}.tp-rotv.tp-rotv-not .tp-rotv_c>.tp-fldv.tp-v-fst>.tp-fldv_b{border-top-left-radius:var(--bs-br);border-top-right-radius:var(--bs-br)}.tp-rotv_c>.tp-tabv.tp-v-lst>.tp-tabv_c{border-bottom-left-radius:var(--bs-br);border-bottom-right-radius:var(--bs-br)}.tp-rotv_c>.tp-tabv.tp-v-lst>.tp-tabv_i{border-bottom-left-radius:var(--bs-br)}.tp-rotv.tp-rotv-not .tp-rotv_c>.tp-tabv.tp-v-fst{margin-top:calc(-1*var(--cnt-vp))}.tp-rotv.tp-rotv-not .tp-rotv_c>.tp-tabv.tp-v-fst>.tp-tabv_t{border-top-left-radius:var(--bs-br);border-top-right-radius:var(--bs-br)}.tp-rotv.tp-v-disabled,.tp-rotv .tp-v-disabled{pointer-events:none}.tp-rotv.tp-v-hidden,.tp-rotv .tp-v-hidden{display:none}.tp-sprv_r{background-color:var(--grv-fg);border-width:0;display:block;height:2px;margin:0;width:100%}.tp-sprv.tp-v-disabled .tp-sprv_r{opacity:.5}",
+      plugins: [
+        ListBladePlugin,
+        SeparatorBladePlugin,
+        SliderBladePlugin,
+        TabBladePlugin,
+        TextBladePlugin
+      ]
+    });
+  }
+}
+var VERSION = new Semver("4.0.5");
+
+// src/controls/theme.ts
+var studioTheme = {
+  cssVariables: {
+    "--bg": "#0a0e14",
+    "--bg-elevated": "#0f1419",
+    "--muted": "#1a2332",
+    "--text": "#e6edf3",
+    "--text-secondary": "#8b949e",
+    "--accent": "#58d5ff",
+    "--accent-2": "#42a5cc",
+    "--border": "#21262d",
+    "--border-hover": "#30363d",
+    "--success": "#3fb950",
+    "--error": "#f85149"
+  },
+  tweakpane: {
+    "--tp-base-background-color": "var(--bg-elevated)",
+    "--tp-base-shadow-color": "rgba(0, 0, 0, 0.4)",
+    "--tp-button-background-color": "var(--muted)",
+    "--tp-button-background-color-active": "var(--accent-2)",
+    "--tp-button-background-color-focus": "var(--accent)",
+    "--tp-button-background-color-hover": "var(--border-hover)",
+    "--tp-button-foreground-color": "var(--text)",
+    "--tp-container-background-color": "rgba(15, 20, 25, 0.6)",
+    "--tp-container-background-color-active": "rgba(15, 20, 25, 0.8)",
+    "--tp-container-background-color-focus": "rgba(15, 20, 25, 0.9)",
+    "--tp-container-background-color-hover": "rgba(15, 20, 25, 0.7)",
+    "--tp-container-foreground-color": "var(--text)",
+    "--tp-groove-foreground-color": "var(--border)",
+    "--tp-input-background-color": "rgba(26, 35, 50, 0.5)",
+    "--tp-input-background-color-active": "rgba(26, 35, 50, 0.7)",
+    "--tp-input-background-color-focus": "rgba(26, 35, 50, 0.8)",
+    "--tp-input-background-color-hover": "rgba(26, 35, 50, 0.6)",
+    "--tp-input-foreground-color": "var(--text)",
+    "--tp-label-foreground-color": "var(--text-secondary)",
+    "--tp-monitor-background-color": "rgba(26, 35, 50, 0.5)",
+    "--tp-monitor-foreground-color": "var(--text)"
+  }
+};
+function injectThemeVariables() {
+  const style = document.createElement("style");
+  style.id = "hypertool-theme";
+  const cssVars = Object.entries({
+    ...studioTheme.cssVariables,
+    ...studioTheme.tweakpane
+  }).map(([key, value]) => `  ${key}: ${value};`).join(`
+`);
+  style.textContent = `
   body {
    margin: 0;
    padding: 0;
   }
   
 :root {
-${h}
+${cssVars}
 }
 
 /* Tweakpane container styling */
@@ -74,6 +7735,1215 @@ ${h}
     transform: translateX(0);
   }
 }
-`,document.head.appendChild(H)}class DH{constructor(H,h={}){this.pane=null,this.definitions=H,this.options={title:h.title||"Controls",position:h.position||"top-right",expanded:h.expanded!==void 0?h.expanded:!0,container:h.container!==void 0?h.container:null,onChange:h.onChange||(()=>{}),onReady:h.onReady||(()=>{})},this.params=this.extractInitialValues(H),this.init()}extractInitialValues(H){let h={};for(let[D,q]of Object.entries(H))h[D]=q.value;return h}async init(){try{bH(),await new Promise((H)=>setTimeout(H,50)),this.createPane(),this.positionPane(),this.addControls(),this.options.onReady(),console.log("[HypertoolControls] Initialized successfully")}catch(H){console.error("[HypertoolControls] Initialization error:",H)}}createPane(){let H=this.resolveContainer(),h={title:this.options.title,expanded:this.options.expanded};if(H)h.container=H;this.pane=new n0(h)}resolveContainer(){if(typeof document==="undefined")return null;let H=this.options.container;if(!H)return null;if(H instanceof HTMLElement)return H;let h=document.querySelector(H);if(!h)return console.warn(`[HypertoolControls] Container selector "${H}" did not match any elements`),null;return h}positionPane(){if(!this.pane||this.options.container)return;let H=this.pane.element;H.style.position="fixed",H.style.zIndex="10000",{"top-right":()=>{H.style.top="20px",H.style.right="20px"},"top-left":()=>{H.style.top="20px",H.style.left="20px"},"bottom-right":()=>{H.style.bottom="20px",H.style.right="20px"},"bottom-left":()=>{H.style.bottom="20px",H.style.left="20px"}}[this.options.position]()}addControls(){if(!this.pane)return;for(let[H,h]of Object.entries(this.definitions))try{this.addControl(H,h)}catch(D){console.error(`[HypertoolControls] Error adding control "${H}":`,D)}}addControl(H,h){if(!this.pane)return;let D={label:h.label||H};switch(h.type){case"number":if(h.min!==void 0)D.min=h.min;if(h.max!==void 0)D.max=h.max;if(h.step!==void 0)D.step=h.step;break;case"select":D.options=h.options;break;case"color":case"boolean":case"string":break;default:console.warn(`[HypertoolControls] Unknown control type: ${h.type}`);return}this.pane.addBinding(this.params,H,D).on("change",(W)=>{let J=H;this.params[J]=W.value;let Q={key:J,value:W.value,event:W};this.options.onChange(this.values,Q)})}addFolder(H){if(!this.pane)return null;return this.pane.addFolder({title:H})}set(H,h){if(H in this.params){if(this.params[H]=h,this.pane)this.pane.refresh()}}get values(){return{...this.params}}destroy(){if(this.pane)this.pane.dispose(),this.pane=null;let H=document.getElementById("hypertool-theme");if(H)H.remove()}setVisible(H){if(!this.pane)return;this.pane.element.style.display=H?"block":"none"}refresh(){if(this.pane)this.pane.refresh()}}function g0(H,h){return new DH(H,h).params}function p0(H,h){return new DH(H,h)}var g1={};qh(g1,{runtime:()=>wH,mirrorCss:()=>hh,ensureDependencies:()=>Hh,createSandbox:()=>e0,configureRuntime:()=>n1,attachToWindow:()=>Dh});var c0=new Set(["STYLE","LINK"]);class l0{source;target;observer=null;nodeMap=new WeakMap;active=!1;constructor(H={}){this.source=H.sourceDocument??(typeof window!=="undefined"?window.parent?.document??null:null),this.target=H.targetDocument??(typeof document!=="undefined"?document:null),this.active=Boolean(H.mirror??!0)}start(){if(!this.active)return;if(!this.source||!this.target){console.warn("[hyper-frame] Unable to mirror CSS – missing source or target document.");return}this.cleanupPreviousClones(),this.syncAll(),this.attachObserver()}stop(){this.observer?.disconnect(),this.observer=null,this.nodeMap=new WeakMap,this.cleanupPreviousClones()}cleanupPreviousClones(){if(!this.target)return;this.target.querySelectorAll('[data-hyper-frame-clone="true"]').forEach((H)=>H.parentNode?.removeChild(H))}syncAll(){if(!this.source||!this.target)return;let H=this.source.head;Array.from(H.children).filter((D)=>c0.has(D.nodeName)).forEach((D)=>{let q=this.cloneNode(D);if(!q)return;this.target?.head.appendChild(q),this.nodeMap.set(D,q)})}attachObserver(){if(!this.source||!this.target)return;if(this.observer)return;this.observer=new MutationObserver((H)=>{H.forEach((h)=>{switch(h.type){case"childList":this.handleChildListMutation(h);break;case"characterData":this.handleCharacterDataMutation(h);break;case"attributes":this.handleAttributeMutation(h);break}})}),this.observer.observe(this.source.head,{childList:!0,subtree:!0,characterData:!0,attributes:!0})}handleChildListMutation(H){if(!this.target)return;H.removedNodes.forEach((h)=>{let D=this.nodeMap.get(h);if(D&&D.parentNode)D.parentNode.removeChild(D),this.nodeMap.delete(h)}),H.addedNodes.forEach((h)=>{if(!(h instanceof HTMLElement))return;if(!c0.has(h.nodeName))return;let D=this.cloneNode(h);if(!D)return;let q=H.nextSibling?this.nodeMap.get(H.nextSibling):null;if(q&&q.parentNode)q.parentNode.insertBefore(D,q);else this.target?.head.appendChild(D);this.nodeMap.set(h,D)})}handleCharacterDataMutation(H){let D=H.target.parentNode;if(!D)return;let q=this.nodeMap.get(D);if(!q)return;q.textContent=D.textContent}handleAttributeMutation(H){let h=H.target,D=this.nodeMap.get(h);if(!D||!(D instanceof Element))return;if(H.attributeName){let q=h.getAttribute(H.attributeName);if(q===null)D.removeAttribute(H.attributeName);else D.setAttribute(H.attributeName,q)}}cloneNode(H){if(!(H instanceof HTMLElement))return null;if(!c0.has(H.nodeName))return null;let h=H.cloneNode(!0);return h.setAttribute("data-hyper-frame-clone","true"),h}}class r0{controlsApi;constructor(){this.controlsApi=this.resolveControlsApi()}resolveControlsApi(){if(typeof window==="undefined")throw new Error("[hyper-frame] window is not available");let H=window;if(!H.hypertoolControls)throw new Error("[hyper-frame] hypertool controls are not available on window");return H.hypertoolControls}init(H){let h=H.options||{};return this.controlsApi.createControlPanel(H.definitions,{title:h.title,position:h.position,expanded:h.expanded,container:h.container,onChange:(q,W)=>{let J={key:W.key,value:W.value,event:W.event};if(H.onControlChange?.(J),typeof h.onChange==="function")h.onChange(J,H.context)}})}}class o0{container;position;filename;root=null;imageButton=null;videoButton=null;statusLabel=null;statusTimeout=null;userImageCapture=null;userVideoCapture=null;defaultCanvasCaptureEnabled=!1;recording=!1;recorder=null;recordedChunks=[];constructor(H){this.container=H.container,this.position=H.position,this.filename=H.filename??"hyperframe-export",this.mount()}mount(){if(typeof document==="undefined")return;let H=document.createElement("div");H.className="hyper-frame-export-widget",H.dataset.hyperFrame="export-widget",Object.assign(H.style,{position:"fixed",display:"flex",flexDirection:"column",gap:"0.25rem",padding:"0.5rem 0.75rem",borderRadius:"0.75rem",background:"rgba(15, 23, 42, 0.85)",color:"#f8fafc",fontFamily:"Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont",fontSize:"12px",lineHeight:"16px",boxShadow:"0 20px 40px rgba(15, 23, 42, 0.3)",zIndex:"2147483646",pointerEvents:"auto",backdropFilter:"blur(8px)"});let h=document.createElement("div");h.style.display="flex",h.style.flexDirection="row",h.style.alignItems="center",h.style.justifyContent="space-between",h.style.gap="0.5rem";let D=document.createElement("button");D.type="button",D.textContent="Capture PNG",D.style.flex="1 1 auto",D.style.padding="0.35rem 0.6rem",D.style.border="0",D.style.borderRadius="0.5rem",D.style.cursor="pointer",D.style.background="rgba(94, 234, 212, 0.2)",D.style.color="#5eead4",D.style.fontWeight="600";let q=document.createElement("button");q.type="button",q.textContent="Record Video",q.style.flex="1 1 auto",q.style.padding="0.35rem 0.6rem",q.style.border="0",q.style.borderRadius="0.5rem",q.style.cursor="pointer",q.style.background="rgba(129, 140, 248, 0.2)",q.style.color="#a5b4fc",q.style.fontWeight="600",D.addEventListener("click",()=>this.handleImageCapture(),{passive:!0}),q.addEventListener("click",()=>this.toggleRecording(),{passive:!0});let W=document.createElement("span");W.style.display="block",W.style.color="#e2e8f0",W.style.opacity="0.8",W.style.minHeight="16px",h.appendChild(D),h.appendChild(q),H.appendChild(h),H.appendChild(W),this.root=H,this.imageButton=D,this.videoButton=q,this.statusLabel=W,this.applyPosition(),document.body.appendChild(H),this.updateButtonStates()}applyPosition(){if(!this.root)return;let H=this.position??"bottom-right",D={"bottom-right":{bottom:"1rem",right:"1rem",top:"",left:""},"bottom-left":{bottom:"1rem",left:"1rem",top:"",right:""},"top-right":{top:"1rem",right:"1rem",bottom:"",left:""},"top-left":{top:"1rem",left:"1rem",bottom:"",right:""}}[H];Object.assign(this.root.style,D)}setStatus(H,h="default"){if(!this.statusLabel)return;if(this.statusTimeout)window.clearTimeout(this.statusTimeout),this.statusTimeout=null;switch(this.statusLabel.textContent=H,h){case"error":this.statusLabel.style.color="#fca5a5";break;case"success":this.statusLabel.style.color="#bbf7d0";break;default:this.statusLabel.style.color="#e2e8f0"}if(H)this.statusTimeout=window.setTimeout(()=>{if(this.statusLabel)this.statusLabel.textContent="",this.statusLabel.style.color="#e2e8f0";this.statusTimeout=null},4000)}updateButtonStates(){if(this.imageButton)this.imageButton.disabled=!this.getActiveImageCapture(),this.imageButton.style.opacity=this.imageButton.disabled?"0.6":"1";if(this.videoButton){let H=Boolean(this.getActiveVideoCapture());this.videoButton.disabled=!H,this.videoButton.style.opacity=H?"1":"0.6"}}normalizeImageCapture(H){if(!H)return null;if(typeof H==="function")return{capture:H};return{capture:H.capture,filename:H.filename,mimeType:H.mimeType}}normalizeVideoCapture(H){if(!H)return null;return{requestStream:H.requestStream,filename:H.filename,mimeType:H.mimeType,bitsPerSecond:H.bitsPerSecond,timeSlice:H.timeSlice}}getActiveImageCapture(){if(this.userImageCapture)return this.userImageCapture;if(this.defaultCanvasCaptureEnabled)return{capture:()=>this.captureCanvasSnapshot(),filename:void 0,mimeType:"image/png"};return null}getActiveVideoCapture(){if(this.userVideoCapture)return this.userVideoCapture;if(this.defaultCanvasCaptureEnabled)return{requestStream:()=>this.captureCanvasStream(),filename:void 0,mimeType:"video/webm;codecs=vp9"};return null}async captureCanvasSnapshot(){let H=this.container.querySelector("canvas");if(!(H instanceof HTMLCanvasElement))throw new Error("No canvas element available for capture.");return new Promise((h,D)=>{H.toBlob((q)=>{if(q)h(q);else D(new Error("Canvas capture returned an empty blob."))})})}async captureCanvasStream(){let H=this.container.querySelector("canvas");if(!(H instanceof HTMLCanvasElement))throw new Error("No canvas element available for recording.");if(typeof H.captureStream!=="function")throw new Error("Canvas captureStream API is not supported in this browser.");return H.captureStream(60)}async handleImageCapture(){let H=this.getActiveImageCapture();if(!H){this.setStatus("No capture handler available","error");return}try{this.setBusy(!0,"image");let h=await H.capture(),D=await this.resolveCaptureResult(h,H.mimeType??"image/png");if(D){let q=H.filename??`${this.filename}.png`;this.downloadBlob(D,q),this.setStatus("PNG exported","success")}}catch(h){console.error("[hyper-frame] Failed to capture image",h),this.setStatus(h.message||"Failed to capture image","error")}finally{this.setBusy(!1,"image")}}async toggleRecording(){if(this.recording){this.stopRecording();return}let H=this.getActiveVideoCapture();if(!H){this.setStatus("No recorder available","error");return}if(typeof MediaRecorder==="undefined"){this.setStatus("MediaRecorder is not supported in this browser","error");return}try{let h=await H.requestStream();if(!h)throw new Error("Recording stream is not available");this.recordedChunks=[];let D=new MediaRecorder(h,{mimeType:H.mimeType,videoBitsPerSecond:H.bitsPerSecond});D.addEventListener("dataavailable",(q)=>{if(q.data?.size)this.recordedChunks.push(q.data)}),D.addEventListener("stop",()=>{let q=new Blob(this.recordedChunks,{type:H.mimeType??"video/webm"}),W=H.filename??`${this.filename}.webm`;this.downloadBlob(q,W),this.setStatus("Recording saved","success"),h.getTracks().forEach((J)=>J.stop()),this.recording=!1,this.updateRecordingUi()}),D.start(H.timeSlice),this.recorder=D,this.recording=!0,this.setStatus("Recording in progress…"),this.updateRecordingUi()}catch(h){console.error("[hyper-frame] Failed to start recording",h),this.setStatus(h.message||"Failed to record video","error"),this.recording=!1,this.recorder=null,this.updateRecordingUi()}}stopRecording(){if(!this.recorder)return;this.setStatus("Finishing recording…"),this.recorder.stop(),this.recorder=null,this.recording=!1,this.updateRecordingUi()}updateRecordingUi(){if(!this.videoButton)return;this.videoButton.textContent=this.recording?"Stop Recording":"Record Video",this.videoButton.style.background=this.recording?"rgba(248, 113, 113, 0.25)":"rgba(129, 140, 248, 0.2)",this.videoButton.style.color=this.recording?"#fecaca":"#a5b4fc"}async resolveCaptureResult(H,h){if(!H)return null;if(H instanceof Blob)return H;if(typeof H==="string"){if(H.startsWith("data:"))return await(await fetch(H)).blob();return await(await fetch(H)).blob()}if(H instanceof HTMLCanvasElement)return await new Promise((D,q)=>{H.toBlob((W)=>{if(W)D(W);else q(new Error("Canvas export failed."))},h)});if(typeof OffscreenCanvas!=="undefined"&&H instanceof OffscreenCanvas)return await H.convertToBlob({type:h});return null}downloadBlob(H,h){if(typeof window==="undefined")return;let D=URL.createObjectURL(H),q=document.createElement("a");q.href=D,q.download=h,q.rel="noopener",q.style.display="none",document.body.appendChild(q),q.click(),document.body.removeChild(q),URL.revokeObjectURL(D)}setBusy(H,h){let D=h==="image"?this.imageButton:this.videoButton;if(!D)return;D.disabled=H,D.style.opacity=H?"0.6":"1"}setFilename(H){this.filename=H}setVisible(H){if(!this.root)return;this.root.style.display=H?"flex":"none"}registerImageCapture(H){this.userImageCapture=this.normalizeImageCapture(H),this.updateButtonStates()}registerVideoCapture(H){this.userVideoCapture=this.normalizeVideoCapture(H),this.updateButtonStates()}useDefaultCanvasCapture(H=!0){this.defaultCanvasCaptureEnabled=H,this.updateButtonStates()}getApi(){return{registerImageCapture:(H)=>this.registerImageCapture(H),registerVideoCapture:(H)=>this.registerVideoCapture(H),setFilename:(H)=>this.setFilename(H),setVisible:(H)=>this.setVisible(H),useDefaultCanvasCapture:(H)=>this.useDefaultCanvasCapture(H),destroy:()=>this.destroy()}}destroy(){if(this.statusTimeout)window.clearTimeout(this.statusTimeout),this.statusTimeout=null;if(this.root?.parentNode)this.root.parentNode.removeChild(this.root);this.root=null,this.imageButton=null,this.videoButton=null,this.statusLabel=null,this.recorder=null,this.recording=!1,this.recordedChunks=[]}}class a0{pending=new Map;ensure(H){let h=this.createKey(H);if(this.pending.has(h))return this.pending.get(h);let D=this.load(H);return this.pending.set(h,D),D}async ensureAll(H=[]){for(let h of H)await this.ensure(h)}createKey(H){return`${H.type}:${H.url}`}load(H){switch(H.type){case"script":return this.injectScript(H);case"style":return this.injectStyle(H);default:return Promise.reject(new Error(`[hyper-frame] Unsupported dependency type: ${H.type}`))}}injectScript(H){if(typeof document==="undefined")return Promise.reject(new Error("[hyper-frame] document is not available"));if(Array.from(document.querySelectorAll("script")).find((D)=>D.src===H.url))return Promise.resolve();return new Promise((D,q)=>{let W=document.createElement("script");if(W.src=H.url,W.async=!0,W.dataset.hyperFrame="external",H.integrity)W.integrity=H.integrity;if(H.crossOrigin)W.crossOrigin=H.crossOrigin;if(H.attributes)Object.entries(H.attributes).forEach(([J,Q])=>{W.setAttribute(J,Q)});W.addEventListener("load",()=>D(),{once:!0}),W.addEventListener("error",()=>q(new Error(`[hyper-frame] Failed to load script ${H.url}`)),{once:!0}),document.head.appendChild(W)})}injectStyle(H){if(typeof document==="undefined")return Promise.reject(new Error("[hyper-frame] document is not available"));if(Array.from(document.querySelectorAll('link[rel="stylesheet"]')).find((D)=>D.href===H.url))return Promise.resolve();return new Promise((D,q)=>{let W=document.createElement("link");if(W.rel="stylesheet",W.href=H.url,W.dataset.hyperFrame="external",H.attributes)Object.entries(H.attributes).forEach(([J,Q])=>{W.setAttribute(J,Q)});W.addEventListener("load",()=>D(),{once:!0}),W.addEventListener("error",()=>q(new Error(`[hyper-frame] Failed to load stylesheet ${H.url}`)),{once:!0}),document.head.appendChild(W)})}}function i1(H={}){let h=H.documentRef??document;if(!h)throw new Error("[hyper-frame] document is not available");let D=H.containerClassName||"hypertool-sketch",q=H.target;if(q instanceof HTMLElement)return q.classList.add(D),{element:q,createdInternally:!1};if(typeof q==="string"&&q.trim().length>0){let J=h.querySelector(q);if(J)return J.classList.add(D),{element:J,createdInternally:!1};console.warn(`[hyper-frame] Could not find container for selector "${q}", creating one instead.`)}let W=h.createElement("div");return W.classList.add(D),h.body.appendChild(W),{element:W,createdInternally:!0}}function s1(H){while(H.length>0){let h=H.pop();if(h)try{h()}catch(D){console.error("[hyper-frame] cleanup failed",D)}}}class J0{dependencyManager=new a0;cssBridge=null;config;constructor(H={}){this.config=H}async ensureDependencies(H=[]){if(!H.length)return;await this.dependencyManager.ensureAll(H)}mirrorCss(){if(this.cssBridge)return;this.cssBridge=new l0({mirror:this.config.mirrorCss!==!1}),this.cssBridge.start()}async createSandbox(H){if(H.dependencies?.length)await this.ensureDependencies(H.dependencies);if(this.config.mirrorCss!==!1&&H.mirrorCss!==!1)this.mirrorCss();let h=this.createMount(H.mount),D=[],q=(z)=>{if(typeof z==="function")D.push(z)},W=new o0({container:h.container,position:H.exportWidget?.position,filename:H.exportWidget?.filename});if(H.exportWidget?.enabled===!1)W.setVisible(!1);if(H.exportWidget?.useCanvasCapture!==!1)W.useDefaultCanvasCapture(!0);let J=this.createEnvironment(q),Q={mount:h.container,params:{},controls:null,exports:W.getApi(),runtime:this,environment:J},U=null;if(H.controls?.definitions)U=new r0().init({definitions:H.controls.definitions,options:H.controls.options,context:Q,onControlChange:(G)=>{H.controls?.onChange?.(G,Q)}}),Q.controls=U,Q.params=U?.params??{},q(()=>{if(!U)return;if(typeof U.destroy==="function")U.destroy();else if(typeof U.dispose==="function")U.dispose()});q(()=>W.destroy()),q(()=>h.destroy());let Z;try{Z=await H.setup(Q)}catch(z){throw console.error("[hyper-frame] sandbox setup failed",z),s1(D),z}if(typeof Z==="function")q(()=>{try{Z?.()}catch(z){console.error("[hyper-frame] teardown failed",z)}});return{container:h.container,controls:U,params:Q.params,destroy:()=>{s1(D)}}}createEnvironment(H){if(typeof window==="undefined"||typeof document==="undefined")throw new Error("[hyper-frame] window or document is not available");return{window,document,addCleanup:(h)=>{if(typeof h==="function")H(h)},onResize:(h,D)=>{window.addEventListener("resize",h,D);let q=()=>window.removeEventListener("resize",h,D);return H(q),q}}}createMount(H){let h=H,D=i1({target:h?.target,containerClassName:h?.containerClassName});if(typeof h?.onReady==="function")h.onReady({container:D.element});return{container:D.element,destroy:()=>{if(D.createdInternally)D.element.remove()}}}}var c6={mirrorCss:!0},wH=new J0(c6);function n1(H){return new J0(H)}function e0(H){return wH.createSandbox(H)}function Hh(H){return wH.ensureDependencies(H??[])}function hh(){wH.mirrorCss()}function Dh(){if(typeof window==="undefined")return;let H=window,h=H.hyperFrame||{},D={version:"universal",runtime:wH,createSandbox:e0,ensureDependencies:Hh,mirrorCss:hh};H.hyperFrame={...h,...D}}Dh();export{xH as studioTheme,wH as runtime,hh as mirrorCss,bH as injectThemeVariables,g1 as frame,Hh as ensureDependencies,e0 as createSandbox,g0 as createControls,p0 as createControlPanel,t1 as controls,n1 as configureRuntime,Dh as attachToWindow,DH as HypertoolControls};
+`;
+  document.head.appendChild(style);
+}
 
-//# debugId=6E068E417142BF2464756E2164756E21
+// src/controls/HypertoolControls.ts
+class HypertoolControls {
+  constructor(definitions, options = {}) {
+    this.pane = null;
+    this.definitions = definitions;
+    this.options = {
+      title: options.title || "Controls",
+      position: options.position || "top-right",
+      expanded: options.expanded !== undefined ? options.expanded : true,
+      container: options.container !== undefined ? options.container : null,
+      onChange: options.onChange || (() => {}),
+      onReady: options.onReady || (() => {})
+    };
+    this.params = this.extractInitialValues(definitions);
+    this.init();
+  }
+  extractInitialValues(definitions) {
+    const params = {};
+    for (const [key, definition] of Object.entries(definitions)) {
+      params[key] = definition.value;
+    }
+    return params;
+  }
+  async init() {
+    try {
+      injectThemeVariables();
+      await new Promise((resolve) => setTimeout(resolve, 50));
+      this.createPane();
+      this.positionPane();
+      this.addControls();
+      this.options.onReady();
+      console.log("[HypertoolControls] Initialized successfully");
+    } catch (error) {
+      console.error("[HypertoolControls] Initialization error:", error);
+    }
+  }
+  createPane() {
+    const container = this.resolveContainer();
+    const paneOptions = {
+      title: this.options.title,
+      expanded: this.options.expanded
+    };
+    if (container) {
+      paneOptions.container = container;
+    }
+    this.pane = new Pane(paneOptions);
+  }
+  resolveContainer() {
+    if (typeof document === "undefined")
+      return null;
+    const containerOption = this.options.container;
+    if (!containerOption)
+      return null;
+    if (containerOption instanceof HTMLElement) {
+      return containerOption;
+    }
+    const element = document.querySelector(containerOption);
+    if (!element) {
+      console.warn(`[HypertoolControls] Container selector "${containerOption}" did not match any elements`);
+      return null;
+    }
+    return element;
+  }
+  positionPane() {
+    if (!this.pane || this.options.container)
+      return;
+    const container = this.pane.element;
+    container.style.position = "fixed";
+    container.style.zIndex = "10000";
+    const positions = {
+      "top-right": () => {
+        container.style.top = "20px";
+        container.style.right = "20px";
+      },
+      "top-left": () => {
+        container.style.top = "20px";
+        container.style.left = "20px";
+      },
+      "bottom-right": () => {
+        container.style.bottom = "20px";
+        container.style.right = "20px";
+      },
+      "bottom-left": () => {
+        container.style.bottom = "20px";
+        container.style.left = "20px";
+      }
+    };
+    positions[this.options.position]();
+  }
+  addControls() {
+    if (!this.pane)
+      return;
+    for (const [key, definition] of Object.entries(this.definitions)) {
+      try {
+        this.addControl(key, definition);
+      } catch (error) {
+        console.error(`[HypertoolControls] Error adding control "${key}":`, error);
+      }
+    }
+  }
+  addControl(key, definition) {
+    if (!this.pane)
+      return;
+    const config = {
+      label: definition.label || key
+    };
+    switch (definition.type) {
+      case "number":
+        if (definition.min !== undefined)
+          config.min = definition.min;
+        if (definition.max !== undefined)
+          config.max = definition.max;
+        if (definition.step !== undefined)
+          config.step = definition.step;
+        break;
+      case "select":
+        config.options = definition.options;
+        break;
+      case "color":
+      case "boolean":
+      case "string":
+        break;
+      default:
+        console.warn(`[HypertoolControls] Unknown control type: ${definition.type}`);
+        return;
+    }
+    const binding = this.pane.addBinding(this.params, key, config);
+    binding.on("change", (event) => {
+      const typedKey = key;
+      this.params[typedKey] = event.value;
+      const context = {
+        key: typedKey,
+        value: event.value,
+        event
+      };
+      this.options.onChange(this.values, context);
+    });
+  }
+  addFolder(title) {
+    if (!this.pane)
+      return null;
+    return this.pane.addFolder({ title });
+  }
+  set(key, value) {
+    if (key in this.params) {
+      this.params[key] = value;
+      if (this.pane) {
+        this.pane.refresh();
+      }
+    }
+  }
+  get values() {
+    return { ...this.params };
+  }
+  destroy() {
+    if (this.pane) {
+      this.pane.dispose();
+      this.pane = null;
+    }
+    const themeStyle = document.getElementById("hypertool-theme");
+    if (themeStyle) {
+      themeStyle.remove();
+    }
+  }
+  setVisible(visible) {
+    if (!this.pane)
+      return;
+    this.pane.element.style.display = visible ? "block" : "none";
+  }
+  refresh() {
+    if (this.pane) {
+      this.pane.refresh();
+    }
+  }
+}
+// src/controls/simple-api.ts
+function createControls(definitions, options) {
+  const controls = new HypertoolControls(definitions, options);
+  return controls.params;
+}
+function createControlPanel(definitions, options) {
+  return new HypertoolControls(definitions, options);
+}
+// src/frame/index.ts
+var exports_frame = {};
+__export(exports_frame, {
+  runtime: () => runtime,
+  mirrorCss: () => mirrorCss,
+  ensureDependencies: () => ensureDependencies,
+  createSandbox: () => createSandbox,
+  configureRuntime: () => configureRuntime,
+  attachToWindow: () => attachToWindow
+});
+
+// src/frame/cssBridge.ts
+var CLONE_ATTRIBUTE = "data-hyper-frame-clone";
+var SUPPORTED_NODE_NAMES = new Set(["STYLE", "LINK"]);
+var CSS_SYNC_MESSAGE_TYPE = "hyper-frame:css-sync";
+
+class CssBridge {
+  source;
+  target;
+  observer = null;
+  nodeMap = new WeakMap;
+  active = false;
+  messageListener = null;
+  usePostMessage = false;
+  cssNodesById = new Map;
+  constructor(options = {}) {
+    let sourceDoc = null;
+    if (options.sourceDocument) {
+      sourceDoc = options.sourceDocument;
+    } else if (typeof window !== "undefined") {
+      try {
+        sourceDoc = window.parent?.document ?? null;
+      } catch (error) {
+        console.debug("[hyper-frame] Using postMessage for CSS sync (cross-origin)");
+        this.usePostMessage = true;
+        sourceDoc = null;
+      }
+    }
+    this.source = sourceDoc;
+    this.target = options.targetDocument ?? (typeof document !== "undefined" ? document : null);
+    this.active = Boolean(options.mirror ?? true);
+  }
+  start() {
+    if (!this.active)
+      return;
+    if (this.usePostMessage) {
+      this.startPostMessageMode();
+    } else if (this.source && this.target) {
+      this.cleanupPreviousClones();
+      this.syncAll();
+      this.attachObserver();
+    } else {
+      console.warn("[hyper-frame] Unable to mirror CSS – missing source or target document.");
+    }
+  }
+  stop() {
+    this.observer?.disconnect();
+    this.observer = null;
+    this.nodeMap = new WeakMap;
+    this.cleanupPreviousClones();
+    if (this.messageListener && typeof window !== "undefined") {
+      window.removeEventListener("message", this.messageListener);
+      this.messageListener = null;
+    }
+    this.cssNodesById.clear();
+  }
+  startPostMessageMode() {
+    if (!this.target || typeof window === "undefined")
+      return;
+    this.cleanupPreviousClones();
+    this.messageListener = (event) => {
+      if (!event.data || event.data.type !== CSS_SYNC_MESSAGE_TYPE)
+        return;
+      this.handleCssMessage(event.data);
+    };
+    window.addEventListener("message", this.messageListener);
+    console.debug("[hyper-frame] CSS postMessage receiver ready");
+  }
+  handleCssMessage(message) {
+    if (!this.target)
+      return;
+    switch (message.action) {
+      case "init":
+        this.cleanupPreviousClones();
+        this.cssNodesById.clear();
+        break;
+      case "add":
+        if (message.id && message.tagName) {
+          this.addCssNode(message.id, message.tagName, message.attributes, message.textContent);
+        }
+        break;
+      case "remove":
+        if (message.id) {
+          this.removeCssNode(message.id);
+        }
+        break;
+      case "update":
+        if (message.id) {
+          this.updateCssNode(message.id, message.attributes, message.textContent);
+        }
+        break;
+    }
+  }
+  addCssNode(id, tagName, attributes, textContent) {
+    if (!this.target)
+      return;
+    if (this.cssNodesById.has(id))
+      return;
+    const element = document.createElement(tagName);
+    element.setAttribute(CLONE_ATTRIBUTE, "true");
+    element.setAttribute("data-css-id", id);
+    if (attributes) {
+      for (const [key, value] of Object.entries(attributes)) {
+        element.setAttribute(key, value);
+      }
+    }
+    if (textContent) {
+      element.textContent = textContent;
+    }
+    this.target.head.appendChild(element);
+    this.cssNodesById.set(id, element);
+  }
+  removeCssNode(id) {
+    const element = this.cssNodesById.get(id);
+    if (element && element.parentNode) {
+      element.parentNode.removeChild(element);
+      this.cssNodesById.delete(id);
+    }
+  }
+  updateCssNode(id, attributes, textContent) {
+    const element = this.cssNodesById.get(id);
+    if (!element)
+      return;
+    if (attributes) {
+      for (const attr of Array.from(element.attributes)) {
+        if (!attr.name.startsWith("data-")) {
+          element.removeAttribute(attr.name);
+        }
+      }
+      for (const [key, value] of Object.entries(attributes)) {
+        element.setAttribute(key, value);
+      }
+    }
+    if (textContent !== undefined) {
+      element.textContent = textContent;
+    }
+  }
+  cleanupPreviousClones() {
+    if (!this.target)
+      return;
+    this.target.querySelectorAll(`[${CLONE_ATTRIBUTE}="true"]`).forEach((node) => node.parentNode?.removeChild(node));
+  }
+  syncAll() {
+    if (!this.source || !this.target)
+      return;
+    const head = this.source.head;
+    const nodes = Array.from(head.children).filter((node) => SUPPORTED_NODE_NAMES.has(node.nodeName));
+    nodes.forEach((node) => {
+      const clone = this.cloneNode(node);
+      if (!clone)
+        return;
+      this.target?.head.appendChild(clone);
+      this.nodeMap.set(node, clone);
+    });
+  }
+  attachObserver() {
+    if (!this.source || !this.target)
+      return;
+    if (this.observer)
+      return;
+    this.observer = new MutationObserver((mutations) => {
+      mutations.forEach((mutation) => {
+        switch (mutation.type) {
+          case "childList":
+            this.handleChildListMutation(mutation);
+            break;
+          case "characterData":
+            this.handleCharacterDataMutation(mutation);
+            break;
+          case "attributes":
+            this.handleAttributeMutation(mutation);
+            break;
+        }
+      });
+    });
+    this.observer.observe(this.source.head, {
+      childList: true,
+      subtree: true,
+      characterData: true,
+      attributes: true
+    });
+  }
+  handleChildListMutation(mutation) {
+    if (!this.target)
+      return;
+    mutation.removedNodes.forEach((node) => {
+      const mapped = this.nodeMap.get(node);
+      if (mapped && mapped.parentNode) {
+        mapped.parentNode.removeChild(mapped);
+        this.nodeMap.delete(node);
+      }
+    });
+    mutation.addedNodes.forEach((node) => {
+      if (!(node instanceof HTMLElement))
+        return;
+      if (!SUPPORTED_NODE_NAMES.has(node.nodeName))
+        return;
+      const clone = this.cloneNode(node);
+      if (!clone)
+        return;
+      const reference = mutation.nextSibling ? this.nodeMap.get(mutation.nextSibling) : null;
+      if (reference && reference.parentNode) {
+        reference.parentNode.insertBefore(clone, reference);
+      } else {
+        this.target?.head.appendChild(clone);
+      }
+      this.nodeMap.set(node, clone);
+    });
+  }
+  handleCharacterDataMutation(mutation) {
+    const targetNode = mutation.target;
+    const parent = targetNode.parentNode;
+    if (!parent)
+      return;
+    const mappedParent = this.nodeMap.get(parent);
+    if (!mappedParent)
+      return;
+    mappedParent.textContent = parent.textContent;
+  }
+  handleAttributeMutation(mutation) {
+    const target = mutation.target;
+    const mapped = this.nodeMap.get(target);
+    if (!mapped || !(mapped instanceof Element))
+      return;
+    if (mutation.attributeName) {
+      const value = target.getAttribute(mutation.attributeName);
+      if (value === null) {
+        mapped.removeAttribute(mutation.attributeName);
+      } else {
+        mapped.setAttribute(mutation.attributeName, value);
+      }
+    }
+  }
+  cloneNode(node) {
+    if (!(node instanceof HTMLElement))
+      return null;
+    if (!SUPPORTED_NODE_NAMES.has(node.nodeName))
+      return null;
+    const clone = node.cloneNode(true);
+    clone.setAttribute(CLONE_ATTRIBUTE, "true");
+    return clone;
+  }
+}
+
+// src/frame/controlsBridge.ts
+class ControlsBridge {
+  controlsApi;
+  constructor() {
+    this.controlsApi = this.resolveControlsApi();
+  }
+  resolveControlsApi() {
+    if (typeof window === "undefined") {
+      throw new Error("[hyper-frame] window is not available");
+    }
+    const hyperWindow = window;
+    if (!hyperWindow.hypertoolControls) {
+      throw new Error("[hyper-frame] hypertool controls are not available on window");
+    }
+    return hyperWindow.hypertoolControls;
+  }
+  init(options) {
+    const panelOptions = options.options || {};
+    const controls = this.controlsApi.createControlPanel(options.definitions, {
+      title: panelOptions.title,
+      position: panelOptions.position,
+      expanded: panelOptions.expanded,
+      container: panelOptions.container,
+      onChange: (params, changeContext) => {
+        const change = {
+          key: changeContext.key,
+          value: changeContext.value,
+          event: changeContext.event
+        };
+        options.onControlChange?.(change);
+        if (typeof panelOptions.onChange === "function") {
+          panelOptions.onChange(change, options.context);
+        }
+      }
+    });
+    return controls;
+  }
+}
+
+// src/frame/exportBridge.ts
+class ExportBridge {
+  container;
+  position;
+  filename;
+  root = null;
+  imageButton = null;
+  videoButton = null;
+  statusLabel = null;
+  statusTimeout = null;
+  userImageCapture = null;
+  userVideoCapture = null;
+  defaultCanvasCaptureEnabled = false;
+  recording = false;
+  recorder = null;
+  recordedChunks = [];
+  constructor(options) {
+    this.container = options.container;
+    this.position = options.position;
+    this.filename = options.filename ?? "hyperframe-export";
+    this.mount();
+  }
+  mount() {
+    if (typeof document === "undefined") {
+      return;
+    }
+    const root = document.createElement("div");
+    root.className = "hyper-frame-export-widget";
+    root.dataset.hyperFrame = "export-widget";
+    Object.assign(root.style, {
+      position: "fixed",
+      display: "flex",
+      flexDirection: "column",
+      gap: "0.25rem",
+      padding: "0.5rem 0.75rem",
+      borderRadius: "0.75rem",
+      color: "#f8fafc",
+      fontFamily: "Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont",
+      fontSize: "12px",
+      lineHeight: "16px",
+      boxShadow: "0 20px 40px rgba(15, 23, 42, 0.3)",
+      zIndex: "2147483646",
+      pointerEvents: "auto",
+      backdropFilter: "blur(8px)"
+    });
+    const controls = document.createElement("div");
+    controls.style.display = "flex";
+    controls.style.flexDirection = "row";
+    controls.style.alignItems = "center";
+    controls.style.justifyContent = "space-between";
+    controls.style.gap = "0.5rem";
+    const imageButton = document.createElement("button");
+    imageButton.type = "button";
+    imageButton.textContent = "Capture PNG";
+    imageButton.style.flex = "1 1 auto";
+    imageButton.style.padding = "0.35rem 0.6rem";
+    imageButton.style.border = "0";
+    imageButton.style.borderRadius = "0.5rem";
+    imageButton.style.cursor = "pointer";
+    imageButton.style.background = "rgba(94, 234, 212, 0.2)";
+    imageButton.style.color = "#5eead4";
+    imageButton.style.fontWeight = "600";
+    const videoButton = document.createElement("button");
+    videoButton.type = "button";
+    videoButton.textContent = "Record Video";
+    videoButton.style.flex = "1 1 auto";
+    videoButton.style.padding = "0.35rem 0.6rem";
+    videoButton.style.border = "0";
+    videoButton.style.borderRadius = "0.5rem";
+    videoButton.style.cursor = "pointer";
+    videoButton.style.background = "rgba(129, 140, 248, 0.2)";
+    videoButton.style.color = "#a5b4fc";
+    videoButton.style.fontWeight = "600";
+    imageButton.addEventListener("click", () => this.handleImageCapture(), { passive: true });
+    videoButton.addEventListener("click", () => this.toggleRecording(), { passive: true });
+    const status = document.createElement("span");
+    status.style.display = "block";
+    status.style.color = "#e2e8f0";
+    status.style.opacity = "0.8";
+    status.style.minHeight = "16px";
+    controls.appendChild(imageButton);
+    controls.appendChild(videoButton);
+    root.appendChild(controls);
+    root.appendChild(status);
+    this.root = root;
+    this.imageButton = imageButton;
+    this.videoButton = videoButton;
+    this.statusLabel = status;
+    this.applyPosition();
+    document.body.appendChild(root);
+    this.updateButtonStates();
+  }
+  applyPosition() {
+    if (!this.root)
+      return;
+    const position = this.position ?? "top-left";
+    const offsets = {
+      "bottom-right": { bottom: "1rem", right: "1rem", top: "", left: "" },
+      "bottom-left": { bottom: "1rem", left: "1rem", top: "", right: "" },
+      "top-right": { top: "1rem", right: "1rem", bottom: "", left: "" },
+      "top-left": { top: "1rem", left: "1rem", bottom: "", right: "" }
+    };
+    const styles = offsets[position];
+    Object.assign(this.root.style, styles);
+  }
+  setStatus(message, tone = "default") {
+    if (!this.statusLabel)
+      return;
+    if (this.statusTimeout) {
+      window.clearTimeout(this.statusTimeout);
+      this.statusTimeout = null;
+    }
+    this.statusLabel.textContent = message;
+    switch (tone) {
+      case "error":
+        this.statusLabel.style.color = "#fca5a5";
+        break;
+      case "success":
+        this.statusLabel.style.color = "#bbf7d0";
+        break;
+      default:
+        this.statusLabel.style.color = "#e2e8f0";
+    }
+    if (message) {
+      this.statusTimeout = window.setTimeout(() => {
+        if (this.statusLabel) {
+          this.statusLabel.textContent = "";
+          this.statusLabel.style.color = "#e2e8f0";
+        }
+        this.statusTimeout = null;
+      }, 4000);
+    }
+  }
+  updateButtonStates() {
+    if (this.imageButton) {
+      this.imageButton.disabled = !this.getActiveImageCapture();
+      this.imageButton.style.opacity = this.imageButton.disabled ? "0.6" : "1";
+    }
+    if (this.videoButton) {
+      const hasVideo = Boolean(this.getActiveVideoCapture());
+      this.videoButton.disabled = !hasVideo;
+      this.videoButton.style.opacity = hasVideo ? "1" : "0.6";
+    }
+  }
+  normalizeImageCapture(handler) {
+    if (!handler)
+      return null;
+    if (typeof handler === "function") {
+      return { capture: handler };
+    }
+    return {
+      capture: handler.capture,
+      filename: handler.filename,
+      mimeType: handler.mimeType
+    };
+  }
+  normalizeVideoCapture(handler) {
+    if (!handler)
+      return null;
+    return {
+      requestStream: handler.requestStream,
+      filename: handler.filename,
+      mimeType: handler.mimeType,
+      bitsPerSecond: handler.bitsPerSecond,
+      timeSlice: handler.timeSlice
+    };
+  }
+  getActiveImageCapture() {
+    if (this.userImageCapture) {
+      return this.userImageCapture;
+    }
+    if (this.defaultCanvasCaptureEnabled) {
+      return {
+        capture: () => this.captureCanvasSnapshot(),
+        filename: undefined,
+        mimeType: "image/png"
+      };
+    }
+    return null;
+  }
+  getActiveVideoCapture() {
+    if (this.userVideoCapture) {
+      return this.userVideoCapture;
+    }
+    if (this.defaultCanvasCaptureEnabled) {
+      return {
+        requestStream: () => this.captureCanvasStream(),
+        filename: undefined,
+        mimeType: "video/webm;codecs=vp9"
+      };
+    }
+    return null;
+  }
+  async captureCanvasSnapshot() {
+    const canvas = this.container.querySelector("canvas");
+    if (!(canvas instanceof HTMLCanvasElement)) {
+      throw new Error("No canvas element available for capture.");
+    }
+    return new Promise((resolve, reject) => {
+      canvas.toBlob((blob) => {
+        if (blob) {
+          resolve(blob);
+        } else {
+          reject(new Error("Canvas capture returned an empty blob."));
+        }
+      });
+    });
+  }
+  async captureCanvasStream() {
+    const canvas = this.container.querySelector("canvas");
+    if (!(canvas instanceof HTMLCanvasElement)) {
+      throw new Error("No canvas element available for recording.");
+    }
+    if (typeof canvas.captureStream !== "function") {
+      throw new Error("Canvas captureStream API is not supported in this browser.");
+    }
+    return canvas.captureStream(60);
+  }
+  async handleImageCapture() {
+    const handler = this.getActiveImageCapture();
+    if (!handler) {
+      this.setStatus("No capture handler available", "error");
+      return;
+    }
+    try {
+      this.setBusy(true, "image");
+      const result = await handler.capture();
+      const blob = await this.resolveCaptureResult(result, handler.mimeType ?? "image/png");
+      if (blob) {
+        const filename = handler.filename ?? `${this.filename}.png`;
+        this.downloadBlob(blob, filename);
+        this.setStatus("PNG exported", "success");
+      }
+    } catch (error) {
+      console.error("[hyper-frame] Failed to capture image", error);
+      this.setStatus(error.message || "Failed to capture image", "error");
+    } finally {
+      this.setBusy(false, "image");
+    }
+  }
+  async toggleRecording() {
+    if (this.recording) {
+      this.stopRecording();
+      return;
+    }
+    const handler = this.getActiveVideoCapture();
+    if (!handler) {
+      this.setStatus("No recorder available", "error");
+      return;
+    }
+    if (typeof MediaRecorder === "undefined") {
+      this.setStatus("MediaRecorder is not supported in this browser", "error");
+      return;
+    }
+    try {
+      const stream = await handler.requestStream();
+      if (!stream) {
+        throw new Error("Recording stream is not available");
+      }
+      this.recordedChunks = [];
+      const recorder = new MediaRecorder(stream, {
+        mimeType: handler.mimeType,
+        videoBitsPerSecond: handler.bitsPerSecond
+      });
+      recorder.addEventListener("dataavailable", (event) => {
+        if (event.data?.size) {
+          this.recordedChunks.push(event.data);
+        }
+      });
+      recorder.addEventListener("stop", () => {
+        const blob = new Blob(this.recordedChunks, { type: handler.mimeType ?? "video/webm" });
+        const filename = handler.filename ?? `${this.filename}.webm`;
+        this.downloadBlob(blob, filename);
+        this.setStatus("Recording saved", "success");
+        stream.getTracks().forEach((track) => track.stop());
+        this.recording = false;
+        this.updateRecordingUi();
+      });
+      recorder.start(handler.timeSlice);
+      this.recorder = recorder;
+      this.recording = true;
+      this.setStatus("Recording in progress…");
+      this.updateRecordingUi();
+    } catch (error) {
+      console.error("[hyper-frame] Failed to start recording", error);
+      this.setStatus(error.message || "Failed to record video", "error");
+      this.recording = false;
+      this.recorder = null;
+      this.updateRecordingUi();
+    }
+  }
+  stopRecording() {
+    if (!this.recorder) {
+      return;
+    }
+    this.setStatus("Finishing recording…");
+    this.recorder.stop();
+    this.recorder = null;
+    this.recording = false;
+    this.updateRecordingUi();
+  }
+  updateRecordingUi() {
+    if (!this.videoButton)
+      return;
+    this.videoButton.textContent = this.recording ? "Stop Recording" : "Record Video";
+    this.videoButton.style.background = this.recording ? "rgba(248, 113, 113, 0.25)" : "rgba(129, 140, 248, 0.2)";
+    this.videoButton.style.color = this.recording ? "#fecaca" : "#a5b4fc";
+  }
+  async resolveCaptureResult(result, mimeType) {
+    if (!result) {
+      return null;
+    }
+    if (result instanceof Blob) {
+      return result;
+    }
+    if (typeof result === "string") {
+      if (result.startsWith("data:")) {
+        const response2 = await fetch(result);
+        return await response2.blob();
+      }
+      const response = await fetch(result);
+      return await response.blob();
+    }
+    if (result instanceof HTMLCanvasElement) {
+      return await new Promise((resolve, reject) => {
+        result.toBlob((blob) => {
+          if (blob) {
+            resolve(blob);
+          } else {
+            reject(new Error("Canvas export failed."));
+          }
+        }, mimeType);
+      });
+    }
+    if (typeof OffscreenCanvas !== "undefined" && result instanceof OffscreenCanvas) {
+      const blob = await result.convertToBlob({ type: mimeType });
+      return blob;
+    }
+    return null;
+  }
+  downloadBlob(blob, filename) {
+    if (typeof window === "undefined") {
+      return;
+    }
+    const url = URL.createObjectURL(blob);
+    const anchor = document.createElement("a");
+    anchor.href = url;
+    anchor.download = filename;
+    anchor.rel = "noopener";
+    anchor.style.display = "none";
+    document.body.appendChild(anchor);
+    anchor.click();
+    document.body.removeChild(anchor);
+    URL.revokeObjectURL(url);
+  }
+  setBusy(busy, mode) {
+    const button = mode === "image" ? this.imageButton : this.videoButton;
+    if (!button)
+      return;
+    button.disabled = busy;
+    button.style.opacity = busy ? "0.6" : "1";
+  }
+  setFilename(filename) {
+    this.filename = filename;
+  }
+  setVisible(visible) {
+    if (!this.root)
+      return;
+    this.root.style.display = visible ? "flex" : "none";
+  }
+  registerImageCapture(handler) {
+    this.userImageCapture = this.normalizeImageCapture(handler);
+    this.updateButtonStates();
+  }
+  registerVideoCapture(handler) {
+    this.userVideoCapture = this.normalizeVideoCapture(handler);
+    this.updateButtonStates();
+  }
+  useDefaultCanvasCapture(enable = true) {
+    this.defaultCanvasCaptureEnabled = enable;
+    this.updateButtonStates();
+  }
+  getApi() {
+    return {
+      registerImageCapture: (handler) => this.registerImageCapture(handler),
+      registerVideoCapture: (handler) => this.registerVideoCapture(handler),
+      setFilename: (filename) => this.setFilename(filename),
+      setVisible: (visible) => this.setVisible(visible),
+      useDefaultCanvasCapture: (enable) => this.useDefaultCanvasCapture(enable),
+      destroy: () => this.destroy()
+    };
+  }
+  destroy() {
+    if (this.statusTimeout) {
+      window.clearTimeout(this.statusTimeout);
+      this.statusTimeout = null;
+    }
+    if (this.root?.parentNode) {
+      this.root.parentNode.removeChild(this.root);
+    }
+    this.root = null;
+    this.imageButton = null;
+    this.videoButton = null;
+    this.statusLabel = null;
+    this.recorder = null;
+    this.recording = false;
+    this.recordedChunks = [];
+  }
+}
+
+// src/frame/dependencyManager.ts
+class DependencyManager {
+  pending = new Map;
+  ensure(dependency) {
+    const key = this.createKey(dependency);
+    if (this.pending.has(key)) {
+      return this.pending.get(key);
+    }
+    const task = this.load(dependency);
+    this.pending.set(key, task);
+    return task;
+  }
+  async ensureAll(dependencies = []) {
+    for (const dependency of dependencies) {
+      await this.ensure(dependency);
+    }
+  }
+  createKey(dependency) {
+    return `${dependency.type}:${dependency.url}`;
+  }
+  load(dependency) {
+    switch (dependency.type) {
+      case "script":
+        return this.injectScript(dependency);
+      case "style":
+        return this.injectStyle(dependency);
+      default:
+        return Promise.reject(new Error(`[hyper-frame] Unsupported dependency type: ${dependency.type}`));
+    }
+  }
+  injectScript(dependency) {
+    if (typeof document === "undefined") {
+      return Promise.reject(new Error("[hyper-frame] document is not available"));
+    }
+    const existing = Array.from(document.querySelectorAll("script")).find((script) => script.src === dependency.url);
+    if (existing) {
+      return Promise.resolve();
+    }
+    return new Promise((resolve, reject) => {
+      const script = document.createElement("script");
+      script.src = dependency.url;
+      script.async = true;
+      script.dataset.hyperFrame = "external";
+      if (dependency.integrity) {
+        script.integrity = dependency.integrity;
+      }
+      if (dependency.crossOrigin) {
+        script.crossOrigin = dependency.crossOrigin;
+      }
+      if (dependency.attributes) {
+        Object.entries(dependency.attributes).forEach(([key, value]) => {
+          script.setAttribute(key, value);
+        });
+      }
+      script.addEventListener("load", () => resolve(), { once: true });
+      script.addEventListener("error", () => reject(new Error(`[hyper-frame] Failed to load script ${dependency.url}`)), {
+        once: true
+      });
+      document.head.appendChild(script);
+    });
+  }
+  injectStyle(dependency) {
+    if (typeof document === "undefined") {
+      return Promise.reject(new Error("[hyper-frame] document is not available"));
+    }
+    const existing = Array.from(document.querySelectorAll('link[rel="stylesheet"]')).find((link) => link.href === dependency.url);
+    if (existing) {
+      return Promise.resolve();
+    }
+    return new Promise((resolve, reject) => {
+      const link = document.createElement("link");
+      link.rel = "stylesheet";
+      link.href = dependency.url;
+      link.dataset.hyperFrame = "external";
+      if (dependency.attributes) {
+        Object.entries(dependency.attributes).forEach(([key, value]) => {
+          link.setAttribute(key, value);
+        });
+      }
+      link.addEventListener("load", () => resolve(), { once: true });
+      link.addEventListener("error", () => reject(new Error(`[hyper-frame] Failed to load stylesheet ${dependency.url}`)), {
+        once: true
+      });
+      document.head.appendChild(link);
+    });
+  }
+}
+
+// src/frame/utils/dom.ts
+function resolveContainer(options = {}) {
+  const doc = options.documentRef ?? document;
+  if (!doc) {
+    throw new Error("[hyper-frame] document is not available");
+  }
+  const className = options.containerClassName || "hypertool-sketch";
+  const target = options.target;
+  if (target instanceof HTMLElement) {
+    target.classList.add(className);
+    return { element: target, createdInternally: false };
+  }
+  if (typeof target === "string" && target.trim().length > 0) {
+    const node = doc.querySelector(target);
+    if (node) {
+      node.classList.add(className);
+      return { element: node, createdInternally: false };
+    }
+    console.warn(`[hyper-frame] Could not find container for selector "${target}", creating one instead.`);
+  }
+  const container = doc.createElement("div");
+  container.classList.add(className);
+  doc.body.appendChild(container);
+  return { element: container, createdInternally: true };
+}
+
+// src/frame/runtime.ts
+function runCleanups(cleanups) {
+  while (cleanups.length > 0) {
+    const cleanup = cleanups.pop();
+    if (cleanup) {
+      try {
+        cleanup();
+      } catch (error) {
+        console.error("[hyper-frame] cleanup failed", error);
+      }
+    }
+  }
+}
+
+class HyperFrameRuntime {
+  dependencyManager = new DependencyManager;
+  cssBridge = null;
+  config;
+  constructor(config = {}) {
+    this.config = config;
+  }
+  async ensureDependencies(dependencies = []) {
+    if (!dependencies.length) {
+      return;
+    }
+    await this.dependencyManager.ensureAll(dependencies);
+  }
+  mirrorCss() {
+    if (this.cssBridge) {
+      return;
+    }
+    this.cssBridge = new CssBridge({ mirror: this.config.mirrorCss !== false });
+    this.cssBridge.start();
+  }
+  async createSandbox(options) {
+    if (options.dependencies?.length) {
+      await this.ensureDependencies(options.dependencies);
+    }
+    if (this.config.mirrorCss !== false && options.mirrorCss !== false) {
+      this.mirrorCss();
+    }
+    const mount = this.createMount(options.mount);
+    const cleanups = [];
+    const pushCleanup = (cleanup) => {
+      if (typeof cleanup === "function") {
+        cleanups.push(cleanup);
+      }
+    };
+    const exportBridge = new ExportBridge({
+      container: mount.container,
+      position: options.exportWidget?.position,
+      filename: options.exportWidget?.filename
+    });
+    if (options.exportWidget?.enabled === false) {
+      exportBridge.setVisible(false);
+    }
+    if (options.exportWidget?.useCanvasCapture !== false) {
+      exportBridge.useDefaultCanvasCapture(true);
+    }
+    const environment = this.createEnvironment(pushCleanup);
+    const context = {
+      mount: mount.container,
+      params: {},
+      controls: null,
+      exports: exportBridge.getApi(),
+      runtime: this,
+      environment
+    };
+    let controlsHandle = null;
+    if (options.controls?.definitions) {
+      const controlsBridge = new ControlsBridge;
+      controlsHandle = controlsBridge.init({
+        definitions: options.controls.definitions,
+        options: options.controls.options,
+        context,
+        onControlChange: (change) => {
+          options.controls?.onChange?.(change, context);
+        }
+      });
+      context.controls = controlsHandle;
+      context.params = controlsHandle?.params ?? {};
+      pushCleanup(() => {
+        if (!controlsHandle)
+          return;
+        if (typeof controlsHandle.destroy === "function") {
+          controlsHandle.destroy();
+        } else if (typeof controlsHandle.dispose === "function") {
+          controlsHandle.dispose();
+        }
+      });
+    }
+    pushCleanup(() => exportBridge.destroy());
+    pushCleanup(() => mount.destroy());
+    let setupCleanup;
+    try {
+      setupCleanup = await options.setup(context);
+    } catch (error) {
+      console.error("[hyper-frame] sandbox setup failed", error);
+      runCleanups(cleanups);
+      throw error;
+    }
+    if (typeof setupCleanup === "function") {
+      pushCleanup(() => {
+        try {
+          setupCleanup?.();
+        } catch (error) {
+          console.error("[hyper-frame] teardown failed", error);
+        }
+      });
+    }
+    const handle = {
+      container: mount.container,
+      controls: controlsHandle,
+      params: context.params,
+      destroy: () => {
+        runCleanups(cleanups);
+      }
+    };
+    return handle;
+  }
+  createEnvironment(pushCleanup) {
+    if (typeof window === "undefined" || typeof document === "undefined") {
+      throw new Error("[hyper-frame] window or document is not available");
+    }
+    return {
+      window,
+      document,
+      addCleanup: (cleanup) => {
+        if (typeof cleanup === "function") {
+          pushCleanup(cleanup);
+        }
+      },
+      onResize: (handler, options) => {
+        window.addEventListener("resize", handler, options);
+        const dispose = () => window.removeEventListener("resize", handler, options);
+        pushCleanup(dispose);
+        return dispose;
+      }
+    };
+  }
+  createMount(options) {
+    const baseOptions = options;
+    const resolved = resolveContainer({
+      target: baseOptions?.target,
+      containerClassName: baseOptions?.containerClassName
+    });
+    if (typeof baseOptions?.onReady === "function") {
+      baseOptions.onReady({ container: resolved.element });
+    }
+    return {
+      container: resolved.element,
+      destroy: () => {
+        if (resolved.createdInternally) {
+          resolved.element.remove();
+        }
+      }
+    };
+  }
+}
+
+// src/frame/index.ts
+var defaultConfig = { mirrorCss: true };
+var runtime = new HyperFrameRuntime(defaultConfig);
+function configureRuntime(config) {
+  return new HyperFrameRuntime(config);
+}
+function createSandbox(options) {
+  return runtime.createSandbox(options);
+}
+function ensureDependencies(options) {
+  return runtime.ensureDependencies(options ?? []);
+}
+function mirrorCss() {
+  runtime.mirrorCss();
+}
+function attachToWindow() {
+  if (typeof window === "undefined") {
+    return;
+  }
+  const hyperWindow = window;
+  const existing = hyperWindow.hyperFrame || {};
+  const api = {
+    version: "universal",
+    runtime,
+    createSandbox,
+    ensureDependencies,
+    mirrorCss
+  };
+  hyperWindow.hyperFrame = { ...existing, ...api };
+}
+attachToWindow();
+export {
+  studioTheme,
+  runtime,
+  mirrorCss,
+  injectThemeVariables,
+  exports_frame as frame,
+  ensureDependencies,
+  createSandbox,
+  createControls,
+  createControlPanel,
+  exports_controls as controls,
+  configureRuntime,
+  attachToWindow,
+  HypertoolControls
+};
+
+//# debugId=22B8C1EF06D8F10B64756E2164756E21

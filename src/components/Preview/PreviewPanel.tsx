@@ -11,6 +11,7 @@ import { IconDownload, IconTerminal } from "@tabler/icons-react";
 import { config } from "@/config";
 import { Terminal } from "@xterm/xterm";
 import "@xterm/xterm/css/xterm.css";
+import { CssSyncManager } from "./CssSyncManager";
 
 interface PreviewPanelProps {
   files: Record<string, string>;
@@ -64,6 +65,10 @@ export const PreviewPanel = memo(({ files, onDownload }: PreviewPanelProps)=> {
   const terminalRef = useRef<Terminal | null>(null);
   const terminalElRef = useRef<HTMLDivElement | null>(null);
   const shellProcessRef = useRef<WebContainerProcess | null>(null);
+
+  // CSS sync refs
+  const cssSyncManagerRef = useRef<CssSyncManager | null>(null);
+  const iframeRef = useRef<HTMLIFrameElement | null>(null);
 
   const [status, setStatus] = useState<string>("Booting preview runtime…");
   const [error, setError] = useState<string | null>(null);
@@ -225,8 +230,51 @@ export const PreviewPanel = memo(({ files, onDownload }: PreviewPanelProps)=> {
       isMountedRef.current = false;
       devServerRef.current?.kill();
       containerRef.current?.teardown();
+      cssSyncManagerRef.current?.stop();
     };
   }, []);
+
+  // Initialize CSS sync when preview is ready
+  useEffect(() => {
+    if (!previewUrl || !iframeRef.current) {
+      return;
+    }
+
+    const handleIframeLoad = () => {
+      const iframe = iframeRef.current;
+      if (!iframe || !iframe.contentWindow) {
+        console.warn('[PreviewPanel] Iframe window not accessible for CSS sync');
+        return;
+      }
+
+      // Initialize CSS sync manager if not already done
+      if (!cssSyncManagerRef.current) {
+        cssSyncManagerRef.current = new CssSyncManager(document);
+      }
+
+      // Start syncing CSS to the iframe
+      const iframeWindow = iframe.contentWindow;
+      const targetOrigin = new URL(previewUrl).origin;
+      cssSyncManagerRef.current.start(iframeWindow, targetOrigin);
+      console.log('[PreviewPanel] CSS sync started for iframe:', targetOrigin);
+    };
+
+    const iframe = iframeRef.current;
+    if (iframe) {
+      // If iframe is already loaded, start immediately
+      if (iframe.contentWindow) {
+        handleIframeLoad();
+      }
+      // Also listen for load event in case it hasn't loaded yet
+      iframe.addEventListener('load', handleIframeLoad);
+    }
+
+    return () => {
+      if (iframe) {
+        iframe.removeEventListener('load', handleIframeLoad);
+      }
+    };
+  }, [previewUrl]);
 
   useEffect(() => {
     if (typeof window === "undefined") {
@@ -491,10 +539,11 @@ export const PreviewPanel = memo(({ files, onDownload }: PreviewPanelProps)=> {
       <div className="relative flex-1 bg-black">
         {previewUrl ? (
           <iframe
+            ref={iframeRef}
             key={previewUrl}
             src={previewUrl}
             title="Preview"
-            sandbox="allow-forms allow-modals allow-pointer-lock allow-popups allow-same-origin allow-scripts"
+            // sandbox="allow-forms allow-downloads allow-modals allow-pointer-lock allow-popups allow-same-origin allow-scripts"
             className="h-full w-full border-0"
           />
         ) : (

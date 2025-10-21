@@ -204,7 +204,10 @@ if (typeof window !== "undefined") {
 
 function injectLibraryScripts(html: string, scriptSources: ScriptDescriptor[]): string {
   let output = html;
-  const mainScriptTag = '<script type="module" src="./main.tsx"></script>';
+  const mainScriptPatterns = [
+    '<script type="module" src="./main.tsx"></script>',
+    '<script type="module" src="./main.ts"></script>',
+  ];
 
   for (const descriptor of scriptSources) {
     if (output.includes(descriptor.src)) {
@@ -215,16 +218,27 @@ function injectLibraryScripts(html: string, scriptSources: ScriptDescriptor[]): 
       ? `    <script src="${descriptor.src}"></script>`
       : `    <script type="module" src="${descriptor.src}"></script>`;
 
-    if (output.includes(mainScriptTag)) {
-      output = output.replace(mainScriptTag, `${scriptTag}\n    ${mainScriptTag}`);
+    // Try to inject before main script (tsx or ts)
+    let injected = false;
+    for (const mainScriptTag of mainScriptPatterns) {
+      if (output.includes(mainScriptTag)) {
+        output = output.replace(mainScriptTag, `${scriptTag}\n    ${mainScriptTag}`);
+        injected = true;
+        break;
+      }
+    }
+
+    if (injected) {
       continue;
     }
 
+    // Fallback: inject before </body>
     if (output.includes("</body>")) {
       output = output.replace("</body>", `${scriptTag}\n</body>`);
       continue;
     }
 
+    // Last resort: append at end
     output = `${output.trim()}\n${scriptTag}\n`;
   }
 

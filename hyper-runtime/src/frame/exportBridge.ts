@@ -64,7 +64,7 @@ export class ExportBridge {
       gap: '0.25rem',
       padding: '0.5rem 0.75rem',
       borderRadius: '0.75rem',
-      background: 'rgba(15, 23, 42, 0.85)',
+      // background: 'rgba(15, 23, 42, 0.85)',
       color: '#f8fafc',
       fontFamily: 'Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont',
       fontSize: '12px',
@@ -133,7 +133,7 @@ export class ExportBridge {
   private applyPosition() {
     if (!this.root) return;
 
-    const position = this.position ?? 'bottom-right';
+    const position = this.position ?? 'top-left';
     const offsets: Record<string, Partial<CSSStyleDeclaration>> = {
       'bottom-right': { bottom: '1rem', right: '1rem', top: '', left: '' },
       'bottom-left': { bottom: '1rem', left: '1rem', top: '', right: '' },

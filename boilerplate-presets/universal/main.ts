@@ -102,13 +102,18 @@ function initialisePulse(context: SandboxContext) {
       const alpha = Math.max(0, 1 - progress);
       const noise = (params.noise ?? 0.35) * 80;
       const wobble = Math.sin((elapsed * 0.002 + i) * 2.4) * noise;
+
+      // Ensure both radii are non-negative
+      const innerRadius = Math.max(0, radius - 40 + wobble);
+      const outerRadius = Math.max(0, radius + wobble);
+
       const gradient = ctx.createRadialGradient(
         centerX,
         centerY,
-        Math.max(0, radius - 40 + wobble),
+        innerRadius,
         centerX,
         centerY,
-        radius + wobble,
+        outerRadius,
       );
 
       gradient.addColorStop(0, withAlpha(params.accent ?? "#38bdf8", alpha * 0.6));
@@ -116,7 +121,7 @@ function initialisePulse(context: SandboxContext) {
 
       ctx.beginPath();
       ctx.fillStyle = gradient;
-      ctx.arc(centerX, centerY, radius + wobble, 0, Math.PI * 2);
+      ctx.arc(centerX, centerY, outerRadius, 0, Math.PI * 2);
       ctx.fill();
     }
 
@@ -148,7 +153,7 @@ function withAlpha(color: string, alpha: number) {
   }
 
   return computed.replace(/rgba?\(([^)]+)\)/, (_match, parts) => {
-    const [r, g, b] = parts.split(",").map((value) => Number(value.trim()));
+    const [r, g, b] = parts.split(",").map((value: string) => Number(value.trim()));
     return `rgba(${r}, ${g}, ${b}, ${alpha.toFixed(3)})`;
   });
 }

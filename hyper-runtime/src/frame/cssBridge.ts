@@ -1,10 +1,22 @@
 const CLONE_ATTRIBUTE = 'data-hyper-frame-clone';
 const SUPPORTED_NODE_NAMES = new Set(['STYLE', 'LINK']);
 
+// Export for use by parent window CSS sync senders
+export const CSS_SYNC_MESSAGE_TYPE = 'hyper-frame:css-sync';
+
 interface CssBridgeOptions {
   sourceDocument?: Document | null;
   targetDocument?: Document | null;
   mirror?: boolean;
+}
+
+interface CssSyncMessage {
+  type: typeof CSS_SYNC_MESSAGE_TYPE;
+  action: 'init' | 'add' | 'remove' | 'update';
+  id?: string;
+  tagName?: string;
+  attributes?: Record<string, string>;
+  textContent?: string;
 }
 
 type NodeMapping = WeakMap<Node, Node>;
@@ -15,23 +27,46 @@ export class CssBridge {
   private observer: MutationObserver | null = null;
   private nodeMap: NodeMapping = new WeakMap();
   private active = false;
+  private messageListener: ((event: MessageEvent) => void) | null = null;
+  private usePostMessage = false;
+  private cssNodesById = new Map<string, HTMLElement>();
 
   constructor(options: CssBridgeOptions = {}) {
-    this.source = options.sourceDocument ?? (typeof window !== 'undefined' ? window.parent?.document ?? null : null);
+    // Try to access parent document, but handle cross-origin errors gracefully
+    let sourceDoc: Document | null = null;
+    if (options.sourceDocument) {
+      sourceDoc = options.sourceDocument;
+    } else if (typeof window !== 'undefined') {
+      try {
+        // This will throw SecurityError if cross-origin
+        sourceDoc = window.parent?.document ?? null;
+      } catch (error) {
+        // Cross-origin access blocked - use postMessage instead
+        console.debug('[hyper-frame] Using postMessage for CSS sync (cross-origin)');
+        this.usePostMessage = true;
+        sourceDoc = null;
+      }
+    }
+
+    this.source = sourceDoc;
     this.target = options.targetDocument ?? (typeof document !== 'undefined' ? document : null);
     this.active = Boolean(options.mirror ?? true);
   }
 
   start() {
     if (!this.active) return;
-    if (!this.source || !this.target) {
-      console.warn('[hyper-frame] Unable to mirror CSS – missing source or target document.');
-      return;
-    }
 
-    this.cleanupPreviousClones();
-    this.syncAll();
-    this.attachObserver();
+    if (this.usePostMessage) {
+      // Use postMessage for cross-origin CSS sync
+      this.startPostMessageMode();
+    } else if (this.source && this.target) {
+      // Use direct DOM access for same-origin
+      this.cleanupPreviousClones();
+      this.syncAll();
+      this.attachObserver();
+    } else {
+      console.warn('[hyper-frame] Unable to mirror CSS – missing source or target document.');
+    }
   }
 
   stop() {
@@ -39,6 +74,110 @@ export class CssBridge {
     this.observer = null;
     this.nodeMap = new WeakMap();
     this.cleanupPreviousClones();
+
+    if (this.messageListener && typeof window !== 'undefined') {
+      window.removeEventListener('message', this.messageListener);
+      this.messageListener = null;
+    }
+
+    this.cssNodesById.clear();
+  }
+
+  private startPostMessageMode() {
+    if (!this.target || typeof window === 'undefined') return;
+
+    this.cleanupPreviousClones();
+
+    this.messageListener = (event: MessageEvent) => {
+      if (!event.data || event.data.type !== CSS_SYNC_MESSAGE_TYPE) return;
+      this.handleCssMessage(event.data as CssSyncMessage);
+    };
+
+    window.addEventListener('message', this.messageListener);
+    console.debug('[hyper-frame] CSS postMessage receiver ready');
+  }
+
+  private handleCssMessage(message: CssSyncMessage) {
+    if (!this.target) return;
+
+    switch (message.action) {
+      case 'init':
+        // Initial CSS sync - clear and prepare
+        this.cleanupPreviousClones();
+        this.cssNodesById.clear();
+        break;
+
+      case 'add':
+        if (message.id && message.tagName) {
+          this.addCssNode(message.id, message.tagName, message.attributes, message.textContent);
+        }
+        break;
+
+      case 'remove':
+        if (message.id) {
+          this.removeCssNode(message.id);
+        }
+        break;
+
+      case 'update':
+        if (message.id) {
+          this.updateCssNode(message.id, message.attributes, message.textContent);
+        }
+        break;
+    }
+  }
+
+  private addCssNode(id: string, tagName: string, attributes?: Record<string, string>, textContent?: string) {
+    if (!this.target) return;
+    if (this.cssNodesById.has(id)) return; // Already exists
+
+    const element = document.createElement(tagName);
+    element.setAttribute(CLONE_ATTRIBUTE, 'true');
+    element.setAttribute('data-css-id', id);
+
+    if (attributes) {
+      for (const [key, value] of Object.entries(attributes)) {
+        element.setAttribute(key, value);
+      }
+    }
+
+    if (textContent) {
+      element.textContent = textContent;
+    }
+
+    this.target.head.appendChild(element);
+    this.cssNodesById.set(id, element);
+  }
+
+  private removeCssNode(id: string) {
+    const element = this.cssNodesById.get(id);
+    if (element && element.parentNode) {
+      element.parentNode.removeChild(element);
+      this.cssNodesById.delete(id);
+    }
+  }
+
+  private updateCssNode(id: string, attributes?: Record<string, string>, textContent?: string) {
+    const element = this.cssNodesById.get(id);
+    if (!element) return;
+
+    if (attributes) {
+      // Remove old attributes except special ones
+      for (const attr of Array.from(element.attributes)) {
+        if (!attr.name.startsWith('data-')) {
+          element.removeAttribute(attr.name);
+        }
+      }
+
+      // Set new attributes
+      for (const [key, value] of Object.entries(attributes)) {
+        element.setAttribute(key, value);
+      }
+    }
+
+    if (textContent !== undefined) {
+      element.textContent = textContent;
+    }
   }
 
   private cleanupPreviousClones() {
