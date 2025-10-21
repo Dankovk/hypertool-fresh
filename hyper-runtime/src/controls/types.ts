@@ -35,7 +35,10 @@ export interface StringControlDefinition extends BaseControlDefinition {
 export interface SelectControlDefinition extends BaseControlDefinition {
   type: 'select';
   value: string | number;
-  options: Record<string, string | number> | Array<string | number>;
+  options:
+    | Record<string, string | number> // {Label: 'value'}
+    | Array<string | number> // ['value1', 'value2']
+    | Array<{label?: string; text?: string; value: string | number}>; // [{label: 'Label', value: 'value'}]
 }
 
 export type ControlDefinition =

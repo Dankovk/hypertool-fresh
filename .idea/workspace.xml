@@ -4,22 +4,37 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="51bc1ced-b378-46bc-8004-9aa3de836607" name="Changes" comment="moved to webcontainers and zustand">
-      <change afterPath="$PROJECT_DIR$/boilerplate-presets/universal/package.json" afterDir="false" />
+    <list default="true" id="51bc1ced-b378-46bc-8004-9aa3de836607" name="Changes" comment="Gpt-5 model name fix">
+      <change afterPath="$PROJECT_DIR$/boilerplate-presets/maga/index.html" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/boilerplate-presets/maga/main.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/boilerplate-presets/maga/package-lock.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/boilerplate-presets/maga/package.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/boilerplate-presets/maga/sketch.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/boilerplate-presets/maga/tsconfig.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/boilerplate-presets/maga/vite.config.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/boilerplate-presets/start/index.html" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/boilerplate-presets/start/main.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/boilerplate-presets/start/package-lock.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/boilerplate-presets/start/package.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/boilerplate-presets/start/sketch.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/boilerplate-presets/start/tsconfig.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/boilerplate-presets/start/vite.config.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/boilerplate-presets/sviat/index.html" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/boilerplate-presets/sviat/main.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/boilerplate-presets/sviat/package-lock.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/boilerplate-presets/sviat/package.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/boilerplate-presets/sviat/sketch.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/boilerplate-presets/sviat/tsconfig.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/boilerplate-presets/sviat/vite.config.ts" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/boilerplate-presets/universal/index.html" beforeDir="false" afterPath="$PROJECT_DIR$/boilerplate-presets/universal/index.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/boilerplate-presets/universal/main.ts" beforeDir="false" afterPath="$PROJECT_DIR$/boilerplate-presets/universal/main.ts" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/hyper-runtime/dist/controls/index.js" beforeDir="false" afterPath="$PROJECT_DIR$/hyper-runtime/dist/controls/index.js" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/hyper-runtime/dist/controls/index.js.map" beforeDir="false" afterPath="$PROJECT_DIR$/hyper-runtime/dist/controls/index.js.map" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/hyper-runtime/dist/frame/index.js" beforeDir="false" afterPath="$PROJECT_DIR$/hyper-runtime/dist/frame/index.js" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/hyper-runtime/dist/frame/index.js.map" beforeDir="false" afterPath="$PROJECT_DIR$/hyper-runtime/dist/frame/index.js.map" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/hyper-runtime/dist/index.js" beforeDir="false" afterPath="$PROJECT_DIR$/hyper-runtime/dist/index.js" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/hyper-runtime/dist/index.js.map" beforeDir="false" afterPath="$PROJECT_DIR$/hyper-runtime/dist/index.js.map" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/hyper-runtime/src/controls/HypertoolControls.ts" beforeDir="false" afterPath="$PROJECT_DIR$/hyper-runtime/src/controls/HypertoolControls.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/hyper-runtime/src/frame/controlsBridge.ts" beforeDir="false" afterPath="$PROJECT_DIR$/hyper-runtime/src/frame/controlsBridge.ts" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/hyper-runtime/src/frame/cssBridge.ts" beforeDir="false" afterPath="$PROJECT_DIR$/hyper-runtime/src/frame/cssBridge.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/hyper-runtime/src/frame/exportBridge.ts" beforeDir="false" afterPath="$PROJECT_DIR$/hyper-runtime/src/frame/exportBridge.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/next-env.d.ts" beforeDir="false" afterPath="$PROJECT_DIR$/next-env.d.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/components/Preview/PreviewPanel.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/components/Preview/PreviewPanel.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/lib/boilerplate.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/lib/boilerplate.ts" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -80,11 +95,11 @@
     "RunOnceActivity.ShowReadmeOnStart": "true",
     "RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252": "true",
     "RunOnceActivity.git.unshallow": "true",
-    "git-widget-placeholder": "#9 on codex/redesign-hyper-runtime-for-…0dals",
+    "git-widget-placeholder": "main",
     "js.debugger.nextJs.config.created.client": "true",
     "js.debugger.nextJs.config.created.server": "true",
     "junie.onboarding.icon.badge.shown": "true",
-    "last_opened_file_path": "/Users/koristuvac/WebstormProjects/hypertool/fresh-breeze/boilerplate-presets/circle-with-triangle",
+    "last_opened_file_path": "/Users/koristuvac/WebstormProjects/hypertool/fresh-breeze/boilerplate-presets/sviat",
     "node.js.detected.package.eslint": "true",
     "node.js.detected.package.tslint": "true",
     "node.js.selected.package.eslint": "(autodetect)",
@@ -97,9 +112,11 @@
 }]]></component>
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$/boilerplate-presets/sviat" />
+      <recent name="$PROJECT_DIR$/boilerplate-presets/start" />
+      <recent name="$PROJECT_DIR$/boilerplate-presets/maga" />
+      <recent name="$PROJECT_DIR$/boilerplate-presets/universal" />
       <recent name="$PROJECT_DIR$/boilerplate-presets/circle-with-triangle" />
-      <recent name="$PROJECT_DIR$/boilerplate-presets/circle" />
-      <recent name="$PROJECT_DIR$" />
     </key>
     <key name="MoveFile.RECENT_KEYS">
       <recent name="$PROJECT_DIR$/boilerplate-presets/non-migrated" />
@@ -219,7 +236,31 @@
       <option name="project" value="LOCAL" />
       <updated>1760888302524</updated>
     </task>
-    <option name="localTasksCounter" value="11" />
+    <task id="LOCAL-00011" summary="Reorganize">
+      <option name="closed" value="true" />
+      <created>1761060742789</created>
+      <option name="number" value="00011" />
+      <option name="presentableId" value="LOCAL-00011" />
+      <option name="project" value="LOCAL" />
+      <updated>1761060742789</updated>
+    </task>
+    <task id="LOCAL-00012" summary="New example">
+      <option name="closed" value="true" />
+      <created>1761062448852</created>
+      <option name="number" value="00012" />
+      <option name="presentableId" value="LOCAL-00012" />
+      <option name="project" value="LOCAL" />
+      <updated>1761062448852</updated>
+    </task>
+    <task id="LOCAL-00013" summary="Gpt-5 model name fix">
+      <option name="closed" value="true" />
+      <created>1761067118364</created>
+      <option name="number" value="00013" />
+      <option name="presentableId" value="LOCAL-00013" />
+      <option name="project" value="LOCAL" />
+      <updated>1761067118364</updated>
+    </task>
+    <option name="localTasksCounter" value="14" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -244,7 +285,10 @@
     <MESSAGE value="added hyper-frame" />
     <MESSAGE value="Debug with new flow" />
     <MESSAGE value="moved to webcontainers and zustand" />
-    <option name="LAST_COMMIT_MESSAGE" value="moved to webcontainers and zustand" />
+    <MESSAGE value="Reorganize" />
+    <MESSAGE value="New example" />
+    <MESSAGE value="Gpt-5 model name fix" />
+    <option name="LAST_COMMIT_MESSAGE" value="Gpt-5 model name fix" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>

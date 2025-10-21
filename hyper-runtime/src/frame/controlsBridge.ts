@@ -47,6 +47,7 @@ export class ControlsBridge {
   }
 
   init(options: ControlsBridgeInitOptions) {
+
     const panelOptions = options.options || {};
     const controls = this.controlsApi.createControlPanel(options.definitions, {
       title: panelOptions.title,

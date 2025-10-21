@@ -173,6 +173,7 @@ export class HypertoolControls<T extends ControlDefinitions = ControlDefinitions
     const config: any = {
       label: definition.label || key,
     };
+    console.log(definition)
 
     // Type-specific configuration
     switch (definition.type) {
@@ -183,7 +184,31 @@ export class HypertoolControls<T extends ControlDefinitions = ControlDefinitions
         break;
 
       case 'select':
-        config.options = definition.options;
+        console.log(`[HypertoolControls] Adding select control "${key}":`, definition);
+        // Always convert to Tweakpane array format: [{text: 'Label', value: 'value'}, ...]
+        if (Array.isArray(definition.options)) {
+          config.options = definition.options.map((opt) => {
+            // Handle array of objects: [{label: 'X', value: 'x'}] or [{text: 'X', value: 'x'}]
+            if (typeof opt === 'object' && opt !== null) {
+              return {
+                text: opt.label || opt.text || String(opt.value),
+                value: opt.value
+              };
+            }
+            // Handle simple array: ['x', 'y', 'z']
+            return {
+              text: String(opt),
+              value: opt
+            };
+          });
+        } else {
+          // Convert object format {Label: 'value'} to array format
+          config.options = Object.entries(definition.options).map(([text, value]) => ({
+            text,
+            value
+          }));
+        }
+        console.log('[HypertoolControls] Select options for', key, ':', config.options);
         break;
 
       case 'color':

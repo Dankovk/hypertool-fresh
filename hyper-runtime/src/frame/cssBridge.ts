@@ -56,6 +56,8 @@ export class CssBridge {
   start() {
     if (!this.active) return;
 
+
+
     if (this.usePostMessage) {
       // Use postMessage for cross-origin CSS sync
       this.startPostMessageMode();
