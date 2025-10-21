@@ -181,22 +181,43 @@ function injectFrameLibrary(files: FileMap): ScriptDescriptor[] {
     files[FRAME_BUNDLE_PATH] = distCode;
 
     const globalsCode = `
-import { mountP5Sketch, runP5Sketch, startP5Sketch } from "./index.js";
+import {
+  hyperFrameRuntime,
+  startHyperFrame,
+  mountP5Sketch,
+  runP5Sketch,
+  startP5Sketch,
+  mountThreeSketch,
+  runThreeSketch,
+  startThreeSketch,
+} from "./index.js";
 
 if (typeof window !== "undefined") {
   const existing = window.hyperFrame || {};
-  const p5 = Object.assign({}, existing.p5 || {}, {
-    mount: mountP5Sketch,
-    run: runP5Sketch,
-    start: startP5Sketch,
-  });
 
-  window.hyperFrame = Object.assign({}, existing, {
-    mountP5Sketch,
-    runP5Sketch,
-    startP5Sketch,
-    p5,
-  });
+  window.hyperFrame = {
+    ...existing,
+    start: startHyperFrame,
+    registerRenderer: (renderer) => {
+      hyperFrameRuntime.registerRenderer(renderer);
+      return renderer;
+    },
+    syncParentStyles: () => {
+      hyperFrameRuntime.syncParentStyles(true);
+    },
+    p5: {
+      ...(existing.p5 || {}),
+      mount: mountP5Sketch,
+      run: runP5Sketch,
+      start: (options) => startP5Sketch(options),
+    },
+    three: {
+      ...(existing.three || {}),
+      mount: mountThreeSketch,
+      run: runThreeSketch,
+      start: (options) => startThreeSketch(options),
+    },
+  };
 }
 `.trimStart();
 
