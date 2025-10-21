@@ -24,12 +24,18 @@ export type {
 } from "./controls/types";
 
 export {
+  runtime,
+  registerAdapter,
+  start,
+  ensureDependencies,
+  mirrorCss,
   mountP5Sketch,
   runP5Sketch,
   startP5Sketch,
   mountThreeSketch,
   runThreeSketch,
   startThreeSketch,
+  attachToWindow,
 } from "./frame/index";
 
 export type {
@@ -61,8 +67,7 @@ export type {
   ThreeSketchHandler,
   ThreeLifecycleHandlers,
   MountThreeOptions,
-  MountThreeResult,
   RunThreeSketchOptions,
   RunThreeSketchResult,
   StartThreeSketchOptions,
-} from "./frame/index";
+} from "./frame/types";
