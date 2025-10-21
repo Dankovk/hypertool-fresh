@@ -106,7 +106,6 @@ export function listAvailablePresets(): PresetInfo[] {
           const packageJson = JSON.parse(readFileSync(packageJsonPath, "utf8"));
           name = packageJson.name || entry.name;
           description = packageJson.description || "";
-          console.log(packageJson)
         } catch (e) {
           // Ignore invalid package.json
         }
@@ -181,21 +180,31 @@ function injectFrameLibrary(files: FileMap): ScriptDescriptor[] {
     files[FRAME_BUNDLE_PATH] = distCode;
 
     const globalsCode = `
-import { mountP5Sketch, runP5Sketch, startP5Sketch } from "./index.js";
+import {
+  runtime,
+  registerAdapter,
+  start,
+  ensureDependencies,
+  mirrorCss,
+  startInline,
+  inlineAdapter,
+} from "./index.js";
 
 if (typeof window !== "undefined") {
   const existing = window.hyperFrame || {};
-  const p5 = Object.assign({}, existing.p5 || {}, {
-    mount: mountP5Sketch,
-    run: runP5Sketch,
-    start: startP5Sketch,
+
+  const inline = Object.assign({}, existing.inline || {}, {
+    adapter: inlineAdapter,
+    start: startInline,
   });
 
   window.hyperFrame = Object.assign({}, existing, {
-    mountP5Sketch,
-    runP5Sketch,
-    startP5Sketch,
-    p5,
+    runtime,
+    registerAdapter,
+    start,
+    ensureDependencies,
+    mirrorCss,
+    inline,
   });
 }
 `.trimStart();
