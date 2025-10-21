@@ -41,12 +41,47 @@ export class ExportBridge {
   private recording = false;
   private recorder: MediaRecorder | null = null;
   private recordedChunks: Blob[] = [];
+  private supportedVideoFormat: { mimeType: string; extension: string } | null = null;
 
   constructor(options: ExportBridgeOptions) {
     this.container = options.container;
     this.position = options.position;
     this.filename = options.filename ?? 'hyperframe-export';
+    this.detectBestVideoFormat();
     this.mount();
+  }
+
+  /**
+   * Detect the best supported video format for cross-browser compatibility
+   * Priority: MP4/H.264 > WebM/VP9 > WebM/VP8
+   */
+  private detectBestVideoFormat() {
+    if (typeof MediaRecorder === 'undefined') {
+      this.supportedVideoFormat = null;
+      return;
+    }
+
+    // Test formats in order of preference
+    const formats = [
+        { mimeType: 'video/mp4;codecs=h264', extension: 'mp4' },
+      { mimeType: 'video/mp4', extension: 'mp4' },
+      { mimeType: 'video/webm;codecs=h264', extension: 'webm' },
+      { mimeType: 'video/webm;codecs=vp9', extension: 'webm' },
+      { mimeType: 'video/webm;codecs=vp8', extension: 'webm' },
+      { mimeType: 'video/webm', extension: 'webm' },
+    ];
+
+    for (const format of formats) {
+      if (MediaRecorder.isTypeSupported(format.mimeType)) {
+        this.supportedVideoFormat = format;
+        console.log('[ExportBridge] Using video format:', format.mimeType);
+        return;
+      }
+    }
+
+    // Fallback to first supported format
+    this.supportedVideoFormat = formats.find(f => MediaRecorder.isTypeSupported(f.mimeType)) || formats[formats.length - 1];
+    console.warn('[ExportBridge] No preferred format supported, using fallback:', this.supportedVideoFormat.mimeType);
   }
 
   private mount() {
@@ -236,11 +271,14 @@ export class ExportBridge {
     if (this.userVideoCapture) {
       return this.userVideoCapture;
     }
-    if (this.defaultCanvasCaptureEnabled) {
+    if (this.defaultCanvasCaptureEnabled && this.supportedVideoFormat) {
       return {
         requestStream: () => this.captureCanvasStream(),
-        filename: undefined,
-        mimeType: 'video/webm;codecs=vp9',
+        filename: `${this.filename}.${this.supportedVideoFormat.extension}`,
+        mimeType: this.supportedVideoFormat.mimeType,
+        // High quality settings: 10 Mbps for 1080p, scales with resolution
+        bitsPerSecond: 10_000_000,
+        timeSlice: undefined, // Let browser optimize
       };
     }
     return null;
@@ -335,7 +373,7 @@ export class ExportBridge {
 
       recorder.addEventListener('stop', () => {
         const blob = new Blob(this.recordedChunks, { type: handler.mimeType ?? 'video/webm' });
-        const filename = handler.filename ?? `${this.filename}.webm`;
+        const filename = handler.filename ?? `${this.filename}.${this.supportedVideoFormat?.extension ?? 'webm'}`;
         this.downloadBlob(blob, filename);
         this.setStatus('Recording saved', 'success');
         stream.getTracks().forEach((track) => track.stop());
