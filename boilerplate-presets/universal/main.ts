@@ -31,17 +31,78 @@ const controlDefinitions: ControlDefinitions = {
     max: 1,
     step: 0.01,
   },
+  rainbow: {
+    type: "boolean",
+    label: "Rainbow",
+    value: true,
+  },
+  saturation: {
+    type: "number",
+    label: "Saturation",
+    value: 0.9,
+    min: 0,
+    max: 1,
+    step: 0.01,
+  },
+  lightness: {
+    type: "number",
+    label: "Lightness",
+    value: 0.6,
+    min: 0,
+    max: 1,
+    step: 0.01,
+  },
+  ringCount: {
+    type: "number",
+    label: "Rings",
+    value: 14,
+    min: 6,
+    max: 24,
+    step: 1,
+  },
+  ringThickness: {
+    type: "number",
+    label: "Ring Thickness",
+    value: 45,
+    min: 10,
+    max: 80,
+    step: 1,
+  },
+  kaleidoSegments: {
+    type: "number",
+    label: "Kaleido Segments",
+    value: 8,
+    min: 1,
+    max: 12,
+    step: 1,
+  },
+  petalSize: {
+    type: "number",
+    label: "Orb Size",
+    value: 60,
+    min: 20,
+    max: 120,
+    step: 1,
+  },
+  grain: {
+    type: "number",
+    label: "Grain",
+    value: 0.2,
+    min: 0,
+    max: 1,
+    step: 0.01,
+  },
 };
 
 createSandbox({
   controls: {
     definitions: controlDefinitions,
     options: {
-      title: "Pulse", 
+      title: "Hippie Pulse",
     },
   },
   exportWidget: {
-    filename: "hyper-pulse",
+    filename: "hippie-pulse",
     useCanvasCapture: true,
   },
   setup: (context: SandboxContext) => initialisePulse(context),
@@ -63,7 +124,25 @@ function initialisePulse(context: SandboxContext) {
     throw new Error("Unable to obtain 2D rendering context");
   }
 
-  exports.setFilename("hyper-pulse");
+  // Hippie helpers: noise texture for grain overlay
+  const noiseCanvas = document.createElement("canvas");
+  noiseCanvas.width = 128;
+  noiseCanvas.height = 128;
+  const nctx = noiseCanvas.getContext("2d");
+  const updateNoise = () => {
+    if (!nctx) return;
+    const imageData = nctx.createImageData(noiseCanvas.width, noiseCanvas.height);
+    for (let i = 0; i < imageData.data.length; i += 4) {
+      const v = Math.floor(Math.random() * 255);
+      imageData.data[i] = v;
+      imageData.data[i + 1] = v;
+      imageData.data[i + 2] = v;
+      imageData.data[i + 3] = 255;
+    }
+    nctx.putImageData(imageData, 0, 0);
+  };
+
+  exports.setFilename("hippie-pulse");
   exports.useDefaultCanvasCapture(true);
 
   const resize = () => {
@@ -88,6 +167,8 @@ function initialisePulse(context: SandboxContext) {
     const width = canvas.clientWidth;
     const height = canvas.clientHeight;
 
+    // Background
+    ctx.globalCompositeOperation = "source-over";
     ctx.fillStyle = params.background ?? "#020617";
     ctx.fillRect(0, 0, width, height);
 
@@ -95,16 +176,23 @@ function initialisePulse(context: SandboxContext) {
     const centerY = height / 2;
     const maxRadius = Math.sqrt(centerX ** 2 + centerY ** 2);
 
-    const ringCount = 12;
+    const ringCount = Math.max(1, Math.floor(params.ringCount ?? 14));
+    const ringThickness = Math.max(1, Math.floor(params.ringThickness ?? 45));
+    const useRainbow = params.rainbow ?? true;
+
+    if (useRainbow) {
+      ctx.globalCompositeOperation = "lighter";
+    }
+
     for (let i = 0; i < ringCount; i += 1) {
       const progress = ((elapsed * 0.0005 + i / ringCount) % 1);
       const radius = progress * maxRadius;
       const alpha = Math.max(0, 1 - progress);
-      const noise = (params.noise ?? 0.35) * 80;
-      const wobble = Math.sin((elapsed * 0.002 + i) * 2.4) * noise;
 
-      // Ensure both radii are non-negative
-      const innerRadius = Math.max(0, radius - 40 + wobble);
+      const wobbleAmp = (params.noise ?? 0.35) * 80;
+      const wobble = Math.sin((elapsed * 0.002 + i) * 2.4) * wobbleAmp;
+
+      const innerRadius = Math.max(0, radius - ringThickness + wobble);
       const outerRadius = Math.max(0, radius + wobble);
 
       const gradient = ctx.createRadialGradient(
@@ -116,13 +204,64 @@ function initialisePulse(context: SandboxContext) {
         outerRadius,
       );
 
-      gradient.addColorStop(0, withAlpha(params.accent ?? "#38bdf8", alpha * 0.6));
-      gradient.addColorStop(1, withAlpha(params.accent ?? "#38bdf8", 0));
+      let color = params.accent ?? "#38bdf8";
+      if (useRainbow) {
+        const hueBase = (elapsed * 0.02) % 360;
+        const hue = (hueBase + (i * 360) / ringCount) % 360;
+        const sat = Math.max(0, Math.min(1, params.saturation ?? 0.9)) * 100;
+        const lit = Math.max(0, Math.min(1, params.lightness ?? 0.6)) * 100;
+        color = `hsl(${hue.toFixed(1)}deg, ${sat.toFixed(1)}%, ${lit.toFixed(1)}%)`;
+      }
+
+      gradient.addColorStop(0, withAlpha(color, alpha * 0.75));
+      gradient.addColorStop(1, withAlpha(color, 0));
 
       ctx.beginPath();
       ctx.fillStyle = gradient;
       ctx.arc(centerX, centerY, outerRadius, 0, Math.PI * 2);
       ctx.fill();
+    }
+
+    // Kaleidoscopic orbs
+    const segments = Math.max(1, Math.floor(params.kaleidoSegments ?? 8));
+    if (segments > 1) {
+      const petalSize = Math.max(5, Math.floor(params.petalSize ?? 60));
+      const hueBase = (elapsed * 0.02) % 360;
+      for (let s = 0; s < segments; s += 1) {
+        const angle = s * ((Math.PI * 2) / segments) + (elapsed * 0.0006);
+        const r = (Math.sin(elapsed * 0.001 + s) * 0.5 + 0.5) * Math.min(centerX, centerY) * 0.85;
+        const x = centerX + Math.cos(angle) * r;
+        const y = centerY + Math.sin(angle) * r;
+
+        const orbGradient = ctx.createRadialGradient(x, y, 0, x, y, petalSize);
+        const hue = (hueBase + (s * 360) / segments) % 360;
+        const sat = Math.max(0, Math.min(1, params.saturation ?? 0.9)) * 100;
+        const lit = Math.max(0, Math.min(1, params.lightness ?? 0.6)) * 100;
+        const c = useRainbow ? `hsl(${hue.toFixed(1)}deg, ${sat.toFixed(1)}%, ${lit.toFixed(1)}%)` : (params.accent ?? "#38bdf8");
+
+        orbGradient.addColorStop(0, withAlpha(c, 0.85));
+        orbGradient.addColorStop(1, withAlpha(c, 0));
+
+        ctx.beginPath();
+        ctx.fillStyle = orbGradient;
+        ctx.arc(x, y, petalSize, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    }
+
+    // Grain overlay
+    const grainStrength = Math.max(0, Math.min(1, params.grain ?? 0.2));
+    if (grainStrength > 0) {
+      updateNoise();
+      const pattern = ctx.createPattern(noiseCanvas, "repeat");
+      if (pattern) {
+        ctx.save();
+        ctx.globalAlpha = grainStrength * 0.25;
+        ctx.globalCompositeOperation = "source-over";
+        ctx.fillStyle = pattern;
+        ctx.fillRect(0, 0, width, height);
+        ctx.restore();
+      }
     }
 
     animationFrame = window.requestAnimationFrame(render);
