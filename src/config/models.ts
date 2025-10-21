@@ -7,7 +7,7 @@ export interface ModelOption {
 
 export const MODEL_OPTIONS: ModelOption[] = [
   // OpenAI
-  { value: "gpt-5-fast", label: "GPT-5", provider: "OpenAI", tags: ["latest", "fast"] },
+  { value: "gpt-5", label: "GPT-5", provider: "OpenAI", tags: ["latest", "fast"] },
   { value: "gpt-4o", label: "GPT-4o", provider: "OpenAI", tags: ["fast", "creative"] },
   { value: "o1", label: "O1", provider: "OpenAI", tags: ["reasoning"] },
   { value: "o1-mini", label: "O1 Mini", provider: "OpenAI", tags: ["reasoning", "fast"] },
