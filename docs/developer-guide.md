@@ -36,12 +36,12 @@ This note captures the architectural shift we made after commit `21a7514` and ho
 Think of presets as **feature modules**. Every wrapper (loading scripts, controls, messaging) belongs to HyperFrame. Keep feature code in `sketch.ts`, call `hyperFrame.p5.start`, and let the platform handle everything else.
 
 
-1. **HyperFrame Runtime** (`hyper-frame/src/index.ts`)
+1. **HyperFrame Runtime** (`hyper-runtime/src/frame/index.ts`)
     - Owns loading p5 from CDN, waiting for controls, patching lifecycle events, and calling your handlers.
     - Exposed globally via `window.hyperFrame.p5.start`, `run`, and `mount`.
     - Injected automatically when boilerplate files are loaded (see `ensureSystemFiles`).
 
-2. **@hypertool/controls** (`controls-lib`)
+2. **@hypertool/runtime/controls** (`hyper-runtime/src/controls`)
     - Translates `controlDefinitions` into a styled Tweakpane experience consistent with Studio.
     - Handles change events and exposes helpers that HyperFrame consumes.
 
@@ -92,8 +92,8 @@ Think of presets as **feature modules**. Every wrapper (loading scripts, control
 
 ## 6. Key Files to Know
 
-- `hyper-frame/src/index.ts`: HyperFrame runtime; add new capabilities here.
-- `controls-lib/src/HypertoolControls.ts`: Styled Tweakpane wrapper.
+- `hyper-runtime/src/frame/index.ts`: HyperFrame runtime; add new capabilities here.
+- `hyper-runtime/src/controls/HypertoolControls.ts`: Styled Tweakpane wrapper.
 - `src/lib/boilerplate.ts`: Injects runtime bundles and rewrites `index.html`.
 - `src/app/api/ai/route.ts`: Shapes AI prompts and merges responses.
 - `boilerplate-presets/circle/sketch.ts`: Example reference implementation of the new pattern.

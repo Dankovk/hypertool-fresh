@@ -53,6 +53,31 @@ function getPackageJson(files: Record<string, string>): string {
   return files["/package.json"] ?? files["package.json"] ?? "";
 }
 
+function accumulateHash(seed: number, value: string): number {
+  let hash = seed;
+  for (let index = 0; index < value.length; index += 1) {
+    hash = (hash * 31 + value.charCodeAt(index)) | 0;
+  }
+  return hash;
+}
+
+function computeFileMapHash(files: Record<string, string>): string {
+  const entries = Object.entries(files).sort(([a], [b]) => a.localeCompare(b));
+  let hash = 0;
+  let totalLength = 0;
+
+  for (const [path, contents] of entries) {
+    totalLength += path.length + contents.length;
+    hash = accumulateHash(hash, path);
+    hash = accumulateHash(hash, "\u0000");
+    hash = accumulateHash(hash, String(contents.length));
+    hash = accumulateHash(hash, "\u0000");
+    hash = accumulateHash(hash, contents);
+  }
+
+  return `${hash >>> 0}:${entries.length}:${totalLength}`;
+}
+
 export const PreviewPanel = memo(({ files, onDownload }: PreviewPanelProps)=> {
   const isMountedRef = useRef(true);
   const containerRef = useRef<WebContainerInstance | null>(null);
@@ -474,8 +499,7 @@ export const PreviewPanel = memo(({ files, onDownload }: PreviewPanelProps)=> {
     }
 
     // Create a hash of file contents to detect actual changes
-    const filesHash = JSON.stringify(Object.keys(files).sort()) +
-                      JSON.stringify(Object.values(files).map(v => v.substring(0, 100)));
+    const filesHash = computeFileMapHash(files);
 
     // Only sync if files actually changed
     if (lastSyncedFilesHashRef.current === filesHash) {

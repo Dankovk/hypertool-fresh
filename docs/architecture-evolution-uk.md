@@ -12,12 +12,12 @@
 
 ## 2. Нова модель
 
-1. **HyperFrame** (`hyper-frame/src/index.ts`)
+1. **HyperFrame** (`hyper-runtime/src/frame/index.ts`)
    - Сам завантажує p5 з CDN, чекає поки піднімуться контролли і лише тоді викликає хендлери з пресету.
    - Експортує глобальний `window.hyperFrame.p5.start/run/mount`.
    - Підклеюється до файлової мапи автоматично (`ensureSystemFiles`).
 
-2. **@hypertool/controls**
+2. **@hypertool/runtime/controls**
    - Читає `controlDefinitions`, малює Tweakpane з темою Studio, передає івенти назад у HyperFrame.
 
 3. **Контракт пресету**
@@ -54,8 +54,8 @@
 
 ## 6. Ключові файли
 
-- `hyper-frame/src/index.ts` – рантайм, тут додаємо платформенні можливості.
-- `controls-lib/src/HypertoolControls.ts` – тема та логіка контролів.
+- `hyper-runtime/src/frame/index.ts` – рантайм, тут додаємо платформенні можливості.
+- `hyper-runtime/src/controls/HypertoolControls.ts` – тема та логіка контролів.
 - `src/lib/boilerplate.ts` – інʼєкція системних скриптів та переписування `index.html`.
 - `src/app/api/ai/route.ts` – формування промптів і післяобробка відповідей.
 - `boilerplate-presets/circle/sketch.ts` – зразок нового патерну.
