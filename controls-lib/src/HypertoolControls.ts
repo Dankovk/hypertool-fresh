@@ -91,6 +91,9 @@ export class HypertoolControls<T extends ControlDefinitions = ControlDefinitions
     }
 
     this.pane = new Pane(paneOptions);
+    
+    // Add controls-container class for styling
+    this.pane.element.parentElement?.classList.add('controls-container');
   }
 
   /**

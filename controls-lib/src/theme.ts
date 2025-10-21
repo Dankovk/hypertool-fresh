@@ -117,23 +117,23 @@ export function injectThemeVariables() {
 ${cssVars}
 }
 
-.hypertool-three-sketch {
-  width: calc(100% - 256px) !important;
+
+.controls-container {
+  top: 0 !important;
+  right: 0 !important;
+  height: 100%;
+  // background: var(--tp-base-background-color);
+  border-radius: 0 !important;
+  z-index: 10000;
 }
 
-.hypertool-three-sketch canvas {
+.hyper-frame-container {
+  /* width: calc(100% - 256px) !important; */
+}
+
+.hyper-frame-container canvas {
   width: 100% !important;
 }
-
-.tp-dfwv {
-    top: 0 !important;
-    right: 0 !important;
-    height: 100%;
-    background: var(--tp-base-background-color);
-    border-radius: 0 !important;
-    z-index: 10000;
-}
-
 
 .tp-rotv {
     font-family: var(--ht-base-font-family-mono) !important;

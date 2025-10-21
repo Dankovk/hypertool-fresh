@@ -150,6 +150,7 @@ function resolveContainer(options: MountOptions): { element: HTMLElement; create
 
   const container = document.createElement('div');
   container.classList.add(className);
+  container.classList.add('hyper-frame-container');
   document.body.appendChild(container);
   return { element: container, createdInternally: true };
 }
