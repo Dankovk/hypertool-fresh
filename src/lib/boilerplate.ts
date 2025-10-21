@@ -125,10 +125,10 @@ export function listAvailablePresets(): PresetInfo[] {
   return presets;
 }
 
-const CONTROLS_DIST_RELATIVE_PATH = "controls-lib/dist/index.js";
+const CONTROLS_DIST_RELATIVE_PATH = "hyper-runtime/dist/controls/index.js";
 const CONTROLS_BUNDLE_PATH = "/__hypertool__/controls/index.js";
 const CONTROLS_GLOBALS_PATH = "/__hypertool__/controls/globals.js";
-const FRAME_DIST_RELATIVE_PATH = "hyper-frame/dist/index.js";
+const FRAME_DIST_RELATIVE_PATH = "hyper-runtime/dist/frame/index.js";
 const FRAME_BUNDLE_PATH = "/__hypertool__/frame/index.js";
 const FRAME_GLOBALS_PATH = "/__hypertool__/frame/globals.js";
 
@@ -255,4 +255,11 @@ export function ensureSystemFiles(original: FileMap): FileMap {
   }
 
   return files;
+}
+
+export function loadRuntimeBundles(): FileMap {
+  const files = ensureSystemFiles({});
+  return Object.fromEntries(
+    Object.entries(files).filter(([path]) => path.startsWith("/__hypertool__/")),
+  );
 }

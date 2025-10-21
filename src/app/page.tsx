@@ -89,6 +89,134 @@ export default function HomePage() {
     URL.revokeObjectURL(url);
   }, [files]);
 
+  useEffect(() => {
+    if (process.env.NODE_ENV !== "development") {
+      return;
+    }
+
+    let active = true;
+    let eventSource: EventSource | null = null;
+    let reconnectTimer: number | null = null;
+    let refreshTimer: number | null = null;
+
+    const fetchBundles = async () => {
+      try {
+        const response = await fetch("/api/runtime-watch/snapshot");
+        if (!response.ok) {
+          return null;
+        }
+
+        const json = await response.json();
+        if (!json || typeof json !== "object" || !json.bundles) {
+          return null;
+        }
+
+        return json.bundles as Record<string, string>;
+      } catch (error) {
+        return null;
+      }
+    };
+
+    const scheduleRefresh = () => {
+      if (refreshTimer) {
+        clearTimeout(refreshTimer);
+      }
+
+      refreshTimer = window.setTimeout(async () => {
+        if (!active) {
+          return;
+        }
+
+        const runtimeFiles = await fetchBundles();
+        if (!runtimeFiles || !active) {
+          return;
+        }
+
+        const currentFiles = useFilesStore.getState().files;
+        let changed = false;
+        const nextFiles = { ...currentFiles };
+
+        for (const [path, contents] of Object.entries(runtimeFiles)) {
+          if (!path.startsWith("/__hypertool__/")) {
+            continue;
+          }
+
+          if (nextFiles[path] !== contents) {
+            nextFiles[path] = contents;
+            changed = true;
+          }
+        }
+
+        if (changed) {
+          setFiles(nextFiles);
+        }
+      }, 250);
+    };
+
+    const connect = () => {
+      if (!active) {
+        return;
+      }
+
+      if (eventSource) {
+        eventSource.close();
+      }
+
+      const source = new EventSource("/api/runtime-watch");
+      eventSource = source;
+
+      source.addEventListener("ready", () => {
+        if (!active) {
+          return;
+        }
+        scheduleRefresh();
+      });
+
+      source.onmessage = (event) => {
+        if (!event.data || !active) {
+          return;
+        }
+
+        try {
+          const payload = JSON.parse(event.data);
+          if (payload && typeof payload.file === "string" && payload.file.endsWith(".d.ts")) {
+            return;
+          }
+        } catch (error) {
+          // Ignore invalid payloads
+        }
+
+        scheduleRefresh();
+      };
+
+      source.onerror = () => {
+        source.close();
+        if (!active) {
+          return;
+        }
+        if (reconnectTimer) {
+          clearTimeout(reconnectTimer);
+        }
+        reconnectTimer = window.setTimeout(connect, 2000);
+      };
+    };
+
+    connect();
+
+    return () => {
+      active = false;
+      if (refreshTimer) {
+        clearTimeout(refreshTimer);
+      }
+      if (reconnectTimer) {
+        clearTimeout(reconnectTimer);
+      }
+      if (eventSource) {
+        eventSource.close();
+      }
+    };
+  }, [setFiles]);
+
   return (
     <div className="grid h-screen grid-cols-studio gap-4 p-4">
       <ChatPanel

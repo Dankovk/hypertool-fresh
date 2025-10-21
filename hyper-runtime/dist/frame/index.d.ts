@@ -108,7 +108,7 @@ export interface RunP5SketchResult {
     getInstance(): P5Instance | null;
 }
 /**
- * High level helper that wires up controls-lib and p5 mounting in one call.
+ * High level helper that wires up the controls runtime and p5 mounting in one call.
  */
 export declare function runP5Sketch(options: RunP5SketchOptions): RunP5SketchResult;
 export interface StartP5SketchOptions extends RunP5SketchOptions {
@@ -124,3 +124,82 @@ export interface StartP5SketchOptions extends RunP5SketchOptions {
  * Bootstrap a p5 sketch by ensuring p5 and the controls library are ready.
  */
 export declare function startP5Sketch(options: StartP5SketchOptions): Promise<RunP5SketchResult>;
+export type ThreeInstance = any;
+export interface ThreeContext {
+    scene: any;
+    camera: any;
+    renderer: any;
+    controls?: any;
+}
+export interface ThreeSketchContext {
+    params: Record<string, any>;
+    controls: any;
+    getThreeContext(): ThreeContext | null;
+}
+export type ThreeSketchHandler = (three: ThreeContext, context: ThreeSketchContext, ...args: any[]) => void;
+export interface ThreeLifecycleHandlers {
+    setup?: ThreeSketchHandler;
+    animate?: ThreeSketchHandler;
+    resize?: ThreeSketchHandler;
+    dispose?: () => void;
+}
+export interface MountThreeOptions {
+    target?: HTMLElement | string | null;
+    containerClassName?: string;
+    camera?: {
+        type?: 'perspective' | 'orthographic';
+        fov?: number;
+        near?: number;
+        far?: number;
+        position?: [number, number, number];
+    };
+    renderer?: {
+        antialias?: boolean;
+        alpha?: boolean;
+        preserveDrawingBuffer?: boolean;
+    };
+    orbitControls?: boolean;
+    onReady?: (context: ThreeContext) => void;
+}
+export interface MountThreeResult {
+    container: HTMLElement;
+    getContext(): ThreeContext | null;
+    destroy(): void;
+    startAnimation(): void;
+    stopAnimation(): void;
+}
+/**
+ * Mount a Three.js scene with basic setup
+ */
+export declare function mountThreeSketch(handlers: ThreeLifecycleHandlers, options?: MountThreeOptions): MountThreeResult;
+export interface RunThreeSketchOptions {
+    controlDefinitions: ControlDefinitions;
+    handlers: ThreeLifecycleHandlers;
+    controls?: ControlPanelOptions;
+    mount?: MountThreeOptions;
+}
+export interface RunThreeSketchResult {
+    params: Record<string, any>;
+    controls: any;
+    context: ThreeSketchContext;
+    threeContext: ThreeContext;
+    destroy(): void;
+    getInstance(): ThreeContext | null;
+}
+/**
+ * High level helper that wires up the controls runtime and Three.js mounting in one call.
+ */
+export declare function runThreeSketch(options: RunThreeSketchOptions): RunThreeSketchResult;
+export interface StartThreeSketchOptions extends RunThreeSketchOptions {
+    readiness?: {
+        maxAttempts?: number;
+    };
+}
+/**
+ * Bootstrap a Three.js sketch by ensuring Three.js and the controls library are ready.
+ *
+ * Note: Three.js should be imported as a module and exposed on window.THREE
+ * in your sketch entry point.
+ */
+export declare function startThreeSketch(options: StartThreeSketchOptions): Promise<RunThreeSketchResult>;
+//# sourceMappingURL=index.d.ts.map

@@ -274,7 +274,7 @@ function wrapHandlers(
 }
 
 /**
- * High level helper that wires up controls-lib and p5 mounting in one call.
+ * High level helper that wires up the controls runtime and p5 mounting in one call.
  */
 export function runP5Sketch(options: RunP5SketchOptions): RunP5SketchResult {
   const controlsApi = getHypertoolControls();
@@ -734,7 +734,7 @@ export interface RunThreeSketchResult {
 }
 
 /**
- * High level helper that wires up controls-lib and Three.js mounting in one call.
+ * High level helper that wires up the controls runtime and Three.js mounting in one call.
  */
 export function runThreeSketch(options: RunThreeSketchOptions): RunThreeSketchResult {
   const controlsApi = getHypertoolControls();

@@ -3,9 +3,9 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "cd controls-lib && bun run build && cd ../hyper-frame && bun run build && cd .. && next dev --turbo  -p 3030",
-    "build": "cd controls-lib && bun run build && cd ../hyper-frame && bun run build && cd .. && next build --turbo",
-    "build:controls": "cd controls-lib && bun run build",
+    "dev": "node ./scripts/dev-runtime.mjs",
+    "build": "cd hyper-runtime && bun run build && cd .. && next build --turbo",
+    "build:runtime": "cd hyper-runtime && bun run build",
     "start": "next start -p 3030",
     "lint": "next lint",
     "typecheck": "tsc -p tsconfig.json --noEmit"
