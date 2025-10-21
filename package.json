@@ -6,6 +6,7 @@
     "dev": "cd controls-lib && bun run build && cd ../hyper-frame && bun run build && cd .. && next dev --turbo  -p 3030",
     "build": "cd controls-lib && bun run build && cd ../hyper-frame && bun run build && cd .. && next build --turbo",
     "build:controls": "cd controls-lib && bun run build",
+    "build:hyper-frame": "cd hyper-frame && bun run build",
     "start": "next start -p 3030",
     "lint": "next lint",
     "typecheck": "tsc -p tsconfig.json --noEmit"

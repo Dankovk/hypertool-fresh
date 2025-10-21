@@ -214,7 +214,7 @@
   body {
     @apply min-h-screen bg-background font-mono text-text antialiased;
     line-height: 1.6;
-    font-family: var(--ht-base-font-family-base);
+    font-family: var(--ht-base-font-family-display);
   }
 
   a {

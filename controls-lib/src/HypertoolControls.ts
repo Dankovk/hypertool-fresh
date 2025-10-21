@@ -62,7 +62,7 @@ export class HypertoolControls<T extends ControlDefinitions = ControlDefinitions
       this.createPane();
 
       // Position the pane
-      this.positionPane();
+      // this.positionPane();
 
       // Add controls
       this.addControls();
@@ -91,6 +91,9 @@ export class HypertoolControls<T extends ControlDefinitions = ControlDefinitions
     }
 
     this.pane = new Pane(paneOptions);
+    
+    // Add controls-container class for styling
+    this.pane.element.parentElement?.classList.add('controls-container');
   }
 
   /**
@@ -124,7 +127,7 @@ export class HypertoolControls<T extends ControlDefinitions = ControlDefinitions
     if (!this.pane || this.options.container) return;
 
     const container = this.pane.element;
-    container.style.position = 'fixed';
+    // container.style.position = 'fixed';
     container.style.zIndex = '10000';
 
     const positions: Record<ControlPosition, () => void> = {
