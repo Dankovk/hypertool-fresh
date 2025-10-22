@@ -292,22 +292,37 @@ export class CssBridge {
     if (!(node instanceof HTMLElement)) return null;
     if (!SUPPORTED_NODE_NAMES.has(node.nodeName)) return null;
 
-    // For LINK tags, fetch CSS and convert to inline STYLE
+    // For LINK tags, handle differently based on rel type
     if (node.nodeName === 'LINK' && node instanceof HTMLLinkElement) {
       const href = node.getAttribute('href');
       const rel = node.getAttribute('rel');
 
-      if (rel === 'stylesheet' && href) {
-        try {
-          const cssContent = await this.fetchCssContent(href);
-          const styleElement = document.createElement('STYLE');
-          styleElement.textContent = cssContent;
-          styleElement.setAttribute(CLONE_ATTRIBUTE, 'true');
-          return styleElement;
-        } catch (error) {
-          console.error(`[CssBridge] Failed to fetch CSS from ${href}:`, error);
-          // Fall through to clone the link tag as-is
+      if (href) {
+        // For stylesheet links, fetch and inline the CSS
+        if (rel === 'stylesheet') {
+          try {
+            const cssContent = await this.fetchCssContent(href);
+            const styleElement = document.createElement('STYLE');
+            styleElement.textContent = cssContent;
+            styleElement.setAttribute(CLONE_ATTRIBUTE, 'true');
+            return styleElement;
+          } catch (error) {
+            console.error(`[CssBridge] Failed to fetch CSS from ${href}:`, error);
+            // Fall through to clone with absolute URL
+          }
         }
+
+        // For non-stylesheet links (preload, etc.), convert href to absolute URL
+        const clone = node.cloneNode(true) as HTMLElement;
+        try {
+          const baseUrl = this.source ? new URL(this.source.location.href) : new URL(window.location.href);
+          const absoluteUrl = new URL(href, baseUrl).href;
+          clone.setAttribute('href', absoluteUrl);
+        } catch (error) {
+          console.error(`[CssBridge] Failed to convert URL to absolute: ${href}`, error);
+        }
+        clone.setAttribute(CLONE_ATTRIBUTE, 'true');
+        return clone;
       }
     }
 

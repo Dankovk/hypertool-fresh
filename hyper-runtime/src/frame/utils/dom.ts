@@ -15,7 +15,7 @@ export function resolveContainer(options: ResolveContainerOptions = {}): Resolve
     throw new Error('[hyper-frame] document is not available');
   }
 
-  const className = options.containerClassName || 'hypertool-sketch';
+  const className = options.containerClassName || 'hyper-frame';
   const target = options.target;
 
   if (target instanceof HTMLElement) {

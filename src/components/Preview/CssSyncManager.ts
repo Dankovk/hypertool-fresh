@@ -154,33 +154,54 @@ export class CssSyncManager {
   }
 
   private async sendAddMessage(node: HTMLElement, id: string) {
-    // For LINK tags, fetch the CSS and convert to inline STYLE
+    // For LINK tags, handle differently based on rel type
     if (node.tagName === 'LINK' && node instanceof HTMLLinkElement) {
       const href = node.getAttribute('href');
       const rel = node.getAttribute('rel');
 
-      // Only process stylesheet links
-      if (rel === 'stylesheet' && href) {
-        try {
-          const cssContent = await this.fetchCssContent(href);
-          // Send as a STYLE tag with inline CSS
-          this.postMessage({
-            type: CSS_SYNC_MESSAGE_TYPE,
-            action: 'add',
-            id,
-            tagName: 'STYLE',
-            attributes: {},
-            textContent: cssContent,
-          });
-          return;
-        } catch (error) {
-          console.error(`[CssSyncManager] Failed to fetch CSS from ${href}:`, error);
-          // Fall through to send the link tag as-is
+      if (href) {
+        // For stylesheet links, fetch and inline the CSS
+        if (rel === 'stylesheet') {
+          try {
+            const cssContent = await this.fetchCssContent(href);
+            // Send as a STYLE tag with inline CSS
+            this.postMessage({
+              type: CSS_SYNC_MESSAGE_TYPE,
+              action: 'add',
+              id,
+              tagName: 'STYLE',
+              attributes: {},
+              textContent: cssContent,
+            });
+            return;
+          } catch (error) {
+            console.error(`[CssSyncManager] Failed to fetch CSS from ${href}:`, error);
+            // Fall through to send with absolute URL
+          }
         }
+
+        // For non-stylesheet links (preload, etc.), convert href to absolute URL
+        const attributes = this.getAttributes(node);
+        try {
+          const absoluteUrl = new URL(href, window.location.href).href;
+          attributes['href'] = absoluteUrl;
+        } catch (error) {
+          console.error(`[CssSyncManager] Failed to convert URL to absolute: ${href}`, error);
+        }
+
+        this.postMessage({
+          type: CSS_SYNC_MESSAGE_TYPE,
+          action: 'add',
+          id,
+          tagName: node.tagName,
+          attributes,
+          textContent: node.textContent ?? '',
+        });
+        return;
       }
     }
 
-    // For STYLE tags or failed LINK fetches, send as-is
+    // For STYLE tags or LINK tags without href, send as-is
     this.postMessage({
       type: CSS_SYNC_MESSAGE_TYPE,
       action: 'add',

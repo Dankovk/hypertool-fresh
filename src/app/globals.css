@@ -2,7 +2,10 @@
 @tailwind components;
 @tailwind utilities;
 
-
+.hyper-frame {
+    width: 100vw !important;
+    height: 100vh !important;
+}
 /* Routed Gothic Font Family */
 @font-face {
   font-family: "Routed Gothic";
