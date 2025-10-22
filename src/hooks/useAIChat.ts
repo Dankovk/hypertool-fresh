@@ -117,12 +117,12 @@ export function useAIChat() {
               } else if (event.type === "token") {
                 fullText += event.text;
                 setStreamingText(fullText);
-                updateLastMessage?.(fullText);
+                // Don't update the actual message, only the dev panel
               } else if (event.type === "progress") {
                 // Progress updates (e.g., "Generating edit 1...")
                 fullText += event.text;
                 setStreamingText(fullText);
-                updateLastMessage?.(fullText);
+                // Don't update the actual message, only the dev panel
               } else if (event.type === "complete") {
                 console.log(`[Streaming] Complete! Processing files...`);
 

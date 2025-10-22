@@ -7,7 +7,7 @@ import { DEFAULT_SYSTEM_PROMPT_FULL, DEFAULT_SYSTEM_PROMPT_PATCH } from '@/confi
 import { buildConversationPrompt } from '@/lib/aiService';
 import { normalizeFileMap } from '@/lib/fileUtils';
 import { createLogger } from '@/lib/logger';
-import { streamObject } from 'ai';
+import { streamObject, streamText } from 'ai';
 import { z } from 'zod';
 import { applyEditsToFiles, createHistoryEntry } from '@/lib/patches';
 import { getHistoryManager } from '@/lib/history';
@@ -116,118 +116,68 @@ app.post('/', async (c) => {
         c.header('Cache-Control', 'no-cache');
         c.header('Connection', 'keep-alive');
 
-        // Define schema based on mode
-        const schema = usePatchMode
-          ? z.object({
-              edits: z.array(CodeEditSchema),
-              explanation: z.string().optional(),
-            })
-          : z.object({
-              files: z.record(z.string()),
-              explanation: z.string().optional(),
-            });
+        // Add instruction to output explanation first, then JSON
+        const streamingPrompt = usePatchMode
+          ? `${conversation}\n\nIMPORTANT: First explain your changes in plain text, then output a JSON object with this exact structure:\n{"edits": [{"type": "search-replace", "filePath": "/path", "search": "old code", "replace": "new code"}], "explanation": "optional"}`
+          : `${conversation}\n\nIMPORTANT: First explain your changes in plain text, then output a JSON object with this exact structure:\n{"files": {"/path": "content"}, "explanation": "optional"}`;
 
-        const result = await streamObject({
+        const result = await streamText({
           model: aiModel,
-          schema,
-          prompt: conversation,
+          prompt: streamingPrompt,
+          temperature: 0.7,
         });
 
         let tokenCount = 0;
-        let lastEditCount = 0;
-        let lastFileCount = 0;
+        let fullText = '';
 
         // Send start event
         logger.debug('Sending start event');
         await stream.write(`data: ${JSON.stringify({ type: 'start' })}\n\n`);
 
-        // Stream using fullStream for token-level updates
-        logger.debug('Starting full stream');
-        for await (const part of result.fullStream) {
-          // Stream text deltas (token by token)
-          if (part.type === 'text-delta') {
-            tokenCount++;
-            await stream.write(`data: ${JSON.stringify({ type: 'token', text: part.textDelta })}\n\n`);
+        // Stream text token by token
+        logger.debug('Starting text stream');
+        for await (const chunk of result.textStream) {
+          tokenCount++;
+          fullText += chunk;
 
-            // Log every 20th token
-            if (tokenCount % 20 === 0) {
-              logger.debug(`Streamed ${tokenCount} tokens`);
-            }
-          }
+          // Stream every token to frontend
+          await stream.write(`data: ${JSON.stringify({ type: 'token', text: chunk })}\n\n`);
 
-          // Handle partial objects for structured progress
-          if (part.type === 'object' && part.object) {
-            const partialObject = part.object;
-
-            // For patch mode, send detailed edit information
-            if (usePatchMode && (partialObject as any).edits) {
-              const currentEdits = (partialObject as any).edits;
-              const currentEditCount = currentEdits.length;
-
-              if (currentEditCount > lastEditCount) {
-                // Send info about the new edit
-                const newEdit = currentEdits[currentEditCount - 1];
-                if (newEdit && newEdit.filePath) {
-                  let editText = `\n📝 Edit ${currentEditCount}: ${newEdit.filePath}\n`;
-
-                  if (newEdit.type) {
-                    editText += `   Type: ${newEdit.type}\n`;
-                  }
-
-                  if (newEdit.search) {
-                    const searchPreview = newEdit.search.length > 100
-                      ? newEdit.search.substring(0, 100) + '...'
-                      : newEdit.search;
-                    editText += `   Search: "${searchPreview}"\n`;
-                  }
-
-                  if (newEdit.replace) {
-                    const replacePreview = newEdit.replace.length > 100
-                      ? newEdit.replace.substring(0, 100) + '...'
-                      : newEdit.replace;
-                    editText += `   Replace: "${replacePreview}"\n`;
-                  }
-
-                  await stream.write(`data: ${JSON.stringify({ type: 'progress', text: editText })}\n\n`);
-                }
-                lastEditCount = currentEditCount;
-              }
-            }
-
-            // For full mode, send file information
-            if (!usePatchMode && (partialObject as any).files) {
-              const currentFiles = (partialObject as any).files;
-              const currentFileCount = Object.keys(currentFiles).length;
-
-              if (currentFileCount > lastFileCount) {
-                const fileNames = Object.keys(currentFiles);
-                const newFileName = fileNames[currentFileCount - 1];
-
-                if (newFileName) {
-                  const fileContent = currentFiles[newFileName];
-                  const preview = fileContent && fileContent.length > 150
-                    ? fileContent.substring(0, 150) + '...'
-                    : fileContent;
-
-                  const progressText = `\n📄 File ${currentFileCount}: ${newFileName}\n   ${preview ? `Preview: ${preview.split('\n')[0]}...\n` : ''}\n`;
-                  await stream.write(`data: ${JSON.stringify({ type: 'progress', text: progressText })}\n\n`);
-                }
-                lastFileCount = currentFileCount;
-              }
-            }
+          // Log every 50th token
+          if (tokenCount % 50 === 0) {
+            logger.debug(`Streamed ${tokenCount} tokens, ${fullText.length} chars`);
           }
         }
 
-        // Get final object
-        const finalObject = await result.object;
-
         logger.info('Streaming completed', {
           totalTokens: tokenCount,
-          hasExplanation: !!finalObject.explanation,
+          totalChars: fullText.length,
         });
 
+        // Parse JSON from the response
+        let finalObject: any = {};
+        const jsonMatch = fullText.match(/\{[\s\S]*\}/);
+
+        if (jsonMatch) {
+          try {
+            finalObject = JSON.parse(jsonMatch[0]);
+            logger.debug('Parsed JSON from response', {
+              hasEdits: !!finalObject.edits,
+              hasFiles: !!finalObject.files,
+              editCount: finalObject.edits?.length,
+              fileCount: finalObject.files ? Object.keys(finalObject.files).length : 0,
+            });
+          } catch (err) {
+            logger.error('Failed to parse JSON from response', err);
+            throw new Error('Failed to parse AI response');
+          }
+        } else {
+          logger.error('No JSON found in response');
+          throw new Error('No structured data in AI response');
+        }
+
         let mergedFiles: Record<string, string>;
-        let summary = finalObject.explanation || '';
+        let summary = finalObject.explanation || fullText;
 
         if (usePatchMode) {
           // Apply patches to working files
