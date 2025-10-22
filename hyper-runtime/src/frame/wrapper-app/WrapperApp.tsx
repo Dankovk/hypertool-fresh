@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useCallback } from 'react';
 import { ControlsPanel } from './components/ControlsPanel';
 import { ExportWidget } from './components/ExportWidget';
 import { SandboxContainer } from './components/SandboxContainer';
@@ -14,16 +14,21 @@ import './styles/wrapper-app.css';
  * - Export widget (capture/recording buttons)
  */
 export const WrapperApp: React.FC<WrapperAppProps> = ({
-  sandboxContainerRef,
+  onContainerReady,
   controls,
   exportWidget,
-  container,
-  exportsApi,
 }) => {
+  const [container, setContainer] = useState<HTMLElement | null>(null);
+
+  const handleContainerReady = useCallback((node: HTMLElement) => {
+    setContainer(node);
+    onContainerReady(node);
+  }, [onContainerReady]);
+
   return (
     <div className="hyper-container ">
       {/* Main sandbox container */}
-      <SandboxContainer containerRef={sandboxContainerRef} />
+      <SandboxContainer onReady={handleContainerReady} />
 
       {/* Controls panel (if configured) */}
       {controls && (
@@ -31,16 +36,16 @@ export const WrapperApp: React.FC<WrapperAppProps> = ({
           definitions={controls.definitions}
           options={controls.options}
           onChange={controls.onChange}
+          onReady={controls.onReady}
         />
       )}
 
       {/* Export widget (if enabled) */}
       {exportWidget && exportWidget.enabled && (
         <ExportWidget
-          container={container}
+          getContainer={() => container}
           position={exportWidget.position}
           filename={exportWidget.filename}
-          exportsApi={exportsApi}
           useCanvasCapture={exportWidget.useCanvasCapture}
         />
       )}

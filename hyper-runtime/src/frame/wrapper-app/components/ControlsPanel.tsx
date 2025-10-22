@@ -16,6 +16,12 @@ export const ControlsPanel: React.FC<ControlsPanelProps> = ({
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const controlsRef = useRef<any>(null);
+  const onReadyRef = useRef(onReady);
+
+  // Update the ref when onReady changes
+  useEffect(() => {
+    onReadyRef.current = onReady;
+  }, [onReady]);
 
   useEffect(() => {
     if (!containerRef.current) return;
@@ -46,7 +52,11 @@ export const ControlsPanel: React.FC<ControlsPanelProps> = ({
       });
 
       controlsRef.current = controls;
-      onReady?.(controls);
+
+      // Notify that controls are ready with the params object
+      if (onReadyRef.current) {
+        onReadyRef.current(controls);
+      }
     } catch (error) {
       console.error('[ControlsPanel] Failed to create controls:', error);
     }
@@ -62,7 +72,7 @@ export const ControlsPanel: React.FC<ControlsPanelProps> = ({
         controlsRef.current = null;
       }
     };
-  }, [definitions, options, onChange, onReady]);
+  }, [definitions, options, onChange]);
 
   return (
     <div

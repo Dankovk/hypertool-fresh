@@ -9,10 +9,9 @@ import '../styles/export-widget.css';
  * from the sandbox canvas element.
  */
 export const ExportWidget: React.FC<ExportWidgetProps> = ({
-  container,
+  getContainer,
   position = 'top-left',
   filename = 'hyperframe-export',
-  exportsApi,
   useCanvasCapture = true,
 }) => {
   const [imageEnabled, setImageEnabled] = useState(false);
@@ -21,15 +20,38 @@ export const ExportWidget: React.FC<ExportWidgetProps> = ({
   const [status, setStatus] = useState('');
   const [statusTone, setStatusTone] = useState<'default' | 'error' | 'success'>('default');
   const statusTimeoutRef = useRef<number | null>(null);
+  const recorderRef = useRef<MediaRecorder | null>(null);
 
-  // Update button states based on exportsApi availability
+  // Update button states based on container availability
   useEffect(() => {
-    if (exportsApi) {
-      // Check if we have capture handlers or default canvas capture is enabled
-      setImageEnabled(useCanvasCapture);
-      setVideoEnabled(useCanvasCapture);
+    // Check periodically if container and canvas are available
+    const checkAvailability = () => {
+      const container = getContainer();
+      if (container && useCanvasCapture) {
+        const canvas = container.querySelector('canvas');
+        if (canvas) {
+          setImageEnabled(true);
+          setVideoEnabled(true);
+          return true;
+        }
+      }
+      return false;
+    };
+
+    // Initial check
+    if (checkAvailability()) {
+      return;
     }
-  }, [exportsApi, useCanvasCapture]);
+
+    // If not available yet, poll for it
+    const interval = setInterval(() => {
+      if (checkAvailability()) {
+        clearInterval(interval);
+      }
+    }, 100);
+
+    return () => clearInterval(interval);
+  }, [getContainer, useCanvasCapture]);
 
   const showStatus = (message: string, tone: 'default' | 'error' | 'success' = 'default') => {
     if (statusTimeoutRef.current) {
@@ -49,10 +71,13 @@ export const ExportWidget: React.FC<ExportWidgetProps> = ({
   };
 
   const handleImageCapture = async () => {
-    if (!exportsApi) return;
-
     try {
       // Find canvas in container
+      const container = getContainer();
+      if (!container) {
+        throw new Error('Container not available.');
+      }
+
       const canvas = container.querySelector('canvas');
       if (!canvas || !(canvas instanceof HTMLCanvasElement)) {
         throw new Error('No canvas element available for capture.');
@@ -88,10 +113,13 @@ export const ExportWidget: React.FC<ExportWidgetProps> = ({
   };
 
   const startRecording = async () => {
-    if (!exportsApi) return;
-
     try {
       // Find canvas in container
+      const container = getContainer();
+      if (!container) {
+        throw new Error('Container not available.');
+      }
+
       const canvas = container.querySelector('canvas');
       if (!canvas || !(canvas instanceof HTMLCanvasElement)) {
         throw new Error('No canvas element available for recording.');
@@ -103,9 +131,11 @@ export const ExportWidget: React.FC<ExportWidgetProps> = ({
 
       const stream = canvas.captureStream(60);
 
-      // Detect best video format
+      // Detect best video format - try MP4 first, fallback to WebM
       const formats = [
+        { mimeType: 'video/mp4;codecs=avc1', extension: 'mp4' },
         { mimeType: 'video/mp4;codecs=h264', extension: 'mp4' },
+        { mimeType: 'video/mp4;codecs=avc1.42E01E', extension: 'mp4' },
         { mimeType: 'video/mp4', extension: 'mp4' },
         { mimeType: 'video/webm;codecs=h264', extension: 'webm' },
         { mimeType: 'video/webm;codecs=vp9', extension: 'webm' },
@@ -113,12 +143,25 @@ export const ExportWidget: React.FC<ExportWidgetProps> = ({
         { mimeType: 'video/webm', extension: 'webm' },
       ];
 
-      const format = formats.find(f => MediaRecorder.isTypeSupported(f.mimeType)) || formats[formats.length - 1];
+      let format = formats.find(f => MediaRecorder.isTypeSupported(f.mimeType));
 
-      const recorder = new MediaRecorder(stream, {
-        mimeType: format.mimeType,
-        videoBitsPerSecond: 10_000_000,
-      });
+      if (!format) {
+        // Fallback: try without specifying mimeType (let browser choose)
+        format = { mimeType: '', extension: 'webm' };
+      }
+
+      console.log('[ExportWidget] Using video format:', format.mimeType || 'browser default');
+
+      const recorderOptions: MediaRecorderOptions = {
+        videoBitsPerSecond: 5_000_000, // 5 Mbps - good quality without being too large
+      };
+
+      // Only set mimeType if we have one (some browsers work better without it)
+      if (format.mimeType) {
+        recorderOptions.mimeType = format.mimeType;
+      }
+
+      const recorder = new MediaRecorder(stream, recorderOptions);
 
       const chunks: Blob[] = [];
 
@@ -129,26 +172,44 @@ export const ExportWidget: React.FC<ExportWidgetProps> = ({
       });
 
       recorder.addEventListener('stop', () => {
-        const blob = new Blob(chunks, { type: format.mimeType });
+        // Use the actual mimeType from the recorder if available
+        const mimeType = format.mimeType || recorder.mimeType || 'video/webm';
+        const blob = new Blob(chunks, { type: mimeType });
+
+        console.log('[ExportWidget] Recording complete:', {
+          size: blob.size,
+          type: blob.type,
+          chunks: chunks.length,
+        });
+
         downloadBlob(blob, `${filename}.${format.extension}`);
         showStatus('Recording saved', 'success');
         stream.getTracks().forEach((track) => track.stop());
         setRecording(false);
+        recorderRef.current = null;
       });
 
       recorder.start();
+      recorderRef.current = recorder;
       setRecording(true);
       showStatus('Recording in progress…');
     } catch (error) {
       console.error('[ExportWidget] Failed to start recording:', error);
       showStatus((error as Error).message || 'Failed to record video', 'error');
       setRecording(false);
+      recorderRef.current = null;
     }
   };
 
   const stopRecording = () => {
-    // Recording stop is handled by MediaRecorder event handlers
-    setRecording(false);
+    if (!recorderRef.current) {
+      console.warn('[ExportWidget] No active recorder to stop');
+      return;
+    }
+
+    showStatus('Finishing recording…');
+    recorderRef.current.stop();
+    // The 'stop' event handler will handle the rest (download, cleanup, etc.)
   };
 
   const downloadBlob = (blob: Blob, filename: string) => {

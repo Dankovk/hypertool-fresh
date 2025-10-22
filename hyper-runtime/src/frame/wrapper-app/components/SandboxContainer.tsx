@@ -1,13 +1,21 @@
-import React from 'react';
+import React, { useCallback } from 'react';
 import type { SandboxContainerProps } from '../types';
 
 /**
  * SandboxContainer - Container component for user's sandbox content
  *
- * This component provides the mount point where the user's code
- * will render its content (canvas, DOM elements, etc.)
+ * This component creates the sandbox container div directly in React
+ * and notifies when it's ready with proper dimensions.
  */
-export const SandboxContainer: React.FC<SandboxContainerProps> = ({ containerRef }) => {
+export const SandboxContainer: React.FC<SandboxContainerProps> = ({ onReady }) => {
+  // Use a callback ref to get notified when the div is mounted
+  const containerRef = useCallback((node: HTMLDivElement | null) => {
+    if (node) {
+      // The node is now in the DOM with proper dimensions
+      onReady(node);
+    }
+  }, [onReady]);
+
   return (
     <div
       ref={containerRef}

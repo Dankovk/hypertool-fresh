@@ -8,9 +8,9 @@ import type {
 
 export interface WrapperAppProps {
   /**
-   * Container element where the sandbox content will be mounted
+   * Callback when the sandbox container is ready
    */
-  sandboxContainerRef: React.RefObject<HTMLDivElement>;
+  onContainerReady: (container: HTMLElement) => void;
 
   /**
    * Controls configuration
@@ -19,6 +19,7 @@ export interface WrapperAppProps {
     definitions: ControlDefinitions;
     options?: ControlPanelOptions;
     onChange?: (change: ControlChangePayload) => void;
+    onReady?: (controls: any) => void;
   } | null;
 
   /**
@@ -30,16 +31,6 @@ export interface WrapperAppProps {
     position?: 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right';
     useCanvasCapture?: boolean;
   } | null;
-
-  /**
-   * Reference to the sandbox container element (for export bridge to find canvas)
-   */
-  container: HTMLElement;
-
-  /**
-   * Exports API instance
-   */
-  exportsApi?: SandboxExportsApi;
 }
 
 export interface ControlsPanelProps {
@@ -50,13 +41,15 @@ export interface ControlsPanelProps {
 }
 
 export interface ExportWidgetProps {
-  container: HTMLElement;
+  getContainer: () => HTMLElement | null;
   position?: 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right';
   filename?: string;
-  exportsApi?: SandboxExportsApi;
   useCanvasCapture?: boolean;
 }
 
 export interface SandboxContainerProps {
-  containerRef: React.RefObject<HTMLDivElement>;
+  /**
+   * Callback when the container is mounted and ready
+   */
+  onReady: (container: HTMLElement) => void;
 }
