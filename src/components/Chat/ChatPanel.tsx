@@ -35,21 +35,21 @@ export function ChatPanel({
         <div className="text-lg font-semibold tracking-tight text-accent">AI Studio</div>
         <div className="flex items-center gap-3">
           <button
-            className="inline-flex items-center gap-2 rounded-lg border border-border px-3 py-2 text-base text-text-secondary transition hover:bg-muted"
+            className="inline-flex items-center gap-2 rounded-lg border border-border px-3 py-2 text-sm text-text-secondary transition hover:bg-background/80"
             onClick={onShowPresets}
           >
             <IconTemplate size={18} /> Presets
           </button>
           {hasVersionHistory && (
             <button
-              className="inline-flex items-center gap-2 rounded-lg border border-border px-3 py-2 text-sm text-text-secondary transition hover:bg-muted"
+              className="inline-flex items-center gap-2 rounded-lg border border-border px-3 py-2 text-sm text-text-secondary transition hover:bg-background/80"
               onClick={onShowHistory}
             >
               <IconHistory size={18} /> History
             </button>
           )}
           <button
-            className="inline-flex items-center gap-2 rounded-lg border border-border px-3 py-2 text-sm text-text-secondary transition hover:bg-muted"
+            className="inline-flex items-center gap-2 rounded-lg border border-border px-3 py-2 text-sm text-text-secondary transition hover:bg-background/80"
             onClick={onReset}
           >
             <IconRefresh size={18} /> Reset

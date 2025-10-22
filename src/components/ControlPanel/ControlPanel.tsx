@@ -41,7 +41,7 @@ export function ControlPanel({ files, onParameterChange, isIframeReady, controlD
       </div>
       <div className="flex-1 overflow-auto p-4">
         {/* External Tweakpane Controls */}
-        {controlDefinitions && Object.keys(controlDefinitions).length > 0 ? (
+        {!controlDefinitions && Object.keys(controlDefinitions).length > 0 ? (
           <TweakpaneControlGenerator
             controlDefinitions={controlDefinitions}
             onParameterChange={onParameterChange || (() => {})}

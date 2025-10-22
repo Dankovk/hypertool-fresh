@@ -336,16 +336,13 @@ class ExportBridge {
       display: "flex",
       flexDirection: "column",
       gap: "0.25rem",
-      padding: "0.5rem 0.75rem",
       borderRadius: "0.75rem",
       color: "#f8fafc",
-      fontFamily: "Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont",
+      fontFamily: "Roboto, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont",
       fontSize: "12px",
       lineHeight: "16px",
-      boxShadow: "0 20px 40px rgba(15, 23, 42, 0.3)",
       zIndex: "2147483646",
-      pointerEvents: "auto",
-      backdropFilter: "blur(8px)"
+      pointerEvents: "auto"
     });
     const controls = document.createElement("div");
     controls.style.display = "flex";
@@ -384,8 +381,6 @@ class ExportBridge {
     status.style.minHeight = "16px";
     controls.appendChild(imageButton);
     controls.appendChild(videoButton);
-    root.appendChild(controls);
-    root.appendChild(status);
     this.root = root;
     this.imageButton = imageButton;
     this.videoButton = videoButton;
@@ -822,6 +817,7 @@ function resolveContainer(options = {}) {
   }
   const container = doc.createElement("div");
   container.classList.add(className);
+  container.classList.add("hyper-frame-container");
   doc.body.appendChild(container);
   return { element: container, createdInternally: true };
 }
@@ -1026,4 +1022,4 @@ export {
   attachToWindow
 };
 
-//# debugId=5531DE839D5ABFE664756E2164756E21
+//# debugId=72611941C0BD640764756E2164756E21

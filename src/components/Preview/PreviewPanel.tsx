@@ -7,11 +7,13 @@ import type {
   WebContainerProcess,
 } from "@webcontainer/api";
 import { WebContainer } from "@webcontainer/api";
-import { IconDownload, IconTerminal } from "@tabler/icons-react";
+import { IconTerminal } from "@tabler/icons-react";
 import { config } from "@/config";
 import { Terminal } from "@xterm/xterm";
 import "@xterm/xterm/css/xterm.css";
 import { CssSyncManager } from "./CssSyncManager";
+import { TopBar } from "../TopBar";
+// We'll implement capture functionality directly
 
 interface PreviewPanelProps {
   files: Record<string, string>;
@@ -70,12 +72,18 @@ export const PreviewPanel = memo(({ files, onDownload }: PreviewPanelProps)=> {
   const cssSyncManagerRef = useRef<CssSyncManager | null>(null);
   const iframeRef = useRef<HTMLIFrameElement | null>(null);
 
+  // Capture refs
+  const previewContainerRef = useRef<HTMLDivElement | null>(null);
+  const recordingRef = useRef<{ isRecording: boolean } | null>(null);
+  const recordedChunksRef = useRef<Blob[]>([]);
+
+  const [terminalExpanded, setTerminalExpanded] = useState(false);
   const [status, setStatus] = useState<string>("Booting preview runtime…");
   const [error, setError] = useState<string | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [logs, setLogs] = useState<LogEntry[]>([]);
   const [containerReady, setContainerReady] = useState(false);
-  const [terminalExpanded, setTerminalExpanded] = useState(true);
+  const [isRecording, setIsRecording] = useState(false);
 
   const appendLog = useCallback((message: string) => {
     if (!isMountedRef.current) {
@@ -231,6 +239,7 @@ export const PreviewPanel = memo(({ files, onDownload }: PreviewPanelProps)=> {
       devServerRef.current?.kill();
       containerRef.current?.teardown();
       cssSyncManagerRef.current?.stop();
+      // Note: recording cleanup is handled by iframe message responses
     };
   }, []);
 
@@ -275,6 +284,55 @@ export const PreviewPanel = memo(({ files, onDownload }: PreviewPanelProps)=> {
       }
     };
   }, [previewUrl]);
+
+  // Listen for messages from iframe
+  useEffect(() => {
+    const handleMessage = (event: MessageEvent) => {
+      // Only handle messages from our iframe
+      if (event.source !== iframeRef.current?.contentWindow) {
+        return;
+      }
+
+      const { type, data } = event.data;
+      console.log('Received message from iframe:', type, data);
+      
+      switch (type) {
+        case 'HYPERTOOL_CAPTURE_RESPONSE':
+          if (data && data.blob) {
+            // Create download link for captured image
+            const url = URL.createObjectURL(data.blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = data.filename || 'hypertool-capture.png';
+            a.click();
+            URL.revokeObjectURL(url);
+          }
+          break;
+        case 'HYPERTOOL_RECORDING_RESPONSE':
+          if (data && data.blob) {
+            // Create download link for recorded video
+            const url = URL.createObjectURL(data.blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = data.filename || 'hypertool-recording.webm';
+            a.click();
+            URL.revokeObjectURL(url);
+          }
+          // Reset recording state
+          recordingRef.current = null;
+          setIsRecording(false);
+          break;
+        case 'HYPERTOOL_RECORDING_STOPPED':
+          // Recording was stopped but no video was generated (e.g., too short)
+          recordingRef.current = null;
+          setIsRecording(false);
+          break;
+      }
+    };
+
+    window.addEventListener('message', handleMessage);
+    return () => window.removeEventListener('message', handleMessage);
+  }, []);
 
   useEffect(() => {
     if (typeof window === "undefined") {
@@ -358,10 +416,62 @@ export const PreviewPanel = memo(({ files, onDownload }: PreviewPanelProps)=> {
       // Cleanup the booted instance if boot effect is cancelled
       if (bootedInstance && bootedInstance !== containerRef.current) {
         console.log("Cleaning up boot effect instance");
-        bootedInstance.teardown().catch(console.error);
+        try {
+          bootedInstance.teardown();
+        } catch (err) {
+          console.error("Error during teardown:", err);
+        }
       }
     };
   }, [appendLog]);
+
+  // Handler methods for TopBar buttons
+  const handleCapturePNG = useCallback(async () => {
+    if (!iframeRef.current?.contentWindow) {
+      console.warn('No iframe content window available for capture');
+      return;
+    }
+
+    try {
+      // Send message to iframe to trigger capture
+      iframeRef.current.contentWindow.postMessage({
+        type: 'HYPERTOOL_CAPTURE_PNG',
+        source: 'hypertool-main'
+      }, '*');
+    } catch (error) {
+      console.error('Failed to capture PNG:', error);
+    }
+  }, []);
+
+  const handleRecordVideo = useCallback(async () => {
+    if (!iframeRef.current?.contentWindow) {
+      console.warn('No iframe content window available for recording');
+      return;
+    }
+
+    try {
+      if (recordingRef.current) {
+        // Stop recording - don't update state here, wait for iframe response
+        console.log('Sending stop recording message to iframe');
+        iframeRef.current.contentWindow.postMessage({
+          type: 'HYPERTOOL_STOP_RECORDING',
+          source: 'hypertool-main'
+        }, '*');
+        return;
+      }
+
+      // Send message to iframe to start recording
+      console.log('Sending start recording message to iframe');
+      iframeRef.current.contentWindow.postMessage({
+        type: 'HYPERTOOL_START_RECORDING',
+        source: 'hypertool-main'
+      }, '*');
+      recordingRef.current = { isRecording: true }; // Set a marker that we're recording
+      setIsRecording(true);
+    } catch (error) {
+      console.error('Failed to record video:', error);
+    }
+  }, []);
 
   // Initialize terminal when container is ready
   useEffect(() => {
@@ -524,19 +634,19 @@ export const PreviewPanel = memo(({ files, onDownload }: PreviewPanelProps)=> {
 
   return (
     <div className="flex flex-col overflow-hidden rounded-2xl border border-border bg-surface shadow-brand">
-      <div className="flex items-center justify-between border-b border-border bg-accent/5 px-5 py-4">
+      {/* <div className="flex items-center justify-between border-b border-border bg-accent/5 px-5 py-4">
         <div className="text-lg font-semibold tracking-tight text-accent">Live Preview</div>
         <div className="flex items-center gap-3">
           <span className="text-sm text-text-secondary">{status}</span>
-          <button
-            className="inline-flex items-center gap-2 rounded-lg border border-border px-3 py-2 text-sm text-text-secondary transition hover:bg-muted"
-            onClick={onDownload}
-          >
-            <IconDownload size={18} /> Download
-          </button>
         </div>
-      </div>
-      <div className="relative flex-1 bg-black">
+      </div> */}
+      <div ref={previewContainerRef} className="relative flex-1 bg-black">
+        <TopBar 
+          onDownload={onDownload} 
+          onCapturePNG={handleCapturePNG}
+          onRecordVideo={handleRecordVideo}
+          isRecording={isRecording}
+        />
         {previewUrl ? (
           <iframe
             ref={iframeRef}
@@ -558,37 +668,46 @@ export const PreviewPanel = memo(({ files, onDownload }: PreviewPanelProps)=> {
         )}
 
         {/* Floating Terminal Panel */}
-        <div
-          className="absolute left-0 right-0 bottom-0 border-t border-border"
-          style={{
-            height: terminalExpanded ? "350px" : "auto",
-            transition: "height 0.2s ease-in-out",
-
-          }}
-        >
-          <button
-            className="flex w-full items-center justify-between px-5 py-3 text-sm text-text bg-background  hover:bg-muted/95 transition cursor-pointer"
-            onClick={() => setTerminalExpanded(!terminalExpanded)}
-          >
-            <div className="flex items-center gap-2">
-              <IconTerminal size={16} />
-              <span className="font-medium">Terminal</span>
-            </div>
-            <span className="text-xs text-text-secondary">
-              {terminalExpanded ? "▼" : "▶"}
-            </span>
-          </button>
+        {terminalExpanded && (
           <div
-            ref={terminalElRef}
-            className="w-full"
+            className="absolute left-0 right-0 bottom-0 border-t border-border"
             style={{
-              backgroundColor: "#0a0a0a",
-              height: terminalExpanded ? "calc(100% - 49px)" : "0px",
-              overflow: "hidden",
-
+              height: "350px",
+              transition: "height 0.2s ease-in-out",
             }}
-          />
-        </div>
+          >
+            <button
+              className="flex w-full items-center justify-between px-5 py-3 text-sm text-text bg-background hover:bg-muted/95 transition cursor-pointer"
+              onClick={() => setTerminalExpanded(false)}
+            >
+              <div className="flex items-center gap-2">
+                <IconTerminal size={16} />
+                <span className="font-medium">Terminal</span>
+              </div>
+              <span className="text-xs text-text-secondary">▼</span>
+            </button>
+            <div
+              ref={terminalElRef}
+              className="w-full"
+              style={{
+                backgroundColor: "#0a0a0a",
+                height: "calc(100% - 49px)",
+                overflow: "hidden",
+              }}
+            />
+          </div>
+        )}
+
+        {/* Terminal Toggle Button - only show when terminal is hidden */}
+        {!terminalExpanded && (
+          <button
+            className="absolute bottom-4 right-4 flex items-center gap-2 rounded-lg border border-border bg-background px-3 py-2 text-sm text-text hover:bg-muted/95 transition"
+            onClick={() => setTerminalExpanded(true)}
+          >
+            <IconTerminal size={16} />
+            <span>Terminal</span>
+          </button>
+        )}
       </div>
     </div>
   );
