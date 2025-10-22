@@ -1,4 +1,7 @@
 import { EditHistoryEntry } from "./patches";
+import { createLogger } from "@/lib/logger";
+
+const logger = createLogger('history');
 
 /**
  * In-memory history manager with undo/redo support
@@ -16,6 +19,8 @@ export class EditHistoryManager {
    * Add a new entry to history
    */
   push(entry: EditHistoryEntry): void {
+    const removedEntries = this.history.length - this.currentIndex - 1;
+
     // Remove any entries after current index (they're from a different timeline)
     this.history = this.history.slice(0, this.currentIndex + 1);
 
@@ -24,11 +29,22 @@ export class EditHistoryManager {
     this.currentIndex = this.history.length - 1;
 
     // Enforce max size
+    let trimmedEntries = 0;
     if (this.history.length > this.maxHistorySize) {
       const excess = this.history.length - this.maxHistorySize;
       this.history = this.history.slice(excess);
       this.currentIndex -= excess;
+      trimmedEntries = excess;
     }
+
+    logger.info('History entry added', {
+      entryId: entry.id,
+      editCount: entry.edits.length,
+      removedFutureEntries: removedEntries,
+      trimmedOldEntries: trimmedEntries,
+      totalEntries: this.history.length,
+      currentIndex: this.currentIndex,
+    });
   }
 
   /**
@@ -36,11 +52,20 @@ export class EditHistoryManager {
    */
   undo(): EditHistoryEntry | null {
     if (!this.canUndo()) {
+      logger.debug('Undo requested but no entries to undo');
       return null;
     }
 
     const entry = this.history[this.currentIndex];
     this.currentIndex--;
+
+    logger.info('Undo performed', {
+      entryId: entry.id,
+      newIndex: this.currentIndex,
+      canUndo: this.canUndo(),
+      canRedo: this.canRedo(),
+    });
+
     return entry;
   }
 
@@ -49,11 +74,21 @@ export class EditHistoryManager {
    */
   redo(): EditHistoryEntry | null {
     if (!this.canRedo()) {
+      logger.debug('Redo requested but no entries to redo');
       return null;
     }
 
     this.currentIndex++;
-    return this.history[this.currentIndex];
+    const entry = this.history[this.currentIndex];
+
+    logger.info('Redo performed', {
+      entryId: entry.id,
+      newIndex: this.currentIndex,
+      canUndo: this.canUndo(),
+      canRedo: this.canRedo(),
+    });
+
+    return entry;
   }
 
   /**
@@ -133,8 +168,13 @@ export class EditHistoryManager {
    * Clear all history
    */
   clear(): void {
+    const clearedCount = this.history.length;
     this.history = [];
     this.currentIndex = -1;
+
+    logger.info('History cleared', {
+      clearedEntries: clearedCount,
+    });
   }
 
   /**
@@ -185,6 +225,7 @@ let globalHistoryManager: EditHistoryManager | null = null;
 
 export function getHistoryManager(): EditHistoryManager {
   if (!globalHistoryManager) {
+    logger.info('Creating global history manager instance');
     globalHistoryManager = new EditHistoryManager();
   }
   return globalHistoryManager;

@@ -5,36 +5,30 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="51bc1ced-b378-46bc-8004-9aa3de836607" name="Changes" comment="Gpt-5 model name fix">
-      <change afterPath="$PROJECT_DIR$/boilerplate-presets/maga/index.html" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/boilerplate-presets/maga/main.ts" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/boilerplate-presets/maga/package-lock.json" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/boilerplate-presets/maga/package.json" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/boilerplate-presets/maga/sketch.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/boilerplate-presets/maga/tsconfig.json" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/boilerplate-presets/maga/vite.config.ts" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/boilerplate-presets/start/index.html" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/boilerplate-presets/start/main.ts" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/boilerplate-presets/start/package-lock.json" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/boilerplate-presets/start/package.json" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/boilerplate-presets/start/sketch.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/boilerplate-presets/start/tsconfig.json" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/boilerplate-presets/start/vite.config.ts" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/boilerplate-presets/sviat/index.html" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/boilerplate-presets/sviat/main.ts" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/boilerplate-presets/sviat/package-lock.json" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/boilerplate-presets/sviat/package.json" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/boilerplate-presets/sviat/sketch.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/boilerplate-presets/sviat/tsconfig.json" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/boilerplate-presets/sviat/vite.config.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend/package.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/bun.lock" beforeDir="false" afterPath="$PROJECT_DIR$/bun.lock" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/hyper-runtime/dist/controls/index.js" beforeDir="false" afterPath="$PROJECT_DIR$/hyper-runtime/dist/controls/index.js" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/hyper-runtime/dist/controls/index.js.map" beforeDir="false" afterPath="$PROJECT_DIR$/hyper-runtime/dist/controls/index.js.map" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/hyper-runtime/dist/frame/index.js" beforeDir="false" afterPath="$PROJECT_DIR$/hyper-runtime/dist/frame/index.js" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/hyper-runtime/dist/frame/index.js.map" beforeDir="false" afterPath="$PROJECT_DIR$/hyper-runtime/dist/frame/index.js.map" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/hyper-runtime/dist/index.js" beforeDir="false" afterPath="$PROJECT_DIR$/hyper-runtime/dist/index.js" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/hyper-runtime/dist/index.js.map" beforeDir="false" afterPath="$PROJECT_DIR$/hyper-runtime/dist/index.js.map" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/hyper-runtime/src/controls/HypertoolControls.ts" beforeDir="false" afterPath="$PROJECT_DIR$/hyper-runtime/src/controls/HypertoolControls.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/hyper-runtime/src/frame/controlsBridge.ts" beforeDir="false" afterPath="$PROJECT_DIR$/hyper-runtime/src/frame/controlsBridge.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/hyper-runtime/src/frame/cssBridge.ts" beforeDir="false" afterPath="$PROJECT_DIR$/hyper-runtime/src/frame/cssBridge.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/package.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/app/api/ai/route.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/app/api/ai/route.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/app/api/boilerplate/route.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/app/api/boilerplate/route.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/app/api/download/route.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/app/api/download/route.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/app/api/history/route.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/app/api/history/route.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/app/api/runtime-watch/route.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/app/api/runtime-watch/route.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/app/api/runtime-watch/snapshot/route.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/app/api/runtime-watch/snapshot/route.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/config/models.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/config/models.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/lib/aiProviders.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/lib/aiProviders.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/lib/aiService.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/lib/aiService.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/lib/boilerplate.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/lib/boilerplate.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/lib/history.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/lib/history.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/lib/patches.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/lib/patches.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/types/ai.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/types/ai.ts" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -88,28 +82,28 @@
     <option name="openDirectoriesWithSingleClick" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent"><![CDATA[{
-  "keyToString": {
-    "ASKED_SHARE_PROJECT_CONFIGURATION_FILES": "true",
-    "ModuleVcsDetector.initialDetectionPerformed": "true",
-    "RunOnceActivity.ShowReadmeOnStart": "true",
-    "RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252": "true",
-    "RunOnceActivity.git.unshallow": "true",
-    "git-widget-placeholder": "main",
-    "js.debugger.nextJs.config.created.client": "true",
-    "js.debugger.nextJs.config.created.server": "true",
-    "junie.onboarding.icon.badge.shown": "true",
-    "last_opened_file_path": "/Users/koristuvac/WebstormProjects/hypertool/fresh-breeze/boilerplate-presets/sviat",
-    "node.js.detected.package.eslint": "true",
-    "node.js.detected.package.tslint": "true",
-    "node.js.selected.package.eslint": "(autodetect)",
-    "node.js.selected.package.tslint": "(autodetect)",
-    "nodejs_package_manager_path": "bun",
-    "to.speed.mode.migration.done": "true",
-    "ts.external.directory.path": "/Users/koristuvac/WebstormProjects/hypertool/fresh-breeze/node_modules/typescript/lib",
-    "vue.rearranger.settings.migration": "true"
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;ASKED_SHARE_PROJECT_CONFIGURATION_FILES&quot;: &quot;true&quot;,
+    &quot;ModuleVcsDetector.initialDetectionPerformed&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;main&quot;,
+    &quot;js.debugger.nextJs.config.created.client&quot;: &quot;true&quot;,
+    &quot;js.debugger.nextJs.config.created.server&quot;: &quot;true&quot;,
+    &quot;junie.onboarding.icon.badge.shown&quot;: &quot;true&quot;,
+    &quot;last_opened_file_path&quot;: &quot;/Users/koristuvac/WebstormProjects/hypertool/fresh-breeze/boilerplate-presets/sviat&quot;,
+    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
+    &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
+    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
+    &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
+    &quot;nodejs_package_manager_path&quot;: &quot;bun&quot;,
+    &quot;to.speed.mode.migration.done&quot;: &quot;true&quot;,
+    &quot;ts.external.directory.path&quot;: &quot;/Users/koristuvac/WebstormProjects/hypertool/fresh-breeze/node_modules/typescript/lib&quot;,
+    &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
   }
-}]]></component>
+}</component>
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
       <recent name="$PROJECT_DIR$/boilerplate-presets/sviat" />

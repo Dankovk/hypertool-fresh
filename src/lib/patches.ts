@@ -5,6 +5,9 @@ import {
   parsePatch,
   structuredPatch,
 } from "diff";
+import { createLogger } from "@/lib/logger";
+
+const logger = createLogger('patches');
 
 /**
  * Represents a code edit operation
@@ -108,9 +111,26 @@ export function applyEdit(
   content: string,
   edit: CodeEdit
 ): PatchResult {
+  logger.debug('Applying edit to file', {
+    filePath,
+    editType: edit.type,
+    contentLength: content.length,
+  });
+
   try {
     if (edit.type === "search-replace") {
       if (!edit.search || !edit.replace) {
+        logger.warn('Invalid search-replace edit detected', {
+          filePath,
+          hasSearch: !!edit.search,
+          hasReplace: !!edit.replace,
+          searchLength: edit.search?.length || 0,
+          replaceLength: edit.replace?.length || 0,
+          searchType: typeof edit.search,
+          replaceType: typeof edit.replace,
+          editKeys: Object.keys(edit),
+          fullEdit: JSON.stringify(edit),
+        });
         return {
           success: false,
           filePath,
@@ -232,10 +252,14 @@ export function applyEditsToFiles(
   results: PatchResult[];
   errors: string[];
 } {
+  logger.info('Applying edits to files', {
+    fileCount: Object.keys(files).length,
+    editCount: edits.length,
+  });
+
   const newFiles = { ...files };
-  if (process.env.NODE_ENV !== 'production') {
-    console.debug('[patches] initial files:', Object.keys(newFiles));
-  }
+  logger.debug('Initial files', { files: Object.keys(newFiles) });
+
   const results: PatchResult[] = [];
   const errors: string[] = [];
 
@@ -257,9 +281,11 @@ export function applyEditsToFiles(
 
     if (content === undefined) {
       const availableKeys = Object.keys(newFiles);
-      if (process.env.NODE_ENV !== 'production') {
-        console.debug('[patches] missing file', filePath, 'available keys:', availableKeys);
-      }
+      logger.warn('File not found for edit', {
+        requestedPath: filePath,
+        availableFiles: availableKeys,
+      });
+
       const available = availableKeys
         .map((key) => (key === filePath ? `${key}*` : key))
         .join(", ");
@@ -272,13 +298,30 @@ export function applyEditsToFiles(
 
     if (result.success && result.newContent) {
       newFiles[filePath] = result.newContent;
+      logger.debug('Edit applied successfully', {
+        filePath,
+        hunksApplied: result.hunksApplied,
+        hunksTotal: result.hunksTotal,
+      });
     } else {
+      logger.warn('Failed to apply edit', {
+        filePath,
+        error: result.error,
+      });
       errors.push(`Failed to apply edit to ${filePath}: ${result.error}`);
     }
   }
 
+  const success = errors.length === 0;
+  logger.info('Finished applying edits', {
+    success,
+    totalEdits: edits.length,
+    successfulEdits: results.filter(r => r.success).length,
+    failedEdits: errors.length,
+  });
+
   return {
-    success: errors.length === 0,
+    success,
     files: newFiles,
     results,
     errors,

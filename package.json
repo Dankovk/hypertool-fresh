@@ -11,8 +11,8 @@
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },
   "dependencies": {
-    "@ai-sdk/anthropic": "^1.0.5",
-    "@ai-sdk/google": "^1.0.5",
+    "@ai-sdk/anthropic": "^2.0.35",
+    "@ai-sdk/google": "^2.0.23",
     "@ai-sdk/openai": "^2.0.42",
     "@codesandbox/sandpack-react": "2.16.0",
     "@tabler/icons-react": "2.47.0",

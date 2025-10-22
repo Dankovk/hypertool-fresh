@@ -1,5 +1,8 @@
 import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { join, resolve } from "node:path";
+import { createLogger } from "@/lib/logger";
+
+const logger = createLogger('boilerplate');
 
 type FileMap = Record<string, string>;
 
@@ -29,13 +32,17 @@ export function resolveBoilerplatePath(): string {
   const cwd = process.cwd();
   const candidatePaths = [DEFAULT_RELATIVE_PATH, ...FALLBACK_RELATIVE_PATHS];
 
+  logger.debug('Resolving boilerplate path', { cwd, candidatePaths });
+
   for (const relativePath of candidatePaths) {
     const candidate = resolve(cwd, relativePath);
     if (existsSync(candidate) && existsSync(join(candidate, "index.html"))) {
+      logger.info('Boilerplate path resolved', { path: candidate });
       return candidate;
     }
   }
 
+  logger.error('Unable to locate boilerplate project', undefined, { cwd, checkedPaths: candidatePaths });
   throw new Error(`Unable to locate boilerplate project from cwd: ${cwd}`);
 }
 
@@ -131,15 +138,20 @@ const FRAME_BUNDLE_PATH = "/__hypertool__/frame/index.js";
 const FRAME_GLOBALS_PATH = "/__hypertool__/frame/globals.js";
 
 function injectControlsLibrary(files: FileMap): ScriptDescriptor | null {
+  logger.debug('Injecting controls library');
+
   try {
     const distPath = resolve(process.cwd(), CONTROLS_DIST_RELATIVE_PATH);
     if (!existsSync(distPath)) {
-      console.warn(`[boilerplate] Controls dist not found at ${distPath}`);
+      logger.warn('Controls dist not found', { distPath });
       return null;
     }
 
     const distCode = readFileSync(distPath, "utf8");
-    console.log(`[boilerplate] Loaded controls bundle: ${distCode.length} bytes, hash: ${distCode.substring(0, 50)}`);
+    logger.info('Loaded controls bundle', {
+      sizeBytes: distCode.length,
+      hashPreview: distCode.substring(0, 50),
+    });
     files[CONTROLS_BUNDLE_PATH] = distCode;
 
     const globalsCode = `
@@ -157,9 +169,10 @@ if (typeof window !== "undefined") {
 `.trimStart();
 
     files[CONTROLS_GLOBALS_PATH] = globalsCode;
+    logger.info('Controls library injected successfully');
     return { src: "./__hypertool__/controls/globals.js", module: true };
   } catch (error) {
-    console.error("[boilerplate] Failed to inject controls library:", error);
+    logger.error('Failed to inject controls library', error);
     return null;
   }
 }
@@ -167,15 +180,20 @@ if (typeof window !== "undefined") {
 function injectFrameLibrary(files: FileMap): ScriptDescriptor[] {
   const scripts: ScriptDescriptor[] = [];
 
+  logger.debug('Injecting frame library');
+
   try {
     const distPath = resolve(process.cwd(), FRAME_DIST_RELATIVE_PATH);
     if (!existsSync(distPath)) {
-      console.warn(`[boilerplate] Frame dist not found at ${distPath}`);
+      logger.warn('Frame dist not found', { distPath });
       return scripts;
     }
 
     const distCode = readFileSync(distPath, "utf8");
-    console.log(`[boilerplate] Loaded frame bundle: ${distCode.length} bytes, hash: ${distCode.substring(0, 50)}`);
+    logger.info('Loaded frame bundle', {
+      sizeBytes: distCode.length,
+      hashPreview: distCode.substring(0, 50),
+    });
     files[FRAME_BUNDLE_PATH] = distCode;
 
     const globalsCode = `
@@ -296,8 +314,9 @@ if (typeof window !== "undefined") {
 
     files[FRAME_GLOBALS_PATH] = globalsCode;
     scripts.push({ src: "./__hypertool__/frame/globals.js", module: true });
+    logger.info('Frame library injected successfully');
   } catch (error) {
-    console.error("[boilerplate] Failed to inject frame library:", error);
+    logger.error('Failed to inject frame library', error);
   }
 
   return scripts;

@@ -25,12 +25,28 @@ export type AiRequest = z.infer<typeof AiRequestSchema>;
 // Schema for code edits (patches)
 export const CodeEditSchema = z.object({
   type: z.enum(["search-replace", "unified-diff"]),
-  filePath: z.string(),
+  filePath: z.string().min(1, "File path is required"),
   search: z.string().optional(),
   replace: z.string().optional(),
   diff: z.string().optional(),
   context: z.string().optional(),
-});
+}).refine(
+  (data) => {
+    // For search-replace, both search and replace must be present and non-empty
+    if (data.type === "search-replace") {
+      return !!data.search && data.search.length > 0 &&
+             !!data.replace && data.replace.length > 0;
+    }
+    // For unified-diff, diff must be present and non-empty
+    if (data.type === "unified-diff") {
+      return !!data.diff && data.diff.length > 0;
+    }
+    return true;
+  },
+  {
+    message: "Invalid edit: search-replace requires both 'search' and 'replace' fields, unified-diff requires 'diff' field",
+  }
+);
 
 export type CodeEdit = z.infer<typeof CodeEditSchema>;
 
