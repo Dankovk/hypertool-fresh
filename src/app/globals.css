@@ -3,9 +3,11 @@
 @tailwind utilities;
 
 .hyper-frame {
-    width: 100vw !important;
-    height: 100vh !important;
+    width: 100% !important;
+    height: 100% !important;
 }
+
+
 /* Routed Gothic Font Family */
 @font-face {
   font-family: "Routed Gothic";
@@ -228,6 +230,18 @@
     text-decoration: none;
   }
   
+}
+
+.controls-container {
+  top: 1rem !important;
+  right: 1rem !important;
+  background: var(--tp-base-background-color) !important;
+  border-radius: 0 !important;
+  z-index: 10000;
+}
+
+.tp-lblv_l {
+  font-family: var(--ht-base-font-family-display) !important;
 }
 
 @layer utilities {

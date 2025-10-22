@@ -120,7 +120,7 @@ export const PreviewPanel = memo(({ files, onDownload }: PreviewPanelProps)=> {
   const [wrapperHeight, setWrapperHeight] = useState(0);
   const [maxWidth, setMaxWidth] = useState(2000);
   const [maxHeight, setMaxHeight] = useState(2000);
-  const [isFittedToScreen, setIsFittedToScreen] = useState(false);
+  const [isFittedToScreen, setIsFittedToScreen] = useState(true);
   const [topBarHeight, setTopBarHeight] = useState(DEFAULT_TOP_BAR_HEIGHT);
 
   const appendLog = useCallback((message: string) => {
@@ -808,46 +808,35 @@ export const PreviewPanel = memo(({ files, onDownload }: PreviewPanelProps)=> {
         )}
 
         {/* Floating Terminal Panel */}
-        {terminalExpanded && (
-          <div
-            className="absolute left-0 right-0 bottom-0 border-t border-border"
-            style={{
-              height: "350px",
-              transition: "height 0.2s ease-in-out",
-            }}
-          >
-            <button
-              className="flex w-full items-center justify-between px-5 py-3 text-sm text-text bg-background hover:bg-muted/95 transition cursor-pointer"
-              onClick={() => setTerminalExpanded(false)}
-            >
-              <div className="flex items-center gap-2">
-                <IconTerminal size={16} />
-                <span className="font-medium">Terminal</span>
-              </div>
-              <span className="text-xs text-text-secondary">▼</span>
-            </button>
-            <div
-              ref={terminalElRef}
-              className="w-full"
-              style={{
-                backgroundColor: TERMINAL_CONFIG.theme.background,
-                height: "calc(100% - 49px)",
-                overflow: "hidden",
-              }}
-            />
-          </div>
-        )}
-
-        {/* Terminal Toggle Button - only show when terminal is hidden */}
-        {!terminalExpanded && (
+        <div
+          className="absolute left-0 right-0 bottom-0 border-t border-border"
+          style={{
+            height: terminalExpanded ? "350px" : "auto",
+            transition: "height 0.2s ease-in-out",
+          }}
+        >
           <button
-            className="absolute bottom-4 right-4 flex items-center gap-2 rounded-lg border border-border bg-background px-3 py-2 text-sm text-text hover:bg-muted/95 transition"
-            onClick={() => setTerminalExpanded(true)}
+            className="flex w-full items-center justify-between px-5 py-3 text-sm text-text bg-background hover:bg-muted/95 transition cursor-pointer"
+            onClick={() => setTerminalExpanded(!terminalExpanded)}
           >
-            <IconTerminal size={16} />
-            <span>Terminal</span>
+            <div className="flex items-center gap-2">
+              <IconTerminal size={16} />
+              <span className="font-medium">Terminal</span>
+            </div>
+            <span className="text-xs text-text-secondary">
+              {terminalExpanded ? "▼" : "▶"}
+            </span>
           </button>
-        )}
+          <div
+            ref={terminalElRef}
+            className="w-full"
+            style={{
+              backgroundColor: "#0a0a0a",
+              height: terminalExpanded ? "calc(100% - 49px)" : "0px",
+              overflow: "hidden",
+            }}
+          />
+        </div>
       </div>
     </div>
   );
