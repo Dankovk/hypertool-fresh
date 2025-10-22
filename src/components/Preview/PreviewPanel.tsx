@@ -15,6 +15,36 @@ import { CssSyncManager } from "./CssSyncManager";
 import { TopBar } from "../TopBar";
 // We'll implement capture functionality directly
 
+// Constants
+const DEFAULT_TOP_BAR_HEIGHT = 46;
+
+const TERMINAL_CONFIG = {
+  cursorBlink: true,
+  fontSize: 13,
+  fontFamily: 'Menlo, Monaco, "Courier New", monospace',
+  theme: {
+    background: "#0a0a0a",
+    foreground: "#d4d4d4",
+    cursor: "#d4d4d4",
+    black: "#000000",
+    red: "#cd3131",
+    green: "#0dbc79",
+    yellow: "#e5e510",
+    blue: "#2472c8",
+    magenta: "#bc3fbc",
+    cyan: "#11a8cd",
+    white: "#e5e5e5",
+    brightBlack: "#666666",
+    brightRed: "#f14c4c",
+    brightGreen: "#23d18b",
+    brightYellow: "#f5f543",
+    brightBlue: "#3b8eea",
+    brightMagenta: "#d670d6",
+    brightCyan: "#29b8db",
+    brightWhite: "#e5e5e5",
+  },
+} as const;
+
 interface PreviewPanelProps {
   files: Record<string, string>;
   onDownload: () => void;
@@ -76,6 +106,7 @@ export const PreviewPanel = memo(({ files, onDownload }: PreviewPanelProps)=> {
   const previewContainerRef = useRef<HTMLDivElement | null>(null);
   const recordingRef = useRef<{ isRecording: boolean } | null>(null);
   const recordedChunksRef = useRef<Blob[]>([]);
+  const topBarRef = useRef<HTMLDivElement | null>(null);
 
   const [terminalExpanded, setTerminalExpanded] = useState(false);
   const [status, setStatus] = useState<string>("Booting preview runtime…");
@@ -84,6 +115,13 @@ export const PreviewPanel = memo(({ files, onDownload }: PreviewPanelProps)=> {
   const [logs, setLogs] = useState<LogEntry[]>([]);
   const [containerReady, setContainerReady] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
+  const [iframeWidth, setIframeWidth] = useState(0);
+  const [iframeHeight, setIframeHeight] = useState(0);
+  const [wrapperHeight, setWrapperHeight] = useState(0);
+  const [maxWidth, setMaxWidth] = useState(2000);
+  const [maxHeight, setMaxHeight] = useState(2000);
+  const [isFittedToScreen, setIsFittedToScreen] = useState(false);
+  const [topBarHeight, setTopBarHeight] = useState(DEFAULT_TOP_BAR_HEIGHT);
 
   const appendLog = useCallback((message: string) => {
     if (!isMountedRef.current) {
@@ -96,6 +134,38 @@ export const PreviewPanel = memo(({ files, onDownload }: PreviewPanelProps)=> {
       }
       return next;
     });
+  }, []);
+
+  const measureTopBarHeight = useCallback(() => {
+    if (topBarRef.current) {
+      const height = topBarRef.current.getBoundingClientRect().height;
+      setTopBarHeight(Math.round(height));
+    }
+  }, []);
+
+  // Unified function to calculate available space after top bar
+  const calculateAvailableSpace = useCallback(() => {
+    if (!previewContainerRef.current) return null;
+    
+    const container = previewContainerRef.current;
+    const containerRect = container.getBoundingClientRect();
+    
+    return {
+      width: Math.round(containerRect.width),
+      height: Math.round(containerRect.height - topBarHeight)
+    };
+  }, [topBarHeight]);
+
+  // Unified function to update iframe size and wrapper
+  const updateIframeSize = useCallback((width: number, height: number, fitted = false) => {
+    setIframeWidth(width);
+    setIframeHeight(height);
+    setWrapperHeight(height);
+    setMaxWidth(width);
+    setMaxHeight(height);
+    if (fitted) {
+      setIsFittedToScreen(true);
+    }
   }, []);
 
   const pipeProcessOutput = useCallback(
@@ -285,6 +355,16 @@ export const PreviewPanel = memo(({ files, onDownload }: PreviewPanelProps)=> {
     };
   }, [previewUrl]);
 
+  // Unified function to handle file downloads
+  const downloadFile = useCallback((blob: Blob, filename: string) => {
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    a.click();
+    URL.revokeObjectURL(url);
+  }, []);
+
   // Listen for messages from iframe
   useEffect(() => {
     const handleMessage = (event: MessageEvent) => {
@@ -298,25 +378,13 @@ export const PreviewPanel = memo(({ files, onDownload }: PreviewPanelProps)=> {
       
       switch (type) {
         case 'HYPERTOOL_CAPTURE_RESPONSE':
-          if (data && data.blob) {
-            // Create download link for captured image
-            const url = URL.createObjectURL(data.blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = data.filename || 'hypertool-capture.png';
-            a.click();
-            URL.revokeObjectURL(url);
+          if (data?.blob) {
+            downloadFile(data.blob, data.filename || 'hypertool-capture.png');
           }
           break;
         case 'HYPERTOOL_RECORDING_RESPONSE':
-          if (data && data.blob) {
-            // Create download link for recorded video
-            const url = URL.createObjectURL(data.blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = data.filename || 'hypertool-recording.webm';
-            a.click();
-            URL.revokeObjectURL(url);
+          if (data?.blob) {
+            downloadFile(data.blob, data.filename || 'hypertool-recording.webm');
           }
           // Reset recording state
           recordingRef.current = null;
@@ -332,7 +400,7 @@ export const PreviewPanel = memo(({ files, onDownload }: PreviewPanelProps)=> {
 
     window.addEventListener('message', handleMessage);
     return () => window.removeEventListener('message', handleMessage);
-  }, []);
+  }, [downloadFile]);
 
   useEffect(() => {
     if (typeof window === "undefined") {
@@ -473,6 +541,83 @@ export const PreviewPanel = memo(({ files, onDownload }: PreviewPanelProps)=> {
     }
   }, []);
 
+  const calculateWrapperHeight = useCallback(() => {
+    const space = calculateAvailableSpace();
+    if (space) {
+      setWrapperHeight(space.height);
+      setMaxWidth(space.width);
+      setMaxHeight(space.height);
+    }
+  }, [calculateAvailableSpace]);
+
+  const handleFitScreen = useCallback(() => {
+    const space = calculateAvailableSpace();
+    if (space) {
+      updateIframeSize(space.width, space.height, true);
+    }
+  }, [calculateAvailableSpace, updateIframeSize]);
+
+  const handleWidthChange = useCallback((width: number) => {
+    setIframeWidth(width);
+    setIsFittedToScreen(false);
+  }, []);
+
+  const handleHeightChange = useCallback((height: number) => {
+    setIframeHeight(height);
+    setIsFittedToScreen(false);
+  }, []);
+
+  // Measure top bar height when component mounts
+  useEffect(() => {
+    measureTopBarHeight();
+  }, [measureTopBarHeight]);
+
+  // Initialize iframe size to fit wrapper by default
+  useEffect(() => {
+    if (!containerReady) return;
+    
+    const space = calculateAvailableSpace();
+    if (space) {
+      updateIframeSize(space.width, space.height, true);
+    }
+  }, [containerReady, calculateAvailableSpace, updateIframeSize]);
+
+  // Unified resize observer for both top bar and container
+  useEffect(() => {
+    const observers: ResizeObserver[] = [];
+
+    // Monitor top bar height changes
+    if (topBarRef.current) {
+      const topBarObserver = new ResizeObserver(() => {
+        measureTopBarHeight();
+      });
+      topBarObserver.observe(topBarRef.current);
+      observers.push(topBarObserver);
+    }
+
+    // Monitor container resize
+    if (previewContainerRef.current) {
+      const containerObserver = new ResizeObserver(() => {
+        if (isFittedToScreen) {
+          // If fitted, update both wrapper and iframe to new size
+          const space = calculateAvailableSpace();
+          if (space) {
+            updateIframeSize(space.width, space.height, true);
+          }
+        } else {
+          // If not fitted, only update wrapper height
+          calculateWrapperHeight();
+        }
+      });
+      containerObserver.observe(previewContainerRef.current);
+      observers.push(containerObserver);
+    }
+
+    return () => {
+      observers.forEach(observer => observer.disconnect());
+    };
+  }, [measureTopBarHeight, calculateAvailableSpace, updateIframeSize, calculateWrapperHeight, isFittedToScreen]);
+
   // Initialize terminal when container is ready
   useEffect(() => {
     if (!containerReady || !containerRef.current || !terminalElRef.current) {
@@ -490,32 +635,7 @@ export const PreviewPanel = memo(({ files, onDownload }: PreviewPanelProps)=> {
     console.log("[Terminal] Initializing terminal...");
 
     // Initialize terminal
-    const term = new Terminal({
-      cursorBlink: true,
-      fontSize: 13,
-      fontFamily: 'Menlo, Monaco, "Courier New", monospace',
-      theme: {
-        background: "#0a0a0a",
-        foreground: "#d4d4d4",
-        cursor: "#d4d4d4",
-        black: "#000000",
-        red: "#cd3131",
-        green: "#0dbc79",
-        yellow: "#e5e510",
-        blue: "#2472c8",
-        magenta: "#bc3fbc",
-        cyan: "#11a8cd",
-        white: "#e5e5e5",
-        brightBlack: "#666666",
-        brightRed: "#f14c4c",
-        brightGreen: "#23d18b",
-        brightYellow: "#f5f543",
-        brightBlue: "#3b8eea",
-        brightMagenta: "#d670d6",
-        brightCyan: "#29b8db",
-        brightWhite: "#e5e5e5",
-      },
-    });
+    const term = new Terminal(TERMINAL_CONFIG);
 
     terminalRef.current = term;
     term.open(terminalElRef.current);
@@ -640,22 +760,42 @@ export const PreviewPanel = memo(({ files, onDownload }: PreviewPanelProps)=> {
           <span className="text-sm text-text-secondary">{status}</span>
         </div>
       </div> */}
-      <div ref={previewContainerRef} className="relative flex-1 bg-black">
-        <TopBar 
-          onDownload={onDownload} 
-          onCapturePNG={handleCapturePNG}
-          onRecordVideo={handleRecordVideo}
-          isRecording={isRecording}
-        />
-        {previewUrl ? (
-          <iframe
-            ref={iframeRef}
-            key={previewUrl}
-            src={previewUrl}
-            title="Preview"
-            // sandbox="allow-forms allow-downloads allow-modals allow-pointer-lock allow-popups allow-same-origin allow-scripts"
-            className="h-full w-full border-0"
+      <div ref={previewContainerRef} className="relative bg-black h-full">
+        <div ref={topBarRef}>
+          <TopBar 
+            onDownload={onDownload} 
+            onCapturePNG={handleCapturePNG}
+            onRecordVideo={handleRecordVideo}
+            isRecording={isRecording}
+            width={iframeWidth}
+            height={iframeHeight}
+            maxWidth={maxWidth}
+            maxHeight={maxHeight}
+            onWidthChange={handleWidthChange}
+            onHeightChange={handleHeightChange}
+            onFitScreen={handleFitScreen}
           />
+        </div>
+        {previewUrl ? (
+          <div 
+            className="hyper-frame-external-wrapper flex w-full items-center justify-center"
+            style={{ height: `${wrapperHeight}px` }}
+          >
+            <iframe
+              ref={iframeRef}
+              key={previewUrl}
+              src={previewUrl}
+              title="Preview"
+              // sandbox="allow-forms allow-downloads allow-modals allow-pointer-lock allow-popups allow-same-origin allow-scripts"
+              className="border-0"
+              style={{
+                width: `${iframeWidth}px`,
+                height: `${iframeHeight}px`,
+                maxWidth: '100%',
+                maxHeight: '100%'
+              }}
+            />
+          </div>
         ) : (
           <div className="flex h-full items-center justify-center text-sm text-text-secondary">
             {error ? error : status}
@@ -690,7 +830,7 @@ export const PreviewPanel = memo(({ files, onDownload }: PreviewPanelProps)=> {
               ref={terminalElRef}
               className="w-full"
               style={{
-                backgroundColor: "#0a0a0a",
+                backgroundColor: TERMINAL_CONFIG.theme.background,
                 height: "calc(100% - 49px)",
                 overflow: "hidden",
               }}

@@ -31,25 +31,25 @@ export function ChatPanel({
   const settings = useStudioSettings();
   return (
     <div className="flex flex-col overflow-hidden rounded-2xl border border-border bg-surface shadow-brand">
-      <div className="flex items-center justify-between border-b border-border bg-accent/5 px-5 py-4">
+      <div className="flex items-center justify-between border-b border-border bg-accent/5 px-5 py-2">
         <div className="text-lg font-semibold tracking-tight text-accent">AI Studio</div>
         <div className="flex items-center gap-3">
           <button
-            className="inline-flex items-center gap-2 rounded-lg border border-border px-3 py-2 text-sm text-text-secondary transition hover:bg-background/80"
+            className="inline-flex items-center gap-2 rounded-lg border border-border px-2 py-1 text-sm text-text-secondary transition hover:bg-background/80"
             onClick={onShowPresets}
           >
             <IconTemplate size={18} /> Presets
           </button>
           {hasVersionHistory && (
             <button
-              className="inline-flex items-center gap-2 rounded-lg border border-border px-3 py-2 text-sm text-text-secondary transition hover:bg-background/80"
+              className="inline-flex items-center gap-2 rounded-lg border border-border px-2 py-1 text-sm text-text-secondary transition hover:bg-background/80"
               onClick={onShowHistory}
             >
               <IconHistory size={18} /> History
             </button>
           )}
           <button
-            className="inline-flex items-center gap-2 rounded-lg border border-border px-3 py-2 text-sm text-text-secondary transition hover:bg-background/80"
+            className="inline-flex items-center gap-2 rounded-lg border border-border px-2 py-1 text-sm text-text-secondary transition hover:bg-background/80"
             onClick={onReset}
           >
             <IconRefresh size={18} /> Reset
