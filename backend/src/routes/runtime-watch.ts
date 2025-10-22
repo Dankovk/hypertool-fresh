@@ -2,6 +2,7 @@ import { Hono } from 'hono';
 import { existsSync, watch } from 'node:fs';
 import { resolve, join } from 'node:path';
 import { stream } from 'hono/streaming';
+import { loadRuntimeBundles } from '@/lib/boilerplate';
 
 const app = new Hono();
 
@@ -30,7 +31,23 @@ app.get('/', (c) => {
     ];
 
     const watchers: ReturnType<typeof watch>[] = [];
-    let keepAlive: ReturnType<typeof setInterval> | null = null;
+    let debounceTimer: ReturnType<typeof setTimeout> | null = null;
+
+    // Function to send bundles via SSE
+    const sendBundles = async () => {
+      try {
+        const bundles = loadRuntimeBundles();
+        const payload = {
+          type: 'bundles',
+          bundles,
+          timestamp: Date.now(),
+        };
+        await stream.write(toSSE(JSON.stringify(payload), 'bundles'));
+        console.log('[runtime-watch] Sent bundles via SSE:', Object.keys(bundles));
+      } catch (error) {
+        console.error('[runtime-watch] Error sending bundles:', error);
+      }
+    };
 
     try {
       // Set SSE headers
@@ -38,42 +55,52 @@ app.get('/', (c) => {
       c.header('Cache-Control', 'no-cache, no-transform');
       c.header('Connection', 'keep-alive');
 
-      // Send ready event
+      // Send ready event with initial bundles
       await stream.write(toSSE(JSON.stringify({ ready: true }), 'ready'));
+      await sendBundles();
 
-      // Set up file watchers
+      // Set up file watchers with debouncing
       for (const target of watchTargets) {
         if (!existsSync(target)) {
           continue;
         }
 
-        const watcher = watch(target, async (eventType, filename) => {
-          const payload = {
-            event: eventType,
-            file: filename ?? null,
-            target,
-            timestamp: Date.now(),
-          };
-          await stream.write(toSSE(JSON.stringify(payload)));
+        const watcher = watch(target, (eventType, filename) => {
+          // Ignore .d.ts files
+          if (filename?.endsWith('.d.ts')) {
+            return;
+          }
+
+          console.log(`[runtime-watch] File change detected: ${eventType} ${filename}`);
+
+          // Debounce: wait 250ms after last change before sending
+          if (debounceTimer) {
+            clearTimeout(debounceTimer);
+          }
+
+          debounceTimer = setTimeout(() => {
+            sendBundles().catch((err) => {
+              console.error('[runtime-watch] Error in sendBundles:', err);
+            });
+          }, 250);
         });
 
         watchers.push(watcher);
       }
 
-      // Keep-alive ping
-      keepAlive = setInterval(async () => {
+      // Keep connection alive indefinitely
+      // Send keep-alive comments every 15 seconds
+      while (true) {
+        await stream.sleep(15000);
         await stream.write(encoder.encode(': keep-alive\n\n'));
-      }, 15000);
-
-      // Wait for connection to close
-      await stream.sleep(Number.MAX_SAFE_INTEGER);
+      }
     } finally {
       // Cleanup
+      if (debounceTimer) {
+        clearTimeout(debounceTimer);
+      }
       for (const watcher of watchers) {
         watcher.close();
-      }
-      if (keepAlive) {
-        clearInterval(keepAlive);
       }
     }
   });

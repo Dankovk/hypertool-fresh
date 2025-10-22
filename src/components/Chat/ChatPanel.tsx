@@ -9,6 +9,7 @@ interface ChatPanelProps {
   messages: ChatMessage[];
   input: string;
   loading: boolean;
+  streamingText?: string;
   onInputChange: (value: string) => void;
   onSubmit: () => void;
   onReset: () => void;
@@ -21,6 +22,7 @@ export function ChatPanel({
   messages,
   input,
   loading,
+  streamingText,
   onInputChange,
   onSubmit,
   onReset,
@@ -67,7 +69,7 @@ export function ChatPanel({
           onSystemPromptChange={settings.setSystemPrompt}
         />
 
-      <ChatMessages messages={messages} loading={loading} />
+      <ChatMessages messages={messages} loading={loading} streamingText={streamingText} />
       <ChatInput
         value={input}
         onChange={onInputChange}

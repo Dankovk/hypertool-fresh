@@ -3,6 +3,7 @@ import { toast } from "sonner";
 import { useBoilerplateStore } from "@/stores";
 import { FileMapSchema } from "@/types/studio";
 import { toClientFiles } from "@/lib/fileUtils";
+import { apiFetch, API_ENDPOINTS } from "@/lib/api-client";
 import type { FileMap } from "@/types/studio";
 
 /**
@@ -13,8 +14,10 @@ export function useBoilerplate() {
   const setPresets = useBoilerplateStore((state) => state.setPresets);
 
   const loadBoilerplate = useCallback(async (presetId?: string): Promise<FileMap | null> => {
-    const url = presetId ? `/api/boilerplate?preset=${presetId}` : "/api/boilerplate?preset=circle";
-    const res = await fetch(url);
+    const url = presetId
+      ? `${API_ENDPOINTS.BOILERPLATE}?preset=${presetId}`
+      : `${API_ENDPOINTS.BOILERPLATE}?preset=circle`;
+    const res = await apiFetch(url);
     if (!res.ok) {
       toast.error("Failed to load boilerplate");
       return null;
@@ -29,7 +32,7 @@ export function useBoilerplate() {
   }, []);
 
   const loadPresets = useCallback(async () => {
-    const res = await fetch("/api/boilerplate?action=list");
+    const res = await apiFetch(`${API_ENDPOINTS.BOILERPLATE}?action=list`);
     if (!res.ok) return;
     const json = await res.json();
     if (json.presets) {

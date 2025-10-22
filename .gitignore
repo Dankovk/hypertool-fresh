@@ -18,8 +18,11 @@ next
 
 
 .idea
+.idea/*
 dist
 dist/*
 dist/
+tsconfig.tsbuildinfo
+.turbo
 
 

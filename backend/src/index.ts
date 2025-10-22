@@ -8,6 +8,7 @@ import download from './routes/download';
 import runtimeWatch from './routes/runtime-watch';
 import runtimeWatchSnapshot from './routes/runtime-watch-snapshot';
 import ai from './routes/ai';
+import aiStream from './routes/ai-stream';
 import history from './routes/history';
 
 const app = new Hono();
@@ -25,6 +26,7 @@ app.route('/api/download', download);
 app.route('/api/runtime-watch', runtimeWatch);
 app.route('/api/runtime-watch/snapshot', runtimeWatchSnapshot);
 app.route('/api/ai', ai);
+app.route('/api/ai/stream', aiStream);
 app.route('/api/history', history);
 
 // 404 handler
@@ -36,15 +38,17 @@ app.onError((err, c) => {
   return c.json({ error: 'Internal server error' }, 500);
 });
 
-export default app;
+// Export for both Vercel and Bun
+const port = parseInt(process.env.PORT || '3001', 10);
 
-// For local development with Bun
+export default {
+  port,
+  fetch: app.fetch,
+  development: process.env.NODE_ENV !== 'production',
+  idleTimeout: 120, // 120 seconds for AI streaming requests
+};
+
+// Log only when directly running (not during import)
 if (import.meta.main) {
-  const port = process.env.PORT || 3001;
   console.log(`🚀 Server running at http://localhost:${port}`);
-
-  Bun.serve({
-    port,
-    fetch: app.fetch,
-  });
 }

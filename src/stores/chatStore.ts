@@ -6,13 +6,18 @@ export interface ChatState {
   messages: ChatMessage[];
   input: string;
   isLoading: boolean;
+  streamingText: string;
+  isStreaming: boolean;
 }
 
 export interface ChatActions {
   setMessages: (messages: ChatMessage[]) => void;
   addMessage: (message: ChatMessage) => void;
+  updateLastMessage: (content: string) => void;
   setInput: (input: string) => void;
   setLoading: (isLoading: boolean) => void;
+  setStreamingText: (text: string) => void;
+  setIsStreaming: (isStreaming: boolean) => void;
   clearMessages: () => void;
   clearInput: () => void;
   reset: () => void;
@@ -24,6 +29,8 @@ const initialState: ChatState = {
   messages: [],
   input: "",
   isLoading: false,
+  streamingText: "",
+  isStreaming: false,
 };
 
 /**
@@ -44,6 +51,13 @@ export const useChatStore = create<ChatStore>()(
         state.messages.push(message);
       }),
 
+    updateLastMessage: (content) =>
+      set((state) => {
+        if (state.messages.length > 0) {
+          state.messages[state.messages.length - 1].content = content;
+        }
+      }),
+
     setInput: (input) =>
       set((state) => {
         state.input = input;
@@ -52,6 +66,16 @@ export const useChatStore = create<ChatStore>()(
     setLoading: (isLoading) =>
       set((state) => {
         state.isLoading = isLoading;
+      }),
+
+    setStreamingText: (text) =>
+      set((state) => {
+        state.streamingText = text;
+      }),
+
+    setIsStreaming: (isStreaming) =>
+      set((state) => {
+        state.isStreaming = isStreaming;
       }),
 
     clearMessages: () =>
@@ -72,6 +96,8 @@ export const useChatStore = create<ChatStore>()(
 export const selectMessages = (state: ChatStore) => state.messages;
 export const selectInput = (state: ChatStore) => state.input;
 export const selectIsLoading = (state: ChatStore) => state.isLoading;
+export const selectStreamingText = (state: ChatStore) => state.streamingText;
+export const selectIsStreaming = (state: ChatStore) => state.isStreaming;
 export const selectMessageCount = (state: ChatStore) => state.messages.length;
 export const selectCanSend = (state: ChatStore) =>
   state.input.trim().length > 0 && !state.isLoading;

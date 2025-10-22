@@ -23,7 +23,7 @@ export async function GET() {
       entryCount: history.length,
       canUndo: summary.canUndo,
       canRedo: summary.canRedo,
-      currentPosition: summary.currentPosition,
+      currentIndex: summary.currentIndex,
     });
 
     return NextResponse.json({

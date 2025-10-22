@@ -33,6 +33,9 @@ export class CssBridge {
 
   constructor(options: CssBridgeOptions = {}) {
     // Try to access parent document, but handle cross-origin errors gracefully
+
+      console.log('AUAUAUAUAUAU');
+      console.log('AUAUAUAUAUAU');
     let sourceDoc: Document | null = null;
     if (options.sourceDocument) {
       sourceDoc = options.sourceDocument;

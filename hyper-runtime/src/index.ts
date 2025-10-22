@@ -9,6 +9,8 @@ export {
   studioTheme,
 } from "./controls/index";
 
+
+console.log('AUAUAUAUAUAU');
 export type {
   ControlDefinitions,
   ControlDefinition,

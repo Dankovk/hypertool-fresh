@@ -11,6 +11,7 @@ import { useCodeVersions } from "@/hooks/useCodeVersions";
 import { useAIChat } from "@/hooks/useAIChat";
 import { useFilesStore, useUIStore, useVersionsStore, useChatStore } from "@/stores";
 import { toRuntimeFileMap } from "@/lib/fileUtils";
+import { API_ENDPOINTS, getApiUrl } from "@/lib/api-client";
 import type { CodeVersion } from "@/types/studio";
 
 export default function HomePage() {
@@ -27,6 +28,11 @@ export default function HomePage() {
   const { codeVersions, clearVersions } = useCodeVersions();
   const chat = useAIChat();
   const clearMessages = useChatStore((state) => state.clearMessages);
+
+  // Debug logging for streaming
+  useEffect(() => {
+    console.log("[HomePage] chat.streamingText:", chat.streamingText ? `${chat.streamingText.length} chars` : "empty");
+  }, [chat.streamingText]);
 
   // Load initial boilerplate (only once on mount)
   useEffect(() => {
@@ -72,8 +78,9 @@ export default function HomePage() {
   }, [setFiles, setShowVersionHistory]);
 
   const onDownload = useCallback(async () => {
-    const res = await fetch("/api/download", {
+    const res = await fetch(getApiUrl(API_ENDPOINTS.DOWNLOAD), {
       method: "POST",
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ files }),
     });
     if (!res.ok) {
@@ -90,85 +97,49 @@ export default function HomePage() {
   }, [files]);
 
   useEffect(() => {
+    console.log("[runtime-watch] useEffect running, setting up SSE connection");
+
     if (process.env.NODE_ENV !== "development") {
+      console.log("[runtime-watch] Not in development mode, skipping");
       return;
     }
 
     let active = true;
     let eventSource: EventSource | null = null;
     let reconnectTimer: number | null = null;
-    let refreshTimer: number | null = null;
 
-    const fetchBundles = async () => {
-      try {
-        // Add cache-busting and no-cache headers
-        const response = await fetch(`/api/runtime-watch/snapshot?t=${Date.now()}`, {
-          cache: "no-store",
-          headers: {
-            "Cache-Control": "no-cache, no-store, must-revalidate",
-            "Pragma": "no-cache",
-          },
-        });
-
-        if (!response.ok) {
-          return null;
-        }
-
-        const json = await response.json();
-        if (!json || typeof json !== "object" || !json.bundles) {
-          return null;
-        }
-        return json.bundles as Record<string, string>;
-      } catch (error) {
-        return null;
-      }
-    };
-
-    const scheduleRefresh = () => {
-      if (refreshTimer) {
-        clearTimeout(refreshTimer);
+    const applyBundles = (runtimeFiles: Record<string, string>) => {
+      if (!runtimeFiles || !active) {
+        console.log("[runtime-watch] No runtime files to apply");
+        return;
       }
 
-      refreshTimer = window.setTimeout(async () => {
-        if (!active) {
-          return;
+      console.log("[runtime-watch] Received bundles via SSE:", Object.keys(runtimeFiles));
+      const currentFiles = useFilesStore.getState().files;
+      let changed = false;
+      const nextFiles = { ...currentFiles };
+
+      for (const [path, contents] of Object.entries(runtimeFiles)) {
+        if (!path.startsWith("/__hypertool__/")) {
+          continue;
         }
 
-        console.log("[runtime-watch] Fetching fresh bundles from snapshot endpoint...");
-        const runtimeFiles = await fetchBundles();
-        if (!runtimeFiles || !active) {
-          console.log("[runtime-watch] No runtime files received");
-          return;
+        const oldContent = nextFiles[path];
+        if (oldContent !== contents) {
+          console.log(`[runtime-watch] Bundle changed: ${path}`);
+          console.log(`  Old size: ${oldContent?.length ?? 0} bytes`);
+          console.log(`  New size: ${contents.length} bytes`);
+          nextFiles[path] = contents;
+          changed = true;
         }
+      }
 
-        console.log("[runtime-watch] Received bundles:", Object.keys(runtimeFiles));
-        const currentFiles = useFilesStore.getState().files;
-        let changed = false;
-        const nextFiles = { ...currentFiles };
-
-        for (const [path, contents] of Object.entries(runtimeFiles)) {
-          if (!path.startsWith("/__hypertool__/")) {
-            continue;
-          }
-
-          const oldContent = nextFiles[path];
-          if (oldContent !== contents) {
-            console.log(`[runtime-watch] Bundle changed: ${path}`);
-            console.log(`  Old size: ${oldContent?.length ?? 0} bytes`);
-            console.log(`  New size: ${contents.length} bytes`);
-            console.log(`  First 100 chars: ${contents.substring(0, 100)}`);
-            nextFiles[path] = contents;
-            changed = true;
-          }
-        }
-
-        if (changed) {
-          console.log("[runtime-watch] ✅ Updating files store with new bundles");
-          setFiles(nextFiles);
-        } else {
-          console.log("[runtime-watch] ⚠️ No bundle changes detected (bundles are identical)");
-        }
-      }, 250);
+      if (changed) {
+        console.log("[runtime-watch] ✅ Updating files store with new bundles");
+        setFiles(nextFiles);
+      } else {
+        console.log("[runtime-watch] ⚠️ No bundle changes detected (bundles are identical)");
+      }
     };
 
     const connect = () => {
@@ -180,42 +151,49 @@ export default function HomePage() {
         eventSource.close();
       }
 
-      const source = new EventSource("/api/runtime-watch");
+      const watchUrl = getApiUrl(API_ENDPOINTS.RUNTIME_WATCH);
+      console.log("[runtime-watch] Connecting to:", watchUrl);
+
+      const source = new EventSource(watchUrl);
       eventSource = source;
 
-      source.addEventListener("ready", () => {
+      source.addEventListener("ready", (event: any) => {
         if (!active) {
           return;
         }
-        console.log("[runtime-watch] SSE connection ready, scheduling initial fetch");
-        scheduleRefresh();
+        console.log("[runtime-watch] SSE connection ready");
+        try {
+          const data = JSON.parse(event.data);
+          console.log("[runtime-watch] Ready event data:", data);
+        } catch (e) {
+          // Ignore parse errors
+        }
       });
 
-      source.onmessage = (event) => {
-        if (!event.data || !active) {
+      source.addEventListener("bundles", (event: any) => {
+        if (!active) {
           return;
         }
 
         try {
           const payload = JSON.parse(event.data);
-          console.log("[runtime-watch] SSE event received:", payload);
-          if (payload && typeof payload.file === "string" && payload.file.endsWith(".d.ts")) {
-            console.log("[runtime-watch] Ignoring .d.ts file change");
-            return;
+          console.log("[runtime-watch] Bundles event received");
+          if (payload && payload.bundles) {
+            applyBundles(payload.bundles);
           }
         } catch (error) {
-          // Ignore invalid payloads
+          console.error("[runtime-watch] Error parsing bundles event:", error);
         }
+      });
 
-        console.log("[runtime-watch] File change detected, scheduling refresh");
-        scheduleRefresh();
-      };
-
-      source.onerror = () => {
+      source.onerror = (error) => {
+        console.error("[runtime-watch] SSE connection error:", error);
+        console.log("[runtime-watch] EventSource readyState:", source.readyState);
         source.close();
         if (!active) {
           return;
         }
+        console.log("[runtime-watch] Scheduling reconnect in 2 seconds...");
         if (reconnectTimer) {
           clearTimeout(reconnectTimer);
         }
@@ -226,10 +204,8 @@ export default function HomePage() {
     connect();
 
     return () => {
+      console.log("[runtime-watch] useEffect cleanup, closing connection");
       active = false;
-      if (refreshTimer) {
-        clearTimeout(refreshTimer);
-      }
       if (reconnectTimer) {
         clearTimeout(reconnectTimer);
       }
@@ -245,6 +221,7 @@ export default function HomePage() {
         messages={chat.messages}
         input={chat.input}
         loading={chat.loading}
+        streamingText={chat.streamingText}
         onInputChange={chat.setInput}
         onSubmit={chat.sendMessage}
         onReset={onReset}

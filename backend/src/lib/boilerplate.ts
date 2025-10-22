@@ -14,15 +14,18 @@ interface PresetInfo {
   description: string;
 }
 
-const DEFAULT_RELATIVE_PATH = "boilerplate-presets/universal";
-const PRESETS_RELATIVE_PATH = "boilerplate-presets";
+// Backend runs from backend/ directory, so go up one level to project root
+const pathToRootDir = resolve(process.cwd(), "..");
+
+const DEFAULT_RELATIVE_PATH = "../boilerplate-presets/universal";
+const PRESETS_RELATIVE_PATH = "../boilerplate-presets";
 const FALLBACK_RELATIVE_PATHS = [
-  "./boilerplate-presets/universal",
   "../boilerplate-presets/universal",
   "../../boilerplate-presets/universal",
-  "./boilerplate-presets",
+  "./boilerplate-presets/universal",
   "../boilerplate-presets",
   "../../boilerplate-presets",
+  "./boilerplate-presets",
 ];
 
 export function resolveBoilerplatePath(): string {
@@ -132,7 +135,7 @@ const FRAME_GLOBALS_PATH = "/__hypertool__/frame/globals.js";
 
 function injectControlsLibrary(files: FileMap): ScriptDescriptor | null {
   try {
-    const distPath = resolve(process.cwd(), CONTROLS_DIST_RELATIVE_PATH);
+    const distPath = resolve(pathToRootDir, CONTROLS_DIST_RELATIVE_PATH);
     if (!existsSync(distPath)) {
       console.warn(`[boilerplate] Controls dist not found at ${distPath}`);
       return null;
@@ -168,7 +171,7 @@ function injectFrameLibrary(files: FileMap): ScriptDescriptor[] {
   const scripts: ScriptDescriptor[] = [];
 
   try {
-    const distPath = resolve(process.cwd(), FRAME_DIST_RELATIVE_PATH);
+    const distPath = resolve(pathToRootDir, FRAME_DIST_RELATIVE_PATH);
     if (!existsSync(distPath)) {
       console.warn(`[boilerplate] Frame dist not found at ${distPath}`);
       return scripts;

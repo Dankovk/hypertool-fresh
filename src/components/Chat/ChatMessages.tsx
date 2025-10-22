@@ -1,19 +1,23 @@
 import { useEffect, useRef } from "react";
 import { ChatMessage } from "./ChatMessage";
 import { TypingIndicator } from "./TypingIndicator";
+import { StreamingPreview } from "./StreamingPreview";
 import type { ChatMessage as ChatMessageType } from "@/types/studio";
 
 interface ChatMessagesProps {
   messages: ChatMessageType[];
   loading: boolean;
+  streamingText?: string;
 }
 
-export function ChatMessages({ messages, loading }: ChatMessagesProps) {
+export function ChatMessages({ messages, loading, streamingText }: ChatMessagesProps) {
   const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  console.log("[ChatMessages] streamingText prop:", streamingText ? `${streamingText.length} chars` : "empty");
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages, loading]);
+  }, [messages, loading, streamingText]);
 
   return (
     <div className="scrollbar-thin flex-1 space-y-4 overflow-y-auto px-5 py-5">
@@ -28,7 +32,8 @@ export function ChatMessages({ messages, loading }: ChatMessagesProps) {
           <div className="leading-relaxed text-text">Describe the visual you want and I&apos;ll update the sketch.</div>
         </div>
       )}
-      {loading && <TypingIndicator />}
+      {streamingText && <StreamingPreview streamingText={streamingText} />}
+      {loading && !streamingText && <TypingIndicator />}
       <div ref={messagesEndRef} />
     </div>
   );
