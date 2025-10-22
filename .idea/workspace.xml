@@ -5,30 +5,8 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="51bc1ced-b378-46bc-8004-9aa3de836607" name="Changes" comment="Gpt-5 model name fix">
-      <change afterPath="$PROJECT_DIR$/backend/package.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/bun.lock" beforeDir="false" afterPath="$PROJECT_DIR$/bun.lock" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/hyper-runtime/dist/controls/index.js" beforeDir="false" afterPath="$PROJECT_DIR$/hyper-runtime/dist/controls/index.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/hyper-runtime/dist/controls/index.js.map" beforeDir="false" afterPath="$PROJECT_DIR$/hyper-runtime/dist/controls/index.js.map" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/hyper-runtime/dist/frame/index.js" beforeDir="false" afterPath="$PROJECT_DIR$/hyper-runtime/dist/frame/index.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/hyper-runtime/dist/frame/index.js.map" beforeDir="false" afterPath="$PROJECT_DIR$/hyper-runtime/dist/frame/index.js.map" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/hyper-runtime/dist/index.js" beforeDir="false" afterPath="$PROJECT_DIR$/hyper-runtime/dist/index.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/hyper-runtime/dist/index.js.map" beforeDir="false" afterPath="$PROJECT_DIR$/hyper-runtime/dist/index.js.map" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/package.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/app/api/ai/route.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/app/api/ai/route.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/app/api/boilerplate/route.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/app/api/boilerplate/route.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/app/api/download/route.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/app/api/download/route.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/app/api/history/route.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/app/api/history/route.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/app/api/runtime-watch/route.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/app/api/runtime-watch/route.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/app/api/runtime-watch/snapshot/route.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/app/api/runtime-watch/snapshot/route.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/config/models.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/config/models.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/lib/aiProviders.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/lib/aiProviders.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/lib/aiService.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/lib/aiService.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/lib/boilerplate.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/lib/boilerplate.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/lib/history.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/lib/history.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/lib/patches.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/lib/patches.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/types/ai.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/types/ai.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/hyper-runtime/src/frame/cssBridge.ts" beforeDir="false" afterPath="$PROJECT_DIR$/hyper-runtime/src/frame/cssBridge.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/components/Preview/CssSyncManager.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/components/Preview/CssSyncManager.ts" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -75,6 +53,9 @@
   &quot;associatedIndex&quot;: 6
 }</component>
   <component name="ProjectId" id="34FYshMvBPxVFh75Q23rFU8VoxW" />
+  <component name="ProjectLevelVcsManager">
+    <ConfirmationsSetting value="1" id="Add" />
+  </component>
   <component name="ProjectViewState">
     <option name="autoscrollFromSource" value="true" />
     <option name="autoscrollToSource" value="true" />

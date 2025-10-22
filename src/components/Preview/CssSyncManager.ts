@@ -47,7 +47,7 @@ export class CssSyncManager {
     this.targetWindow = null;
   }
 
-  private sendInitialCss() {
+  private async sendInitialCss() {
     if (!this.targetWindow) return;
 
     // Send init message
@@ -59,11 +59,12 @@ export class CssSyncManager {
       SUPPORTED_NODE_NAMES.has(node.nodeName)
     );
 
-    nodes.forEach((node) => {
-      if (!(node instanceof HTMLElement)) return;
+    // Send nodes sequentially to maintain order
+    for (const node of nodes) {
+      if (!(node instanceof HTMLElement)) continue;
       const id = this.getOrCreateNodeId(node);
-      this.sendAddMessage(node, id);
-    });
+      await this.sendAddMessage(node, id);
+    }
   }
 
   private attachObserver() {
@@ -113,7 +114,10 @@ export class CssSyncManager {
       if (!SUPPORTED_NODE_NAMES.has(node.nodeName)) return;
 
       const id = this.getOrCreateNodeId(node);
-      this.sendAddMessage(node, id);
+      // Fire and forget - we don't want to block mutations
+      this.sendAddMessage(node, id).catch((error) => {
+        console.error('[CssSyncManager] Failed to send add message:', error);
+      });
     });
   }
 
@@ -149,7 +153,34 @@ export class CssSyncManager {
     });
   }
 
-  private sendAddMessage(node: HTMLElement, id: string) {
+  private async sendAddMessage(node: HTMLElement, id: string) {
+    // For LINK tags, fetch the CSS and convert to inline STYLE
+    if (node.tagName === 'LINK' && node instanceof HTMLLinkElement) {
+      const href = node.getAttribute('href');
+      const rel = node.getAttribute('rel');
+
+      // Only process stylesheet links
+      if (rel === 'stylesheet' && href) {
+        try {
+          const cssContent = await this.fetchCssContent(href);
+          // Send as a STYLE tag with inline CSS
+          this.postMessage({
+            type: CSS_SYNC_MESSAGE_TYPE,
+            action: 'add',
+            id,
+            tagName: 'STYLE',
+            attributes: {},
+            textContent: cssContent,
+          });
+          return;
+        } catch (error) {
+          console.error(`[CssSyncManager] Failed to fetch CSS from ${href}:`, error);
+          // Fall through to send the link tag as-is
+        }
+      }
+    }
+
+    // For STYLE tags or failed LINK fetches, send as-is
     this.postMessage({
       type: CSS_SYNC_MESSAGE_TYPE,
       action: 'add',
@@ -158,6 +189,18 @@ export class CssSyncManager {
       attributes: this.getAttributes(node),
       textContent: node.textContent ?? '',
     });
+  }
+
+  private async fetchCssContent(href: string): Promise<string> {
+    // Convert relative URLs to absolute
+    const absoluteUrl = new URL(href, window.location.href).href;
+
+    const response = await fetch(absoluteUrl);
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+    }
+
+    return await response.text();
   }
 
   private getOrCreateNodeId(node: Node): string {
