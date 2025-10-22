@@ -1,6 +1,6 @@
+import React from 'react';
+import { createRoot, type Root } from 'react-dom/client';
 import { CssBridge } from './cssBridge';
-import { ControlsBridge } from './controlsBridge';
-import { ExportBridge } from './exportBridge';
 import { DependencyManager, ExternalDependency } from './dependencyManager';
 import {
   HyperFrameRuntimeApi,
@@ -12,6 +12,7 @@ import {
   SandboxEnvironment,
 } from './types';
 import { resolveContainer } from './utils/dom';
+import { WrapperApp } from './wrapper-app/WrapperApp';
 
 function runCleanups(cleanups: Array<() => void>) {
   while (cleanups.length > 0) {
@@ -52,6 +53,8 @@ export class HyperFrameRuntime implements HyperFrameRuntimeApi {
     this.cssBridge.start();
   }
 
+
+
   async createSandbox(options: HyperFrameSandboxOptions): Promise<HyperFrameSandboxHandle> {
     if (options.dependencies?.length) {
       await this.ensureDependencies(options.dependencies);
@@ -61,7 +64,7 @@ export class HyperFrameRuntime implements HyperFrameRuntimeApi {
       this.mirrorCss();
     }
 
-    const mount = this.createMount(options.mount);
+    const mount = this.createReactMount(options);
     const cleanups: Array<() => void> = [];
     const pushCleanup = (cleanup: () => void) => {
       if (typeof cleanup === 'function') {
@@ -69,58 +72,42 @@ export class HyperFrameRuntime implements HyperFrameRuntimeApi {
       }
     };
 
-    const exportBridge = new ExportBridge({
-      container: mount.container,
-      position: options.exportWidget?.position,
-      filename: options.exportWidget?.filename,
-    });
-
-    if (options.exportWidget?.enabled === false) {
-      exportBridge.setVisible(false);
-    }
-
-    if (options.exportWidget?.useCanvasCapture !== false) {
-      exportBridge.useDefaultCanvasCapture(true);
-    }
-
     const environment = this.createEnvironment(pushCleanup);
 
+    // Create a minimal exports API (will be used by ExportWidget)
+    const exportsApi = {
+      registerImageCapture: () => {},
+      registerVideoCapture: () => {},
+      setFilename: () => {},
+      setVisible: () => {},
+      useDefaultCanvasCapture: () => {},
+      destroy: () => {},
+    };
+
     const context: SandboxContext = {
-      mount: mount.container,
+      mount: mount.sandboxContainer,
       params: {},
       controls: null,
-      exports: exportBridge.getApi(),
+      exports: exportsApi,
       runtime: this,
       environment,
     };
 
     let controlsHandle: SandboxControlsHandle | null = null;
 
+    // If controls are configured, we'll handle them via React component
+    // but we still need to create a handle for the context
     if (options.controls?.definitions) {
-      const controlsBridge = new ControlsBridge();
-      controlsHandle = controlsBridge.init({
-        definitions: options.controls.definitions,
-        options: options.controls.options,
-        context,
-        onControlChange: (change) => {
-          options.controls?.onChange?.(change, context);
-        },
-      }) as SandboxControlsHandle;
+      // Create a proxy object that will be updated when controls are initialized
+      controlsHandle = {
+        params: {},
+        dispose: () => {},
+      };
 
       context.controls = controlsHandle;
-      context.params = controlsHandle?.params ?? {};
-
-      pushCleanup(() => {
-        if (!controlsHandle) return;
-        if (typeof controlsHandle.destroy === 'function') {
-          controlsHandle.destroy();
-        } else if (typeof controlsHandle.dispose === 'function') {
-          controlsHandle.dispose();
-        }
-      });
+      context.params = controlsHandle.params;
     }
 
-    pushCleanup(() => exportBridge.destroy());
     pushCleanup(() => mount.destroy());
 
     let setupCleanup: void | (() => void);
@@ -143,7 +130,7 @@ export class HyperFrameRuntime implements HyperFrameRuntimeApi {
     }
 
     const handle: HyperFrameSandboxHandle = {
-      container: mount.container,
+      container: mount.sandboxContainer,
       controls: controlsHandle,
       params: context.params,
       destroy: () => {
@@ -176,20 +163,69 @@ export class HyperFrameRuntime implements HyperFrameRuntimeApi {
     };
   }
 
-  private createMount(options?: HyperFrameSandboxOptions['mount']): { container: HTMLElement; destroy(): void } {
-    const baseOptions = options as any;
+  private createReactMount(options: HyperFrameSandboxOptions): {
+    sandboxContainer: HTMLElement;
+    destroy(): void;
+  } {
+    const baseOptions = options.mount as any;
     const resolved = resolveContainer({
       target: baseOptions?.target,
       containerClassName: baseOptions?.containerClassName,
     });
 
-    if (typeof baseOptions?.onReady === 'function') {
-      baseOptions.onReady({ container: resolved.element });
-    }
+    // Create a temporary div that will act as the sandbox container
+    // React will render into this
+    const tempContainer = document.createElement('div');
+    tempContainer.style.width = '100%';
+    tempContainer.style.height = '100%';
+
+    // Create a ref for the sandbox container
+    const sandboxContainerRef = React.createRef<HTMLDivElement>();
+
+    // Create React root
+    const root = createRoot(resolved.element);
+
+    // Render the WrapperApp
+    root.render(
+      React.createElement(WrapperApp, {
+        sandboxContainerRef,
+        controls: options.controls
+          ? {
+              definitions: options.controls.definitions,
+              options: options.controls.options,
+              onChange: (change) => options.controls?.onChange?.(change, {} as any),
+            }
+          : null,
+        exportWidget: {
+          enabled: options.exportWidget?.enabled !== false,
+          filename: options.exportWidget?.filename,
+          position: options.exportWidget?.position,
+          useCanvasCapture: options.exportWidget?.useCanvasCapture !== false,
+        },
+        container: tempContainer,
+        exportsApi: undefined,
+      })
+    );
+
+    // Use a microtask to wait for React to render
+    // This ensures the ref is populated before we continue
+    let sandboxContainer: HTMLElement = tempContainer;
+
+    // Schedule a check for the ref after React renders
+    Promise.resolve().then(() => {
+      if (sandboxContainerRef.current) {
+        sandboxContainer = sandboxContainerRef.current;
+      }
+
+      if (typeof baseOptions?.onReady === 'function') {
+        baseOptions.onReady({ container: sandboxContainer });
+      }
+    });
 
     return {
-      container: resolved.element,
+      sandboxContainer: tempContainer,
       destroy: () => {
+        root.unmount();
         if (resolved.createdInternally) {
           resolved.element.remove();
         }

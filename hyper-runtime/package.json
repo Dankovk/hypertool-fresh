@@ -27,6 +27,10 @@
     "build:types": "tsc --project tsconfig.json --emitDeclarationOnly",
     "dev": "bun build src/index.ts src/controls/index.ts src/frame/index.ts --outdir dist --target browser --format esm --sourcemap=external --watch"
   },
+  "dependencies": {
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
+  },
   "peerDependencies": {
     "p5": "^1.9.0",
     "three": "^0.160.0",
@@ -34,6 +38,8 @@
   },
   "devDependencies": {
     "@types/p5": "^1.6.3",
+    "@types/react": "^18.3.1",
+    "@types/react-dom": "^18.3.1",
     "@types/three": "^0.160.0",
     "@types/bun": "latest",
     "p5": "^1.9.0",
