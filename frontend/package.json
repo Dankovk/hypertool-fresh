@@ -1,12 +1,9 @@
 {
   "name": "@hypertool/frontend",
   "version": "0.1.0",
-
   "private": true,
-
   "scripts": {
     "dev": "next dev --turbo -p 3030"
-
   },
   "dependencies": {
     "@ai-sdk/anthropic": "^2.0.35",
@@ -26,8 +23,10 @@
     "llm-diff-patcher": "^0.2.1",
     "next": "^16.0.0-canary.14",
     "p5": "1.9.2",
+    "partial-json": "^0.1.7",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
+    "shiki": "^3.13.0",
     "sonner": "1.5.0",
     "tweakpane": "^4.0.5",
     "zod": "^3.23.8",

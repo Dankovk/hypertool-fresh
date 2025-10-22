@@ -227,6 +227,26 @@
   
 }
 
+/* Shiki syntax highlighting */
+.shiki-wrapper .shiki,
+.shiki-wrapper pre.shiki {
+  margin: 0 !important;
+  padding: 12px !important;
+  background-color: #0d1117 !important;
+  overflow-x: auto !important;
+}
+
+.shiki-wrapper .shiki code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace !important;
+  font-size: 13px !important;
+  line-height: 1.5 !important;
+}
+
+.shiki-wrapper .shiki .line {
+  display: inline-block;
+  width: 100%;
+}
+
 @layer utilities {
   .animate-slide-in {
     animation: messageSlide 0.3s ease-out both;

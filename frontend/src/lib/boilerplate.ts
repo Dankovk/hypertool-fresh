@@ -273,13 +273,13 @@ if (typeof window !== "undefined") {
       
       recorder.onstop = () => {
         console.log('Recording stopped, processing...');
-        const blob = new Blob(recordingState.recordedChunks, { type: 'video/webm' });
+        const blob = new Blob(recordingState.recordedChunks, { type: 'video/mp4' });
         console.log('Recording blob size:', blob.size, 'bytes');
         window.parent.postMessage({
           type: 'HYPERTOOL_RECORDING_RESPONSE',
           data: {
             blob: blob,
-            filename: 'hypertool-recording.webm'
+            filename: 'hypertool-recording.mp4'
           }
         }, '*');
         recordingState.isRecording = false;

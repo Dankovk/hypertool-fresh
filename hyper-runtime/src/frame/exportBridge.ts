@@ -65,10 +65,10 @@ export class ExportBridge {
     const formats = [
         { mimeType: 'video/mp4;codecs=h264', extension: 'mp4' },
       { mimeType: 'video/mp4', extension: 'mp4' },
-      { mimeType: 'video/webm;codecs=h264', extension: 'webm' },
-      { mimeType: 'video/webm;codecs=vp9', extension: 'webm' },
-      { mimeType: 'video/webm;codecs=vp8', extension: 'webm' },
-      { mimeType: 'video/webm', extension: 'webm' },
+      // { mimeType: 'video/webm;codecs=h264', extension: 'webm' },
+      // { mimeType: 'video/webm;codecs=vp9', extension: 'webm' },
+      // { mimeType: 'video/webm;codecs=vp8', extension: 'webm' },
+      // { mimeType: 'video/webm', extension: 'webm' },
     ];
 
     for (const format of formats) {
@@ -372,8 +372,8 @@ export class ExportBridge {
       });
 
       recorder.addEventListener('stop', () => {
-        const blob = new Blob(this.recordedChunks, { type: handler.mimeType ?? 'video/webm' });
-        const filename = handler.filename ?? `${this.filename}.${this.supportedVideoFormat?.extension ?? 'webm'}`;
+        const blob = new Blob(this.recordedChunks, { type: handler.mimeType ?? 'video/mp4' });
+        const filename = handler.filename ?? `${this.filename}.${this.supportedVideoFormat?.extension ?? 'mp4'}`;
         this.downloadBlob(blob, filename);
         this.setStatus('Recording saved', 'success');
         stream.getTracks().forEach((track) => track.stop());

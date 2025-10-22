@@ -384,7 +384,7 @@ export const PreviewPanel = memo(({ files, onDownload }: PreviewPanelProps)=> {
           break;
         case 'HYPERTOOL_RECORDING_RESPONSE':
           if (data?.blob) {
-            downloadFile(data.blob, data.filename || 'hypertool-recording.webm');
+            downloadFile(data.blob, data.filename || 'hypertool-capture.mp4');
           }
           // Reset recording state
           recordingRef.current = null;
