@@ -23,7 +23,7 @@ export function SettingsPanel({
   onSystemPromptChange,
 }: SettingsPanelProps) {
   return (
-    <div className="flex flex-col gap-4 border-b border-border bg-black/20 px-5 py-4">
+    <div className="flex flex-col gap-4 border-b border-border bg-dark-green px-5 py-4">
       <div className="grid grid-cols-3 gap-4">
         <label className="flex flex-col gap-2">
           <span className="text-xs font-semibold uppercase tracking-[0.12em] text-text-secondary">Model</span>

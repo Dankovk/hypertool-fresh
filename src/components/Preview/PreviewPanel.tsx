@@ -7,11 +7,43 @@ import type {
   WebContainerProcess,
 } from "@webcontainer/api";
 import { WebContainer } from "@webcontainer/api";
-import { IconDownload, IconTerminal } from "@tabler/icons-react";
+import { IconTerminal } from "@tabler/icons-react";
 import { config } from "@/config";
 import { Terminal } from "@xterm/xterm";
 import "@xterm/xterm/css/xterm.css";
 import { CssSyncManager } from "./CssSyncManager";
+import { TopBar } from "../TopBar";
+// We'll implement capture functionality directly
+
+// Constants
+const DEFAULT_TOP_BAR_HEIGHT = 46;
+
+const TERMINAL_CONFIG = {
+  cursorBlink: true,
+  fontSize: 13,
+  fontFamily: 'Menlo, Monaco, "Courier New", monospace',
+  theme: {
+    background: "#0a0a0a",
+    foreground: "#d4d4d4",
+    cursor: "#d4d4d4",
+    black: "#000000",
+    red: "#cd3131",
+    green: "#0dbc79",
+    yellow: "#e5e510",
+    blue: "#2472c8",
+    magenta: "#bc3fbc",
+    cyan: "#11a8cd",
+    white: "#e5e5e5",
+    brightBlack: "#666666",
+    brightRed: "#f14c4c",
+    brightGreen: "#23d18b",
+    brightYellow: "#f5f543",
+    brightBlue: "#3b8eea",
+    brightMagenta: "#d670d6",
+    brightCyan: "#29b8db",
+    brightWhite: "#e5e5e5",
+  },
+} as const;
 
 interface PreviewPanelProps {
   files: Record<string, string>;
@@ -70,12 +102,26 @@ export const PreviewPanel = memo(({ files, onDownload }: PreviewPanelProps)=> {
   const cssSyncManagerRef = useRef<CssSyncManager | null>(null);
   const iframeRef = useRef<HTMLIFrameElement | null>(null);
 
+  // Capture refs
+  const previewContainerRef = useRef<HTMLDivElement | null>(null);
+  const recordingRef = useRef<{ isRecording: boolean } | null>(null);
+  const recordedChunksRef = useRef<Blob[]>([]);
+  const topBarRef = useRef<HTMLDivElement | null>(null);
+
+  const [terminalExpanded, setTerminalExpanded] = useState(false);
   const [status, setStatus] = useState<string>("Booting preview runtime…");
   const [error, setError] = useState<string | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [logs, setLogs] = useState<LogEntry[]>([]);
   const [containerReady, setContainerReady] = useState(false);
-  const [terminalExpanded, setTerminalExpanded] = useState(true);
+  const [isRecording, setIsRecording] = useState(false);
+  const [iframeWidth, setIframeWidth] = useState(0);
+  const [iframeHeight, setIframeHeight] = useState(0);
+  const [wrapperHeight, setWrapperHeight] = useState(0);
+  const [maxWidth, setMaxWidth] = useState(2000);
+  const [maxHeight, setMaxHeight] = useState(2000);
+  const [isFittedToScreen, setIsFittedToScreen] = useState(false);
+  const [topBarHeight, setTopBarHeight] = useState(DEFAULT_TOP_BAR_HEIGHT);
 
   const appendLog = useCallback((message: string) => {
     if (!isMountedRef.current) {
@@ -88,6 +134,38 @@ export const PreviewPanel = memo(({ files, onDownload }: PreviewPanelProps)=> {
       }
       return next;
     });
+  }, []);
+
+  const measureTopBarHeight = useCallback(() => {
+    if (topBarRef.current) {
+      const height = topBarRef.current.getBoundingClientRect().height;
+      setTopBarHeight(Math.round(height));
+    }
+  }, []);
+
+  // Unified function to calculate available space after top bar
+  const calculateAvailableSpace = useCallback(() => {
+    if (!previewContainerRef.current) return null;
+    
+    const container = previewContainerRef.current;
+    const containerRect = container.getBoundingClientRect();
+    
+    return {
+      width: Math.round(containerRect.width),
+      height: Math.round(containerRect.height - topBarHeight)
+    };
+  }, [topBarHeight]);
+
+  // Unified function to update iframe size and wrapper
+  const updateIframeSize = useCallback((width: number, height: number, fitted = false) => {
+    setIframeWidth(width);
+    setIframeHeight(height);
+    setWrapperHeight(height);
+    setMaxWidth(width);
+    setMaxHeight(height);
+    if (fitted) {
+      setIsFittedToScreen(true);
+    }
   }, []);
 
   const pipeProcessOutput = useCallback(
@@ -231,6 +309,7 @@ export const PreviewPanel = memo(({ files, onDownload }: PreviewPanelProps)=> {
       devServerRef.current?.kill();
       containerRef.current?.teardown();
       cssSyncManagerRef.current?.stop();
+      // Note: recording cleanup is handled by iframe message responses
     };
   }, []);
 
@@ -275,6 +354,53 @@ export const PreviewPanel = memo(({ files, onDownload }: PreviewPanelProps)=> {
       }
     };
   }, [previewUrl]);
+
+  // Unified function to handle file downloads
+  const downloadFile = useCallback((blob: Blob, filename: string) => {
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    a.click();
+    URL.revokeObjectURL(url);
+  }, []);
+
+  // Listen for messages from iframe
+  useEffect(() => {
+    const handleMessage = (event: MessageEvent) => {
+      // Only handle messages from our iframe
+      if (event.source !== iframeRef.current?.contentWindow) {
+        return;
+      }
+
+      const { type, data } = event.data;
+      console.log('Received message from iframe:', type, data);
+      
+      switch (type) {
+        case 'HYPERTOOL_CAPTURE_RESPONSE':
+          if (data?.blob) {
+            downloadFile(data.blob, data.filename || 'hypertool-capture.png');
+          }
+          break;
+        case 'HYPERTOOL_RECORDING_RESPONSE':
+          if (data?.blob) {
+            downloadFile(data.blob, data.filename || 'hypertool-recording.webm');
+          }
+          // Reset recording state
+          recordingRef.current = null;
+          setIsRecording(false);
+          break;
+        case 'HYPERTOOL_RECORDING_STOPPED':
+          // Recording was stopped but no video was generated (e.g., too short)
+          recordingRef.current = null;
+          setIsRecording(false);
+          break;
+      }
+    };
+
+    window.addEventListener('message', handleMessage);
+    return () => window.removeEventListener('message', handleMessage);
+  }, [downloadFile]);
 
   useEffect(() => {
     if (typeof window === "undefined") {
@@ -358,10 +484,139 @@ export const PreviewPanel = memo(({ files, onDownload }: PreviewPanelProps)=> {
       // Cleanup the booted instance if boot effect is cancelled
       if (bootedInstance && bootedInstance !== containerRef.current) {
         console.log("Cleaning up boot effect instance");
-        bootedInstance.teardown().catch(console.error);
+        try {
+          bootedInstance.teardown();
+        } catch (err) {
+          console.error("Error during teardown:", err);
+        }
       }
     };
   }, [appendLog]);
+
+  // Handler methods for TopBar buttons
+  const handleCapturePNG = useCallback(async () => {
+    if (!iframeRef.current?.contentWindow) {
+      console.warn('No iframe content window available for capture');
+      return;
+    }
+
+    try {
+      // Send message to iframe to trigger capture
+      iframeRef.current.contentWindow.postMessage({
+        type: 'HYPERTOOL_CAPTURE_PNG',
+        source: 'hypertool-main'
+      }, '*');
+    } catch (error) {
+      console.error('Failed to capture PNG:', error);
+    }
+  }, []);
+
+  const handleRecordVideo = useCallback(async () => {
+    if (!iframeRef.current?.contentWindow) {
+      console.warn('No iframe content window available for recording');
+      return;
+    }
+
+    try {
+      if (recordingRef.current) {
+        // Stop recording - don't update state here, wait for iframe response
+        console.log('Sending stop recording message to iframe');
+        iframeRef.current.contentWindow.postMessage({
+          type: 'HYPERTOOL_STOP_RECORDING',
+          source: 'hypertool-main'
+        }, '*');
+        return;
+      }
+
+      // Send message to iframe to start recording
+      console.log('Sending start recording message to iframe');
+      iframeRef.current.contentWindow.postMessage({
+        type: 'HYPERTOOL_START_RECORDING',
+        source: 'hypertool-main'
+      }, '*');
+      recordingRef.current = { isRecording: true }; // Set a marker that we're recording
+      setIsRecording(true);
+    } catch (error) {
+      console.error('Failed to record video:', error);
+    }
+  }, []);
+
+  const calculateWrapperHeight = useCallback(() => {
+    const space = calculateAvailableSpace();
+    if (space) {
+      setWrapperHeight(space.height);
+      setMaxWidth(space.width);
+      setMaxHeight(space.height);
+    }
+  }, [calculateAvailableSpace]);
+
+  const handleFitScreen = useCallback(() => {
+    const space = calculateAvailableSpace();
+    if (space) {
+      updateIframeSize(space.width, space.height, true);
+    }
+  }, [calculateAvailableSpace, updateIframeSize]);
+
+  const handleWidthChange = useCallback((width: number) => {
+    setIframeWidth(width);
+    setIsFittedToScreen(false);
+  }, []);
+
+  const handleHeightChange = useCallback((height: number) => {
+    setIframeHeight(height);
+    setIsFittedToScreen(false);
+  }, []);
+
+  // Measure top bar height when component mounts
+  useEffect(() => {
+    measureTopBarHeight();
+  }, [measureTopBarHeight]);
+
+  // Initialize iframe size to fit wrapper by default
+  useEffect(() => {
+    if (!containerReady) return;
+    
+    const space = calculateAvailableSpace();
+    if (space) {
+      updateIframeSize(space.width, space.height, true);
+    }
+  }, [containerReady, calculateAvailableSpace, updateIframeSize]);
+
+  // Unified resize observer for both top bar and container
+  useEffect(() => {
+    const observers: ResizeObserver[] = [];
+
+    // Monitor top bar height changes
+    if (topBarRef.current) {
+      const topBarObserver = new ResizeObserver(() => {
+        measureTopBarHeight();
+      });
+      topBarObserver.observe(topBarRef.current);
+      observers.push(topBarObserver);
+    }
+
+    // Monitor container resize
+    if (previewContainerRef.current) {
+      const containerObserver = new ResizeObserver(() => {
+        if (isFittedToScreen) {
+          // If fitted, update both wrapper and iframe to new size
+          const space = calculateAvailableSpace();
+          if (space) {
+            updateIframeSize(space.width, space.height, true);
+          }
+        } else {
+          // If not fitted, only update wrapper height
+          calculateWrapperHeight();
+        }
+      });
+      containerObserver.observe(previewContainerRef.current);
+      observers.push(containerObserver);
+    }
+
+    return () => {
+      observers.forEach(observer => observer.disconnect());
+    };
+  }, [measureTopBarHeight, calculateAvailableSpace, updateIframeSize, calculateWrapperHeight, isFittedToScreen]);
 
   // Initialize terminal when container is ready
   useEffect(() => {
@@ -380,32 +635,7 @@ export const PreviewPanel = memo(({ files, onDownload }: PreviewPanelProps)=> {
     console.log("[Terminal] Initializing terminal...");
 
     // Initialize terminal
-    const term = new Terminal({
-      cursorBlink: true,
-      fontSize: 13,
-      fontFamily: 'Menlo, Monaco, "Courier New", monospace',
-      theme: {
-        background: "#0a0a0a",
-        foreground: "#d4d4d4",
-        cursor: "#d4d4d4",
-        black: "#000000",
-        red: "#cd3131",
-        green: "#0dbc79",
-        yellow: "#e5e510",
-        blue: "#2472c8",
-        magenta: "#bc3fbc",
-        cyan: "#11a8cd",
-        white: "#e5e5e5",
-        brightBlack: "#666666",
-        brightRed: "#f14c4c",
-        brightGreen: "#23d18b",
-        brightYellow: "#f5f543",
-        brightBlue: "#3b8eea",
-        brightMagenta: "#d670d6",
-        brightCyan: "#29b8db",
-        brightWhite: "#e5e5e5",
-      },
-    });
+    const term = new Terminal(TERMINAL_CONFIG);
 
     terminalRef.current = term;
     term.open(terminalElRef.current);
@@ -524,28 +754,48 @@ export const PreviewPanel = memo(({ files, onDownload }: PreviewPanelProps)=> {
 
   return (
     <div className="flex flex-col overflow-hidden rounded-2xl border border-border bg-surface shadow-brand">
-      <div className="flex items-center justify-between border-b border-border bg-accent/5 px-5 py-4">
+      {/* <div className="flex items-center justify-between border-b border-border bg-accent/5 px-5 py-4">
         <div className="text-lg font-semibold tracking-tight text-accent">Live Preview</div>
         <div className="flex items-center gap-3">
           <span className="text-sm text-text-secondary">{status}</span>
-          <button
-            className="inline-flex items-center gap-2 rounded-lg border border-border px-3 py-2 text-sm text-text-secondary transition hover:bg-muted"
-            onClick={onDownload}
-          >
-            <IconDownload size={18} /> Download
-          </button>
         </div>
-      </div>
-      <div className="relative flex-1 bg-black">
-        {previewUrl ? (
-          <iframe
-            ref={iframeRef}
-            key={previewUrl}
-            src={previewUrl}
-            title="Preview"
-            // sandbox="allow-forms allow-downloads allow-modals allow-pointer-lock allow-popups allow-same-origin allow-scripts"
-            className="h-full w-full border-0"
+      </div> */}
+      <div ref={previewContainerRef} className="relative bg-black h-full">
+        <div ref={topBarRef}>
+          <TopBar 
+            onDownload={onDownload} 
+            onCapturePNG={handleCapturePNG}
+            onRecordVideo={handleRecordVideo}
+            isRecording={isRecording}
+            width={iframeWidth}
+            height={iframeHeight}
+            maxWidth={maxWidth}
+            maxHeight={maxHeight}
+            onWidthChange={handleWidthChange}
+            onHeightChange={handleHeightChange}
+            onFitScreen={handleFitScreen}
           />
+        </div>
+        {previewUrl ? (
+          <div 
+            className="hyper-frame-external-wrapper flex w-full items-center justify-center"
+            style={{ height: `${wrapperHeight}px` }}
+          >
+            <iframe
+              ref={iframeRef}
+              key={previewUrl}
+              src={previewUrl}
+              title="Preview"
+              // sandbox="allow-forms allow-downloads allow-modals allow-pointer-lock allow-popups allow-same-origin allow-scripts"
+              className="border-0"
+              style={{
+                width: `${iframeWidth}px`,
+                height: `${iframeHeight}px`,
+                maxWidth: '100%',
+                maxHeight: '100%'
+              }}
+            />
+          </div>
         ) : (
           <div className="flex h-full items-center justify-center text-sm text-text-secondary">
             {error ? error : status}
@@ -558,37 +808,46 @@ export const PreviewPanel = memo(({ files, onDownload }: PreviewPanelProps)=> {
         )}
 
         {/* Floating Terminal Panel */}
-        <div
-          className="absolute left-0 right-0 bottom-0 border-t border-border"
-          style={{
-            height: terminalExpanded ? "350px" : "auto",
-            transition: "height 0.2s ease-in-out",
-
-          }}
-        >
-          <button
-            className="flex w-full items-center justify-between px-5 py-3 text-sm text-text bg-background  hover:bg-muted/95 transition cursor-pointer"
-            onClick={() => setTerminalExpanded(!terminalExpanded)}
-          >
-            <div className="flex items-center gap-2">
-              <IconTerminal size={16} />
-              <span className="font-medium">Terminal</span>
-            </div>
-            <span className="text-xs text-text-secondary">
-              {terminalExpanded ? "▼" : "▶"}
-            </span>
-          </button>
+        {terminalExpanded && (
           <div
-            ref={terminalElRef}
-            className="w-full"
+            className="absolute left-0 right-0 bottom-0 border-t border-border"
             style={{
-              backgroundColor: "#0a0a0a",
-              height: terminalExpanded ? "calc(100% - 49px)" : "0px",
-              overflow: "hidden",
-
+              height: "350px",
+              transition: "height 0.2s ease-in-out",
             }}
-          />
-        </div>
+          >
+            <button
+              className="flex w-full items-center justify-between px-5 py-3 text-sm text-text bg-background hover:bg-muted/95 transition cursor-pointer"
+              onClick={() => setTerminalExpanded(false)}
+            >
+              <div className="flex items-center gap-2">
+                <IconTerminal size={16} />
+                <span className="font-medium">Terminal</span>
+              </div>
+              <span className="text-xs text-text-secondary">▼</span>
+            </button>
+            <div
+              ref={terminalElRef}
+              className="w-full"
+              style={{
+                backgroundColor: TERMINAL_CONFIG.theme.background,
+                height: "calc(100% - 49px)",
+                overflow: "hidden",
+              }}
+            />
+          </div>
+        )}
+
+        {/* Terminal Toggle Button - only show when terminal is hidden */}
+        {!terminalExpanded && (
+          <button
+            className="absolute bottom-4 right-4 flex items-center gap-2 rounded-lg border border-border bg-background px-3 py-2 text-sm text-text hover:bg-muted/95 transition"
+            onClick={() => setTerminalExpanded(true)}
+          >
+            <IconTerminal size={16} />
+            <span>Terminal</span>
+          </button>
+        )}
       </div>
     </div>
   );

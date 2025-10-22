@@ -62,17 +62,17 @@ export class ExportBridge {
       display: 'flex',
       flexDirection: 'column',
       gap: '0.25rem',
-      padding: '0.5rem 0.75rem',
+      // padding: '0.5rem 0.75rem',
       borderRadius: '0.75rem',
       // background: 'rgba(15, 23, 42, 0.85)',
       color: '#f8fafc',
-      fontFamily: 'Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont',
+      fontFamily: 'Roboto, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont',
       fontSize: '12px',
       lineHeight: '16px',
-      boxShadow: '0 20px 40px rgba(15, 23, 42, 0.3)',
+      // boxShadow: '0 20px 40px rgba(15, 23, 42, 0.3)',
       zIndex: '2147483646',
       pointerEvents: 'auto',
-      backdropFilter: 'blur(8px)',
+      // backdropFilter: 'blur(8px)',
     } as CSSStyleDeclaration);
 
     const controls = document.createElement('div');
@@ -117,8 +117,8 @@ export class ExportBridge {
 
     controls.appendChild(imageButton);
     controls.appendChild(videoButton);
-    root.appendChild(controls);
-    root.appendChild(status);
+    // root.appendChild(controls);
+    // root.appendChild(status);
 
     this.root = root;
     this.imageButton = imageButton;

@@ -240,7 +240,7 @@ export default function HomePage() {
   }, [setFiles]);
 
   return (
-    <div className="grid h-screen grid-cols-studio gap-4 p-4">
+    <div className="grid h-screen grid-cols-studio gap-2 p-2">
       <ChatPanel
         messages={chat.messages}
         input={chat.input}
