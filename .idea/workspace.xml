@@ -4,8 +4,90 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="51bc1ced-b378-46bc-8004-9aa3de836607" name="Changes" comment="Logging and claude">
-      <change beforePath="$PROJECT_DIR$/backend/src/routes/ai-stream.ts" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/routes/ai-stream.ts" afterDir="false" />
+    <list default="true" id="51bc1ced-b378-46bc-8004-9aa3de836607" name="Changes" comment="streaming response">
+      <change afterPath="$PROJECT_DIR$/frontend/public/fonts/departure-mono/DepartureMono-Regular.otf" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/frontend/public/fonts/departure-mono/DepartureMono-Regular.woff" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/frontend/public/fonts/departure-mono/DepartureMono-Regular.woff2" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/frontend/public/fonts/hydrogen/HydrogenType400.ttf" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/frontend/public/fonts/hydrogen/HydrogenType400.woff" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/frontend/public/fonts/hydrogen/HydrogenType400.woff2" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/frontend/public/fonts/routed-gothic/routed-gothic-half-italic.ttf" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/frontend/public/fonts/routed-gothic/routed-gothic-italic.ttf" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/frontend/public/fonts/routed-gothic/routed-gothic-narrow-half-italic.ttf" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/frontend/public/fonts/routed-gothic/routed-gothic-narrow-italic.ttf" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/frontend/public/fonts/routed-gothic/routed-gothic-narrow.ttf" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/frontend/public/fonts/routed-gothic/routed-gothic-wide-half-italic.ttf" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/frontend/public/fonts/routed-gothic/routed-gothic-wide-italic.ttf" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/frontend/public/fonts/routed-gothic/routed-gothic-wide.ttf" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/frontend/public/fonts/routed-gothic/routed-gothic.ttf" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/frontend/src/app/api/ai/route.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/frontend/src/app/api/boilerplate/route.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/frontend/src/app/api/download/route.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/frontend/src/app/api/history/route.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/frontend/src/app/api/runtime-watch/route.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/frontend/src/app/api/runtime-watch/snapshot/route.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/frontend/src/app/globals.css" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/frontend/src/app/layout.tsx" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/frontend/src/app/page.tsx" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/frontend/src/components/Chat/ChatInput.tsx" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/frontend/src/components/Chat/ChatMessage.tsx" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/frontend/src/components/Chat/ChatMessages.tsx" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/frontend/src/components/Chat/ChatPanel.tsx" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/frontend/src/components/Chat/StreamingPreview.tsx" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/frontend/src/components/Chat/TypingIndicator.tsx" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/frontend/src/components/ControlPanel/ControlGenerator.tsx" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/frontend/src/components/ControlPanel/ControlPanel.tsx" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/frontend/src/components/ControlPanel/TweakpaneControlGenerator.tsx" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/frontend/src/components/ControlPanel/index.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/frontend/src/components/ErrorBoundary.tsx" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/frontend/src/components/Modals/Modal.tsx" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/frontend/src/components/Modals/PresetsModal.tsx" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/frontend/src/components/Modals/VersionHistoryModal.tsx" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/frontend/src/components/Preview/CssSyncManager.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/frontend/src/components/Preview/PreviewPanel.tsx" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/frontend/src/components/Settings/SettingsPanel.tsx" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/frontend/src/components/TopBar/TopBar.tsx" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/frontend/src/components/TopBar/index.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/frontend/src/config/index.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/frontend/src/config/models.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/frontend/src/config/prompts.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/frontend/src/hooks/useAIChat.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/frontend/src/hooks/useBoilerplate.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/frontend/src/hooks/useCodeVersions.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/frontend/src/hooks/useStudioSettings.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/frontend/src/lib/aiProviders.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/frontend/src/lib/aiService.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/frontend/src/lib/api-client.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/frontend/src/lib/boilerplate.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/frontend/src/lib/fallbacks.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/frontend/src/lib/fileUtils.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/frontend/src/lib/history.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/frontend/src/lib/iframeCommunication.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/frontend/src/lib/logger.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/frontend/src/lib/patches.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/frontend/src/stores/FIXES.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/frontend/src/stores/README.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/frontend/src/stores/boilerplateStore.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/frontend/src/stores/chatStore.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/frontend/src/stores/filesStore.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/frontend/src/stores/index.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/frontend/src/stores/settingsStore.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/frontend/src/stores/uiStore.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/frontend/src/stores/utils.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/frontend/src/stores/versionsStore.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/frontend/src/types/ai.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/frontend/src/types/studio.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.eslintrc.json" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/CHANGELOG.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/LOGGING_AND_DEBUGGING.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bun.lock" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/hyper-runtime/src/frame/cssBridge.ts" beforeDir="false" afterPath="$PROJECT_DIR$/hyper-runtime/src/frame/cssBridge.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/next-env.d.ts" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/next.config.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/package.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/postcss.config.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tailwind.config.js" beforeDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -52,6 +134,9 @@
   &quot;associatedIndex&quot;: 6
 }</component>
   <component name="ProjectId" id="34FYshMvBPxVFh75Q23rFU8VoxW" />
+  <component name="ProjectLevelVcsManager">
+    <ConfirmationsSetting value="1" id="Add" />
+  </component>
   <component name="ProjectViewState">
     <option name="autoscrollFromSource" value="true" />
     <option name="autoscrollToSource" value="true" />
@@ -70,7 +155,7 @@
     "js.debugger.nextJs.config.created.client": "true",
     "js.debugger.nextJs.config.created.server": "true",
     "junie.onboarding.icon.badge.shown": "true",
-    "last_opened_file_path": "/Users/koristuvac/WebstormProjects/hypertool/fresh-breeze/boilerplate-presets/sviat",
+    "last_opened_file_path": "/Users/koristuvac/WebstormProjects/hypertool/fresh-breeze/frontend",
     "node.js.detected.package.eslint": "true",
     "node.js.detected.package.tslint": "true",
     "node.js.selected.package.eslint": "(autodetect)",
@@ -83,13 +168,14 @@
 }]]></component>
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$/frontend" />
       <recent name="$PROJECT_DIR$/boilerplate-presets/sviat" />
       <recent name="$PROJECT_DIR$/boilerplate-presets/start" />
       <recent name="$PROJECT_DIR$/boilerplate-presets/maga" />
       <recent name="$PROJECT_DIR$/boilerplate-presets/universal" />
-      <recent name="$PROJECT_DIR$/boilerplate-presets/circle-with-triangle" />
     </key>
     <key name="MoveFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$" />
       <recent name="$PROJECT_DIR$/boilerplate-presets/non-migrated" />
       <recent name="$PROJECT_DIR$/boilerplate-presets/circle" />
       <recent name="$PROJECT_DIR$/boilerplate-presets/circle/public" />
@@ -255,7 +341,15 @@
       <option name="project" value="LOCAL" />
       <updated>1761164508592</updated>
     </task>
-    <option name="localTasksCounter" value="17" />
+    <task id="LOCAL-00017" summary="streaming response">
+      <option name="closed" value="true" />
+      <created>1761164912666</created>
+      <option name="number" value="00017" />
+      <option name="presentableId" value="LOCAL-00017" />
+      <option name="project" value="LOCAL" />
+      <updated>1761164912666</updated>
+    </task>
+    <option name="localTasksCounter" value="18" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -284,7 +378,8 @@
     <MESSAGE value="New example" />
     <MESSAGE value="Gpt-5 model name fix" />
     <MESSAGE value="Logging and claude" />
-    <option name="LAST_COMMIT_MESSAGE" value="Logging and claude" />
+    <MESSAGE value="streaming response" />
+    <option name="LAST_COMMIT_MESSAGE" value="streaming response" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
