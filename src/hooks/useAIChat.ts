@@ -51,6 +51,7 @@ export function useAIChat() {
     const currentInput = input;
     clearInput();
     setLoading(true);
+    // Always clear streaming text when starting a new request
     setStreamingText("");
 
     // Add placeholder assistant message for streaming
@@ -115,25 +116,26 @@ export function useAIChat() {
                 console.log("[Streaming] Started");
               } else if (event.type === "token") {
                 fullText += event.text;
-                console.log(`[Streaming] Token received, setting streamingText to: "${fullText.substring(0, 50)}..." (${fullText.length} chars)`);
                 setStreamingText(fullText);
                 updateLastMessage?.(fullText);
               } else if (event.type === "progress") {
                 // Progress updates (e.g., "Generating edit 1...")
                 fullText += event.text;
-                console.log(`[Streaming] Progress received, setting streamingText to: "${fullText.substring(0, 50)}..." (${fullText.length} chars)`);
                 setStreamingText(fullText);
                 updateLastMessage?.(fullText);
               } else if (event.type === "complete") {
                 console.log(`[Streaming] Complete! Processing files...`);
 
                 // Update the message with explanation/summary text
-                // Always use the explanation from complete event as it may contain a generated summary
+                // The backend now includes detailed edit information in the summary
                 if (event.explanation) {
                   fullText = event.explanation;
                   updateLastMessage?.(event.explanation);
-                } else if (!fullText) {
-                  // Fallback if no explanation and no progress was shown
+                } else if (fullText) {
+                  // Use accumulated streaming text if no explanation
+                  updateLastMessage?.(fullText);
+                } else {
+                  // Fallback
                   const fallbackText = "Code updated successfully.";
                   fullText = fallbackText;
                   updateLastMessage?.(fallbackText);
@@ -186,7 +188,10 @@ export function useAIChat() {
       toast.error(err?.message || "AI error");
     } finally {
       setLoading(false);
-      setStreamingText("");
+      // Keep streaming text in development mode for debugging
+      if (process.env.NODE_ENV !== "development") {
+        setStreamingText("");
+      }
     }
   }, [
     input,

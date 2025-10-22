@@ -29,11 +29,6 @@ export default function HomePage() {
   const chat = useAIChat();
   const clearMessages = useChatStore((state) => state.clearMessages);
 
-  // Debug logging for streaming
-  useEffect(() => {
-    console.log("[HomePage] chat.streamingText:", chat.streamingText ? `${chat.streamingText.length} chars` : "empty");
-  }, [chat.streamingText]);
-
   // Load initial boilerplate (only once on mount)
   useEffect(() => {
     const loadInitial = async () => {

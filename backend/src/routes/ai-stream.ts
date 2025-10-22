@@ -133,8 +133,7 @@ app.post('/', async (c) => {
           prompt: conversation,
         });
 
-        let partialUpdateCount = 0;
-        let lastExplanation = '';
+        let tokenCount = 0;
         let lastEditCount = 0;
         let lastFileCount = 0;
 
@@ -142,42 +141,79 @@ app.post('/', async (c) => {
         logger.debug('Sending start event');
         await stream.write(`data: ${JSON.stringify({ type: 'start' })}\n\n`);
 
-        // Stream partial objects
-        logger.debug('Starting object stream');
-        for await (const partialObject of result.partialObjectStream) {
-          partialUpdateCount++;
+        // Stream using fullStream for token-level updates
+        logger.debug('Starting full stream');
+        for await (const part of result.fullStream) {
+          // Stream text deltas (token by token)
+          if (part.type === 'text-delta') {
+            tokenCount++;
+            await stream.write(`data: ${JSON.stringify({ type: 'token', text: part.textDelta })}\n\n`);
 
-          // Log every 5th update to avoid spam
-          if (partialUpdateCount % 5 === 0) {
-            logger.debug(`Streamed ${partialUpdateCount} partial updates`);
-          }
-
-          // Send explanation updates as tokens
-          if (partialObject.explanation && partialObject.explanation !== lastExplanation) {
-            const newText = partialObject.explanation.slice(lastExplanation.length);
-            if (newText) {
-              await stream.write(`data: ${JSON.stringify({ type: 'token', text: newText })}\n\n`);
-              lastExplanation = partialObject.explanation;
+            // Log every 20th token
+            if (tokenCount % 20 === 0) {
+              logger.debug(`Streamed ${tokenCount} tokens`);
             }
           }
 
-          // For patch mode, send progress updates about edits
-          if (usePatchMode && (partialObject as any).edits) {
-            const currentEditCount = (partialObject as any).edits.length;
-            if (currentEditCount > lastEditCount) {
-              lastEditCount = currentEditCount;
-              const progressText = `Generating edit ${currentEditCount}...\n`;
-              await stream.write(`data: ${JSON.stringify({ type: 'progress', text: progressText })}\n\n`);
-            }
-          }
+          // Handle partial objects for structured progress
+          if (part.type === 'object' && part.object) {
+            const partialObject = part.object;
 
-          // For full mode, send progress updates about files
-          if (!usePatchMode && (partialObject as any).files) {
-            const currentFileCount = Object.keys((partialObject as any).files).length;
-            if (currentFileCount > lastFileCount) {
-              lastFileCount = currentFileCount;
-              const progressText = `Generating file ${currentFileCount}...\n`;
-              await stream.write(`data: ${JSON.stringify({ type: 'progress', text: progressText })}\n\n`);
+            // For patch mode, send detailed edit information
+            if (usePatchMode && (partialObject as any).edits) {
+              const currentEdits = (partialObject as any).edits;
+              const currentEditCount = currentEdits.length;
+
+              if (currentEditCount > lastEditCount) {
+                // Send info about the new edit
+                const newEdit = currentEdits[currentEditCount - 1];
+                if (newEdit && newEdit.filePath) {
+                  let editText = `\n📝 Edit ${currentEditCount}: ${newEdit.filePath}\n`;
+
+                  if (newEdit.type) {
+                    editText += `   Type: ${newEdit.type}\n`;
+                  }
+
+                  if (newEdit.search) {
+                    const searchPreview = newEdit.search.length > 100
+                      ? newEdit.search.substring(0, 100) + '...'
+                      : newEdit.search;
+                    editText += `   Search: "${searchPreview}"\n`;
+                  }
+
+                  if (newEdit.replace) {
+                    const replacePreview = newEdit.replace.length > 100
+                      ? newEdit.replace.substring(0, 100) + '...'
+                      : newEdit.replace;
+                    editText += `   Replace: "${replacePreview}"\n`;
+                  }
+
+                  await stream.write(`data: ${JSON.stringify({ type: 'progress', text: editText })}\n\n`);
+                }
+                lastEditCount = currentEditCount;
+              }
+            }
+
+            // For full mode, send file information
+            if (!usePatchMode && (partialObject as any).files) {
+              const currentFiles = (partialObject as any).files;
+              const currentFileCount = Object.keys(currentFiles).length;
+
+              if (currentFileCount > lastFileCount) {
+                const fileNames = Object.keys(currentFiles);
+                const newFileName = fileNames[currentFileCount - 1];
+
+                if (newFileName) {
+                  const fileContent = currentFiles[newFileName];
+                  const preview = fileContent && fileContent.length > 150
+                    ? fileContent.substring(0, 150) + '...'
+                    : fileContent;
+
+                  const progressText = `\n📄 File ${currentFileCount}: ${newFileName}\n   ${preview ? `Preview: ${preview.split('\n')[0]}...\n` : ''}\n`;
+                  await stream.write(`data: ${JSON.stringify({ type: 'progress', text: progressText })}\n\n`);
+                }
+                lastFileCount = currentFileCount;
+              }
             }
           }
         }
@@ -186,7 +222,7 @@ app.post('/', async (c) => {
         const finalObject = await result.object;
 
         logger.info('Streaming completed', {
-          totalUpdates: partialUpdateCount,
+          totalTokens: tokenCount,
           hasExplanation: !!finalObject.explanation,
         });
 
@@ -236,7 +272,32 @@ app.post('/', async (c) => {
           // Generate summary if no explanation provided
           if (!summary) {
             const affectedFiles = new Set(normalizedEdits.map((e: any) => e.filePath));
-            summary = `Applied ${normalizedEdits.length} ${normalizedEdits.length === 1 ? 'edit' : 'edits'} to ${affectedFiles.size} ${affectedFiles.size === 1 ? 'file' : 'files'}:\n${Array.from(affectedFiles).map(f => `  - ${f}`).join('\n')}`;
+
+            // Create detailed summary with edit information
+            let detailedSummary = `Applied ${normalizedEdits.length} ${normalizedEdits.length === 1 ? 'edit' : 'edits'} to ${affectedFiles.size} ${affectedFiles.size === 1 ? 'file' : 'files'}:\n\n`;
+
+            normalizedEdits.forEach((edit: any, index: number) => {
+              detailedSummary += `📝 Edit ${index + 1}: ${edit.filePath}\n`;
+              detailedSummary += `   Type: ${edit.type}\n`;
+
+              if (edit.search) {
+                const searchPreview = edit.search.length > 100
+                  ? edit.search.substring(0, 100) + '...'
+                  : edit.search;
+                detailedSummary += `   Search: "${searchPreview}"\n`;
+              }
+
+              if (edit.replace) {
+                const replacePreview = edit.replace.length > 100
+                  ? edit.replace.substring(0, 100) + '...'
+                  : edit.replace;
+                detailedSummary += `   Replace: "${replacePreview}"\n`;
+              }
+
+              detailedSummary += '\n';
+            });
+
+            summary = detailedSummary;
           }
 
           logger.info('Patches applied successfully', {
@@ -257,7 +318,23 @@ app.post('/', async (c) => {
           // Generate summary if no explanation provided
           if (!summary) {
             const fileNames = Object.keys(files);
-            summary = `Generated ${fileNames.length} ${fileNames.length === 1 ? 'file' : 'files'}:\n${fileNames.map(f => `  - ${f}`).join('\n')}`;
+
+            let detailedSummary = `Generated ${fileNames.length} ${fileNames.length === 1 ? 'file' : 'files'}:\n\n`;
+
+            fileNames.forEach((fileName, index) => {
+              const fileContent = files[fileName];
+              const lines = fileContent.split('\n').length;
+              const chars = fileContent.length;
+              const preview = fileContent.length > 150
+                ? fileContent.substring(0, 150) + '...'
+                : fileContent;
+
+              detailedSummary += `📄 ${index + 1}. ${fileName}\n`;
+              detailedSummary += `   Lines: ${lines}, Characters: ${chars}\n`;
+              detailedSummary += `   Preview: ${preview.split('\n')[0]}...\n\n`;
+            });
+
+            summary = detailedSummary;
           }
         }
 

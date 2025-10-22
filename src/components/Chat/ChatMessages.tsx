@@ -13,8 +13,6 @@ interface ChatMessagesProps {
 export function ChatMessages({ messages, loading, streamingText }: ChatMessagesProps) {
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  console.log("[ChatMessages] streamingText prop:", streamingText ? `${streamingText.length} chars` : "empty");
-
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, loading, streamingText]);
@@ -32,7 +30,7 @@ export function ChatMessages({ messages, loading, streamingText }: ChatMessagesP
           <div className="leading-relaxed text-text">Describe the visual you want and I&apos;ll update the sketch.</div>
         </div>
       )}
-      {streamingText && <StreamingPreview streamingText={streamingText} />}
+      {streamingText && <StreamingPreview streamingText={streamingText} isStreaming={loading} />}
       {loading && !streamingText && <TypingIndicator />}
       <div ref={messagesEndRef} />
     </div>

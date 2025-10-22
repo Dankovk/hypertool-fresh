@@ -3,12 +3,11 @@ import { IconChevronDown, IconChevronUp } from "@tabler/icons-react";
 
 interface StreamingPreviewProps {
   streamingText: string;
+  isStreaming?: boolean;
 }
 
-export function StreamingPreview({ streamingText }: StreamingPreviewProps) {
+export function StreamingPreview({ streamingText, isStreaming = true }: StreamingPreviewProps) {
   const [isExpanded, setIsExpanded] = useState(true);
-
-  console.log("[StreamingPreview] Received streamingText:", streamingText ? `${streamingText.length} chars` : "empty");
 
   if (!streamingText) {
     return null;
@@ -25,11 +24,16 @@ export function StreamingPreview({ streamingText }: StreamingPreviewProps) {
       >
         <div className="flex items-center gap-3">
           <div className="text-[11px] font-semibold uppercase tracking-[0.12em] text-text-secondary">
-            Streaming Preview
+            {isStreaming ? "Streaming Preview" : "Stream Complete"}
           </div>
           <div className="text-xs text-text-secondary/60">
             {tokenCount} words • {charCount} chars
           </div>
+          {!isStreaming && process.env.NODE_ENV === "development" && (
+            <div className="text-xs text-green-400">
+              [DEV MODE]
+            </div>
+          )}
         </div>
         {isExpanded ? (
           <IconChevronUp size={16} className="text-text-secondary" />

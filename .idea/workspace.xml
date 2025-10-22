@@ -5,28 +5,12 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="51bc1ced-b378-46bc-8004-9aa3de836607" name="Changes" comment="Logging and claude">
-      <change beforePath="$PROJECT_DIR$/.env.example" beforeDir="false" afterPath="$PROJECT_DIR$/.env.example" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/backend/.gitignore" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/api/index.ts" beforeDir="false" afterPath="$PROJECT_DIR$/backend/api/index.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/bun.lock" beforeDir="false" afterPath="$PROJECT_DIR$/backend/bun.lock" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/backend/package.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/src/index.ts" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/index.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/src/lib/boilerplate.ts" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/lib/boilerplate.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/src/routes/runtime-watch.ts" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/routes/runtime-watch.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/bun.lock" beforeDir="false" afterPath="$PROJECT_DIR$/bun.lock" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/hyper-runtime/src/frame/cssBridge.ts" beforeDir="false" afterPath="$PROJECT_DIR$/hyper-runtime/src/frame/cssBridge.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/hyper-runtime/src/index.ts" beforeDir="false" afterPath="$PROJECT_DIR$/hyper-runtime/src/index.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/package.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/app/api/history/route.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/app/api/history/route.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/app/api/runtime-watch/route.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/app/api/runtime-watch/route.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/routes/ai-stream.ts" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/routes/ai-stream.ts" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/app/page.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/app/page.tsx" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/components/Chat/ChatMessages.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/components/Chat/ChatMessages.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/components/Chat/ChatPanel.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/components/Chat/ChatPanel.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/components/Chat/StreamingPreview.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/components/Chat/StreamingPreview.tsx" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/hooks/useAIChat.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/hooks/useAIChat.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/hooks/useBoilerplate.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/hooks/useBoilerplate.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/stores/chatStore.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/stores/chatStore.ts" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -80,28 +64,28 @@
     <option name="openDirectoriesWithSingleClick" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent">{
-  &quot;keyToString&quot;: {
-    &quot;ASKED_SHARE_PROJECT_CONFIGURATION_FILES&quot;: &quot;true&quot;,
-    &quot;ModuleVcsDetector.initialDetectionPerformed&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
-    &quot;git-widget-placeholder&quot;: &quot;main&quot;,
-    &quot;js.debugger.nextJs.config.created.client&quot;: &quot;true&quot;,
-    &quot;js.debugger.nextJs.config.created.server&quot;: &quot;true&quot;,
-    &quot;junie.onboarding.icon.badge.shown&quot;: &quot;true&quot;,
-    &quot;last_opened_file_path&quot;: &quot;/Users/koristuvac/WebstormProjects/hypertool/fresh-breeze/boilerplate-presets/sviat&quot;,
-    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
-    &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
-    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
-    &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
-    &quot;nodejs_package_manager_path&quot;: &quot;bun&quot;,
-    &quot;to.speed.mode.migration.done&quot;: &quot;true&quot;,
-    &quot;ts.external.directory.path&quot;: &quot;/Users/koristuvac/WebstormProjects/hypertool/fresh-breeze/node_modules/typescript/lib&quot;,
-    &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "ASKED_SHARE_PROJECT_CONFIGURATION_FILES": "true",
+    "ModuleVcsDetector.initialDetectionPerformed": "true",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252": "true",
+    "RunOnceActivity.git.unshallow": "true",
+    "git-widget-placeholder": "separate-back",
+    "js.debugger.nextJs.config.created.client": "true",
+    "js.debugger.nextJs.config.created.server": "true",
+    "junie.onboarding.icon.badge.shown": "true",
+    "last_opened_file_path": "/Users/koristuvac/WebstormProjects/hypertool/fresh-breeze/boilerplate-presets/sviat",
+    "node.js.detected.package.eslint": "true",
+    "node.js.detected.package.tslint": "true",
+    "node.js.selected.package.eslint": "(autodetect)",
+    "node.js.selected.package.tslint": "(autodetect)",
+    "nodejs_package_manager_path": "bun",
+    "to.speed.mode.migration.done": "true",
+    "ts.external.directory.path": "/Users/koristuvac/WebstormProjects/hypertool/fresh-breeze/node_modules/typescript/lib",
+    "vue.rearranger.settings.migration": "true"
   }
-}</component>
+}]]></component>
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
       <recent name="$PROJECT_DIR$/boilerplate-presets/sviat" />
