@@ -61,8 +61,8 @@ export class HypertoolControls<T extends ControlDefinitions = ControlDefinitions
       // Create Tweakpane instance
       this.createPane();
 
-      // Position the pane
-      this.positionPane();
+      // // Position the pane
+      // this.positionPane();
 
       // Add controls
       this.addControls();
@@ -91,6 +91,8 @@ export class HypertoolControls<T extends ControlDefinitions = ControlDefinitions
     }
 
     this.pane = new Pane(paneOptions);
+    // Add controls-container class for styling
+    this.pane.element.parentElement?.classList.add('controls-container');
   }
 
   /**

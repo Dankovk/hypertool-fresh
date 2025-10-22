@@ -190,6 +190,107 @@ if (typeof window !== "undefined") {
     ensureDependencies,
     mirrorCss,
   });
+
+  // Add message handling for capture functionality
+  let recordingState = {
+    isRecording: false,
+    recorder: null,
+    recordedChunks: []
+  };
+
+  window.addEventListener('message', (event) => {
+    if (event.data?.source !== 'hypertool-main') return;
+    
+    const { type } = event.data;
+    
+    switch (type) {
+      case 'HYPERTOOL_CAPTURE_PNG':
+        handleCapturePNG();
+        break;
+      case 'HYPERTOOL_START_RECORDING':
+        handleStartRecording();
+        break;
+      case 'HYPERTOOL_STOP_RECORDING':
+        handleStopRecording();
+        break;
+    }
+  });
+
+  function handleCapturePNG() {
+    const canvas = document.querySelector('canvas');
+    if (canvas) {
+      canvas.toBlob((blob) => {
+        if (blob) {
+          window.parent.postMessage({
+            type: 'HYPERTOOL_CAPTURE_RESPONSE',
+            data: {
+              blob: blob,
+              filename: 'hypertool-capture.png'
+            }
+          }, '*');
+        }
+      }, 'image/png');
+    } else {
+      console.warn('No canvas found for capture');
+    }
+  }
+
+  function handleStartRecording() {
+    console.log('Starting recording...');
+    const canvas = document.querySelector('canvas');
+    if (canvas && typeof canvas.captureStream === 'function') {
+      const stream = canvas.captureStream(60);
+      const recorder = new MediaRecorder(stream, {
+        mimeType: 'video/webm;codecs=vp9',
+      });
+      
+      recordingState.recordedChunks = [];
+      
+      recorder.ondataavailable = (event) => {
+        if (event.data.size > 0) {
+          recordingState.recordedChunks.push(event.data);
+          console.log('Recording data available:', event.data.size, 'bytes');
+        }
+      };
+      
+      recorder.onstop = () => {
+        console.log('Recording stopped, processing...');
+        const blob = new Blob(recordingState.recordedChunks, { type: 'video/webm' });
+        console.log('Recording blob size:', blob.size, 'bytes');
+        window.parent.postMessage({
+          type: 'HYPERTOOL_RECORDING_RESPONSE',
+          data: {
+            blob: blob,
+            filename: 'hypertool-recording.webm'
+          }
+        }, '*');
+        recordingState.isRecording = false;
+        recordingState.recorder = null;
+      };
+      
+      recorder.start();
+      recordingState.recorder = recorder;
+      recordingState.isRecording = true;
+      console.log('Recording started successfully');
+    } else {
+      console.warn('Canvas not found or captureStream not supported');
+    }
+  }
+
+  function handleStopRecording() {
+    console.log('Stopping recording...');
+    if (recordingState.recorder) {
+      recordingState.recorder.stop();
+      // Send immediate stop confirmation
+      window.parent.postMessage({
+        type: 'HYPERTOOL_RECORDING_STOPPED',
+        data: {}
+      }, '*');
+      console.log('Stop recording message sent');
+    } else {
+      console.warn('No active recorder to stop');
+    }
+  }
 }
 `.trimStart();
 

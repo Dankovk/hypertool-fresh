@@ -34,6 +34,7 @@ export function resolveContainer(options: ResolveContainerOptions = {}): Resolve
 
   const container = doc.createElement('div');
   container.classList.add(className);
+  container.classList.add('hyper-frame-container');
   doc.body.appendChild(container);
   return { element: container, createdInternally: true };
 }

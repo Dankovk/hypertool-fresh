@@ -16,7 +16,7 @@ export function VersionHistoryModal({ isOpen, onClose, versions, onRestoreVersio
         {versions.map((version) => (
           <button
             key={version.id}
-            className="flex flex-col items-start gap-1 rounded-lg border border-border bg-background p-4 text-left transition hover:border-accent hover:bg-muted"
+            className="flex flex-col items-start gap-1 rounded-lg border border-border bg-background p-4 text-left transition hover:border-accent hover:bg-background/80"
             onClick={() => onRestoreVersion(version)}
           >
             <div className="flex items-center gap-2 text-xs text-text-secondary">
