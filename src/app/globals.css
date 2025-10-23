@@ -2,10 +2,10 @@
 @tailwind components;
 @tailwind utilities;
 
-.hyper-frame {
-    width: 100% !important;
-    height: 100% !important;
-}
+/*.hyper-frame {*/
+/*    width: 100% !important;*/
+/*    height: 100% !important;*/
+/*}*/
 
 
 /* Routed Gothic Font Family */

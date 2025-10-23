@@ -26,7 +26,7 @@ export const WrapperApp: React.FC<WrapperAppProps> = ({
   }, [onContainerReady]);
 
   return (
-    <div className="hyper-container ">
+    <>
       {/* Main sandbox container */}
       <SandboxContainer onReady={handleContainerReady} />
 
@@ -49,6 +49,6 @@ export const WrapperApp: React.FC<WrapperAppProps> = ({
           useCanvasCapture={exportWidget.useCanvasCapture}
         />
       )}
-    </div>
+    </>
   );
 };

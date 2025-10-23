@@ -1,7 +1,10 @@
 /**
  * HyperFrame Wrapper App Styles
  */
-
+body {
+    min-height: 100%;
+    min-width: 100%;
+}
 .hyper-frame-wrapper-app {
   width: 100%;
   height: 100%;
@@ -10,9 +13,9 @@
   font-family: 'Roboto', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
 }
 
-.hyper-frame-sandbox-container {
-  width: 100%;
-  height: 100%;
-  position: relative;
-  overflow: hidden;
-}
+/*.hyper-frame-sandbox-container {*/
+/*  width: 100%;*/
+/*  height: 100%;*/
+/*  position: relative;*/
+/*  overflow: hidden;*/
+/*}*/

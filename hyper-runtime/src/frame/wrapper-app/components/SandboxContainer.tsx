@@ -20,12 +20,12 @@ export const SandboxContainer: React.FC<SandboxContainerProps> = ({ onReady }) =
     <div
       ref={containerRef}
       className="hyper-frame-sandbox-container"
-      style={{
-        width: '100%',
-        height: '100%',
-        position: 'relative',
-        overflow: 'hidden',
-      }}
+      // style={{
+      //   width: '100%',
+      //   height: '100%',
+      //   position: 'relative',
+      //   overflow: 'hidden',
+      // }}
     />
   );
 };
