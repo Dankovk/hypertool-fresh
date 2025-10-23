@@ -15,11 +15,11 @@ export function PresetsModal({ isOpen, onClose, presets, onSelectPreset }: Prese
         {presets.map((preset) => (
           <button
             key={preset.id}
-            className="flex flex-col items-start gap-1 rounded-lg border border-border bg-background p-4 text-left transition hover:border-accent hover:bg-muted"
+            className="flex flex-col items-start gap-1 rounded-lg border border-border bg-background p-4 text-left transition hover:border-accent"
             onClick={() => onSelectPreset(preset.id)}
           >
             <div className="font-semibold text-text">{preset.name}</div>
-            <div className="text-sm text-text-secondary">{preset.description}</div>
+            <div className="text-sm">{preset.description}</div>
           </button>
         ))}
       </div>

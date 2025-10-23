@@ -1,6 +1,6 @@
+import React from 'react';
+import { createRoot, type Root } from 'react-dom/client';
 import { CssBridge } from './cssBridge';
-import { ControlsBridge } from './controlsBridge';
-import { ExportBridge } from './exportBridge';
 import { DependencyManager, ExternalDependency } from './dependencyManager';
 import {
   HyperFrameRuntimeApi,
@@ -12,6 +12,7 @@ import {
   SandboxEnvironment,
 } from './types';
 import { resolveContainer } from './utils/dom';
+import { WrapperApp } from './wrapper-app/WrapperApp';
 
 function runCleanups(cleanups: Array<() => void>) {
   while (cleanups.length > 0) {
@@ -52,6 +53,8 @@ export class HyperFrameRuntime implements HyperFrameRuntimeApi {
     this.cssBridge.start();
   }
 
+
+
   async createSandbox(options: HyperFrameSandboxOptions): Promise<HyperFrameSandboxHandle> {
     if (options.dependencies?.length) {
       await this.ensureDependencies(options.dependencies);
@@ -61,66 +64,72 @@ export class HyperFrameRuntime implements HyperFrameRuntimeApi {
       this.mirrorCss();
     }
 
-    const mount = this.createMount(options.mount);
-    const cleanups: Array<() => void> = [];
+    const cleanups: Array<(() => void)> = [];
     const pushCleanup = (cleanup: () => void) => {
       if (typeof cleanup === 'function') {
         cleanups.push(cleanup);
       }
     };
 
-    const exportBridge = new ExportBridge({
-      container: mount.container,
-      position: options.exportWidget?.position,
-      filename: options.exportWidget?.filename,
-    });
-
-    if (options.exportWidget?.enabled === false) {
-      exportBridge.setVisible(false);
-    }
-
-    if (options.exportWidget?.useCanvasCapture !== false) {
-      exportBridge.useDefaultCanvasCapture(true);
-    }
-
     const environment = this.createEnvironment(pushCleanup);
 
+    // Create a minimal exports API (used by TopBar for capture/recording)
+    const exportsApi = {
+      registerImageCapture: () => {},
+      registerVideoCapture: () => {},
+      setFilename: () => {},
+      setVisible: () => {},
+      useDefaultCanvasCapture: () => {},
+      destroy: () => {},
+    };
+
+    let controlsHandle: SandboxControlsHandle | null = null;
     const context: SandboxContext = {
-      mount: mount.container,
+      mount: null as any, // Will be set by mount
       params: {},
       controls: null,
-      exports: exportBridge.getApi(),
+      exports: exportsApi,
       runtime: this,
       environment,
     };
 
-    let controlsHandle: SandboxControlsHandle | null = null;
-
-    if (options.controls?.definitions) {
-      const controlsBridge = new ControlsBridge();
-      controlsHandle = controlsBridge.init({
-        definitions: options.controls.definitions,
-        options: options.controls.options,
-        context,
-        onControlChange: (change) => {
-          options.controls?.onChange?.(change, context);
-        },
-      }) as SandboxControlsHandle;
-
-      context.controls = controlsHandle;
-      context.params = controlsHandle?.params ?? {};
-
-      pushCleanup(() => {
-        if (!controlsHandle) return;
-        if (typeof controlsHandle.destroy === 'function') {
-          controlsHandle.destroy();
-        } else if (typeof controlsHandle.dispose === 'function') {
-          controlsHandle.dispose();
+    // If controls are configured, set up a callback to update the context when they're ready
+    const controlsConfig = options.controls?.definitions
+      ? {
+          definitions: options.controls.definitions,
+          options: options.controls.options,
+          onChange: (change: any) => options.controls?.onChange?.(change, context),
+          onReady: (controls: any) => {
+            // Update the controls handle with the actual params
+            if (controlsHandle) {
+              controlsHandle.params = controls.params;
+              controlsHandle.dispose = controls.dispose || controls.destroy;
+            }
+            // Update context params to point to the actual controls params
+            context.params = controls.params;
+            context.controls = controlsHandle;
+          },
         }
-      });
+      : null;
+
+    // Create controls handle placeholder
+    if (controlsConfig) {
+      controlsHandle = {
+        params: {},
+        dispose: () => {},
+      };
+      context.controls = controlsHandle;
     }
 
-    pushCleanup(() => exportBridge.destroy());
+    // Create mount with controls configuration
+    const mount = await this.createReactMount({
+      ...options,
+      controls: controlsConfig as any,
+    });
+
+    // Update context with mounted container
+    context.mount = mount.sandboxContainer;
+
     pushCleanup(() => mount.destroy());
 
     let setupCleanup: void | (() => void);
@@ -143,7 +152,7 @@ export class HyperFrameRuntime implements HyperFrameRuntimeApi {
     }
 
     const handle: HyperFrameSandboxHandle = {
-      container: mount.container,
+      container: mount.sandboxContainer,
       controls: controlsHandle,
       params: context.params,
       destroy: () => {
@@ -176,20 +185,47 @@ export class HyperFrameRuntime implements HyperFrameRuntimeApi {
     };
   }
 
-  private createMount(options?: HyperFrameSandboxOptions['mount']): { container: HTMLElement; destroy(): void } {
-    const baseOptions = options as any;
+  private async createReactMount(options: HyperFrameSandboxOptions & { controls?: any }): Promise<{
+    sandboxContainer: HTMLElement;
+    destroy(): void;
+  }> {
+    const baseOptions = options.mount as any;
     const resolved = resolveContainer({
       target: baseOptions?.target,
       containerClassName: baseOptions?.containerClassName,
     });
 
+    // Create React root
+    const root = createRoot(resolved.element);
+
+    // Create a promise that resolves when the container is ready
+    const containerPromise = new Promise<HTMLElement>((resolve) => {
+      // Render the WrapperApp with a callback
+      root.render(
+        React.createElement(WrapperApp, {
+          onContainerReady: resolve,
+          controls: options.controls || null,
+          exportWidget: {
+            enabled: options.exportWidget?.enabled !== false,
+            filename: options.exportWidget?.filename,
+            position: options.exportWidget?.position,
+            useCanvasCapture: options.exportWidget?.useCanvasCapture !== false,
+          },
+        })
+      );
+    });
+
+    // Wait for React to mount the container with proper dimensions
+    const sandboxContainer = await containerPromise;
+
     if (typeof baseOptions?.onReady === 'function') {
-      baseOptions.onReady({ container: resolved.element });
+      baseOptions.onReady({ container: sandboxContainer });
     }
 
     return {
-      container: resolved.element,
+      sandboxContainer,
       destroy: () => {
+        root.unmount();
         if (resolved.createdInternally) {
           resolved.element.remove();
         }

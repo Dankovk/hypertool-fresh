@@ -19,7 +19,7 @@ export function VersionHistoryModal({ isOpen, onClose, versions, onRestoreVersio
             className="flex flex-col items-start gap-1 rounded-lg border border-border bg-background p-4 text-left transition hover:border-accent hover:bg-background/80"
             onClick={() => onRestoreVersion(version)}
           >
-            <div className="flex items-center gap-2 text-xs text-text-secondary">
+            <div className="flex items-center gap-2 text-xs">
               <span>{new Date(version.timestamp).toLocaleString()}</span>
               <span>•</span>
               <span className="font-mono">{MODEL_OPTIONS.find(m => m.value === version.model)?.label || version.model}</span>

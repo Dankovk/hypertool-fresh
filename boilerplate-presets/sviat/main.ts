@@ -1,4 +1,6 @@
-// Using global window.hyperFrame; no direct imports
+
+import { createSandbox } from "./__hypertool__/frame/index.js";
+
 
 const controlDefinitions = {
   accent: {
@@ -107,7 +109,7 @@ const controlDefinitions = {
   },
 };
 
-window.hyperFrame.createSandbox({
+createSandbox({
   dependencies: [],
   controls: {
     definitions: controlDefinitions,

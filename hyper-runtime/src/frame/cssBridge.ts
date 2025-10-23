@@ -190,17 +190,17 @@ export class CssBridge {
       .forEach((node) => node.parentNode?.removeChild(node));
   }
 
-  private syncAll() {
+  private async syncAll() {
     if (!this.source || !this.target) return;
     const head = this.source.head;
     const nodes = Array.from(head.children).filter((node) => SUPPORTED_NODE_NAMES.has(node.nodeName));
 
-    nodes.forEach((node) => {
-      const clone = this.cloneNode(node);
-      if (!clone) return;
+    for (const node of nodes) {
+      const clone = await this.cloneNode(node);
+      if (!clone) continue;
       this.target?.head.appendChild(clone);
       this.nodeMap.set(node, clone);
-    });
+    }
   }
 
   private attachObserver() {
@@ -242,21 +242,25 @@ export class CssBridge {
       }
     });
 
-    mutation.addedNodes.forEach((node) => {
+    mutation.addedNodes.forEach(async (node) => {
       if (!(node instanceof HTMLElement)) return;
       if (!SUPPORTED_NODE_NAMES.has(node.nodeName)) return;
 
-      const clone = this.cloneNode(node);
-      if (!clone) return;
+      try {
+        const clone = await this.cloneNode(node);
+        if (!clone) return;
 
-      const reference = mutation.nextSibling ? this.nodeMap.get(mutation.nextSibling) : null;
-      if (reference && reference.parentNode) {
-        reference.parentNode.insertBefore(clone, reference);
-      } else {
-        this.target?.head.appendChild(clone);
+        const reference = mutation.nextSibling ? this.nodeMap.get(mutation.nextSibling) : null;
+        if (reference && reference.parentNode) {
+          reference.parentNode.insertBefore(clone, reference);
+        } else {
+          this.target?.head.appendChild(clone);
+        }
+
+        this.nodeMap.set(node, clone);
+      } catch (error) {
+        console.error('[CssBridge] Failed to clone node:', error);
       }
-
-      this.nodeMap.set(node, clone);
     });
   }
 
@@ -285,12 +289,59 @@ export class CssBridge {
     }
   }
 
-  private cloneNode(node: Node): HTMLElement | null {
+  private async cloneNode(node: Node): Promise<HTMLElement | null> {
     if (!(node instanceof HTMLElement)) return null;
     if (!SUPPORTED_NODE_NAMES.has(node.nodeName)) return null;
+
+    // For LINK tags, handle differently based on rel type
+    if (node.nodeName === 'LINK' && node instanceof HTMLLinkElement) {
+      const href = node.getAttribute('href');
+      const rel = node.getAttribute('rel');
+
+      if (href) {
+        // For stylesheet links, fetch and inline the CSS
+        if (rel === 'stylesheet') {
+          try {
+            const cssContent = await this.fetchCssContent(href);
+            const styleElement = document.createElement('STYLE');
+            styleElement.textContent = cssContent;
+            styleElement.setAttribute(CLONE_ATTRIBUTE, 'true');
+            return styleElement;
+          } catch (error) {
+            console.error(`[CssBridge] Failed to fetch CSS from ${href}:`, error);
+            // Fall through to clone with absolute URL
+          }
+        }
+
+        // For non-stylesheet links (preload, etc.), convert href to absolute URL
+        const clone = node.cloneNode(true) as HTMLElement;
+        try {
+          const baseUrl = this.source ? new URL(this.source.location.href) : new URL(window.location.href);
+          const absoluteUrl = new URL(href, baseUrl).href;
+          clone.setAttribute('href', absoluteUrl);
+        } catch (error) {
+          console.error(`[CssBridge] Failed to convert URL to absolute: ${href}`, error);
+        }
+        clone.setAttribute(CLONE_ATTRIBUTE, 'true');
+        return clone;
+      }
+    }
 
     const clone = node.cloneNode(true) as HTMLElement;
     clone.setAttribute(CLONE_ATTRIBUTE, 'true');
     return clone;
+  }
+
+  private async fetchCssContent(href: string): Promise<string> {
+    // Convert relative URLs to absolute using parent window's location
+    const baseUrl = this.source ? new URL(this.source.location.href) : new URL(window.location.href);
+    const absoluteUrl = new URL(href, baseUrl).href;
+
+    const response = await fetch(absoluteUrl);
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+    }
+
+    return await response.text();
   }
 }

@@ -152,8 +152,8 @@ export class ExportBridge {
 
     controls.appendChild(imageButton);
     controls.appendChild(videoButton);
-    // root.appendChild(controls);
-    // root.appendChild(status);
+    root.appendChild(controls);
+    root.appendChild(status);
 
     this.root = root;
     this.imageButton = imageButton;
