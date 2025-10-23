@@ -21,7 +21,7 @@ export function ChatMessages({ messages, loading }: ChatMessagesProps) {
         <ChatMessage key={m.id} message={m} />
       ))}
       {messages.length === 0 && (
-        <div className="max-w-[85%] rounded-2xl border border-[#1e3a4d] bg-gradient-to-br from-[#0f1922] to-[#162028] px-4 py-3 text-sm shadow-brand-sm">
+        <div className="max-w-[85%] rounded-2xl bg-dark-accent px-4 py-3 text-sm">
           <div className="mb-1 text-[11px] font-semibold uppercase tracking-[0.12em] text-text-secondary">
             assistant
           </div>

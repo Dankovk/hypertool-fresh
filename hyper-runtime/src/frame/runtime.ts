@@ -73,7 +73,7 @@ export class HyperFrameRuntime implements HyperFrameRuntimeApi {
 
     const environment = this.createEnvironment(pushCleanup);
 
-    // Create a minimal exports API (will be used by ExportWidget)
+    // Create a minimal exports API (used by TopBar for capture/recording)
     const exportsApi = {
       registerImageCapture: () => {},
       registerVideoCapture: () => {},

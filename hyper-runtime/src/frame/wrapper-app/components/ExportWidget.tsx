@@ -1,30 +1,38 @@
-import React, { useState, useEffect, useRef } from 'react';
-import type { ExportWidgetProps } from '../types';
-import '../styles/export-widget.css';
+import { useState, useEffect, useRef, useCallback } from 'react';
+
+interface ExportWidgetProps {
+  getContainer: () => HTMLElement | null;
+  filename?: string;
+  useCanvasCapture?: boolean;
+  onImageEnabledChange: (enabled: boolean) => void;
+  onVideoEnabledChange: (enabled: boolean) => void;
+  onRecordingChange: (recording: boolean) => void;
+}
 
 /**
- * ExportWidget - React component for capture/export functionality
- *
- * Provides buttons for capturing PNG images and recording videos
- * from the sandbox canvas element.
+ * ExportWidget - Export controls UI and logic component
+ * 
+ * This component manages:
+ * - UI: Screenshot, recording, and download buttons
+ * - Logic: Capturing PNG images, recording videos, downloading files
+ * - State: Canvas availability detection and all capture/recording state
  */
 export const ExportWidget: React.FC<ExportWidgetProps> = ({
   getContainer,
-  position = 'top-left',
   filename = 'hyperframe-export',
   useCanvasCapture = true,
+  onImageEnabledChange,
+  onVideoEnabledChange,
+  onRecordingChange,
 }) => {
   const [imageEnabled, setImageEnabled] = useState(false);
   const [videoEnabled, setVideoEnabled] = useState(false);
   const [recording, setRecording] = useState(false);
-  const [status, setStatus] = useState('');
-  const [statusTone, setStatusTone] = useState<'default' | 'error' | 'success'>('default');
-  const statusTimeoutRef = useRef<number | null>(null);
   const recorderRef = useRef<MediaRecorder | null>(null);
+  const recordedChunksRef = useRef<Blob[]>([]);
 
   // Update button states based on container availability
   useEffect(() => {
-    // Check periodically if container and canvas are available
     const checkAvailability = () => {
       const container = getContainer();
       if (container && useCanvasCapture) {
@@ -38,12 +46,10 @@ export const ExportWidget: React.FC<ExportWidgetProps> = ({
       return false;
     };
 
-    // Initial check
     if (checkAvailability()) {
       return;
     }
 
-    // If not available yet, poll for it
     const interval = setInterval(() => {
       if (checkAvailability()) {
         clearInterval(interval);
@@ -53,26 +59,35 @@ export const ExportWidget: React.FC<ExportWidgetProps> = ({
     return () => clearInterval(interval);
   }, [getContainer, useCanvasCapture]);
 
-  const showStatus = (message: string, tone: 'default' | 'error' | 'success' = 'default') => {
-    if (statusTimeoutRef.current) {
-      window.clearTimeout(statusTimeoutRef.current);
-    }
+  // Notify parent when states change
+  useEffect(() => {
+    onImageEnabledChange(imageEnabled);
+  }, [imageEnabled, onImageEnabledChange]);
 
-    setStatus(message);
-    setStatusTone(tone);
+  useEffect(() => {
+    onVideoEnabledChange(videoEnabled);
+  }, [videoEnabled, onVideoEnabledChange]);
 
-    if (message) {
-      statusTimeoutRef.current = window.setTimeout(() => {
-        setStatus('');
-        setStatusTone('default');
-        statusTimeoutRef.current = null;
-      }, 4000);
-    }
-  };
+  useEffect(() => {
+    onRecordingChange(recording);
+  }, [recording, onRecordingChange]);
 
-  const handleImageCapture = async () => {
+  const downloadBlob = useCallback((blob: Blob, filename: string) => {
+    const url = URL.createObjectURL(blob);
+    const anchor = document.createElement('a');
+    anchor.href = url;
+    anchor.download = filename;
+    anchor.rel = 'noopener';
+    anchor.style.display = 'none';
+    document.body.appendChild(anchor);
+    anchor.click();
+    document.body.removeChild(anchor);
+    URL.revokeObjectURL(url);
+  }, []);
+
+
+  const handleCapturePNG = useCallback(async () => {
     try {
-      // Find canvas in container
       const container = getContainer();
       if (!container) {
         throw new Error('Container not available.');
@@ -83,7 +98,6 @@ export const ExportWidget: React.FC<ExportWidgetProps> = ({
         throw new Error('No canvas element available for capture.');
       }
 
-      // Capture image
       const blob = await new Promise<Blob | null>((resolve, reject) => {
         canvas.toBlob((blob) => {
           if (blob) {
@@ -96,25 +110,25 @@ export const ExportWidget: React.FC<ExportWidgetProps> = ({
 
       if (blob) {
         downloadBlob(blob, `${filename}.png`);
-        showStatus('PNG exported', 'success');
+        console.log('PNG captured');
       }
     } catch (error) {
       console.error('[ExportWidget] Failed to capture image:', error);
-      showStatus((error as Error).message || 'Failed to capture image', 'error');
     }
-  };
+  }, [getContainer, filename, downloadBlob]);
 
-  const handleToggleRecording = async () => {
-    if (recording) {
-      stopRecording();
-    } else {
-      await startRecording();
+  const stopRecording = useCallback(() => {
+    if (!recorderRef.current) {
+      console.warn('[ExportWidget] No active recorder to stop');
+      return;
     }
-  };
 
-  const startRecording = async () => {
+    console.log('Stopping recording');
+    recorderRef.current.stop();
+  }, []);
+
+  const startRecording = useCallback(async () => {
     try {
-      // Find canvas in container
       const container = getContainer();
       if (!container) {
         throw new Error('Container not available.');
@@ -131,7 +145,6 @@ export const ExportWidget: React.FC<ExportWidgetProps> = ({
 
       const stream = canvas.captureStream(60);
 
-      // Detect best video format - try MP4 first, fallback to WebM
       const formats = [
         { mimeType: 'video/mp4;codecs=avc1', extension: 'mp4' },
         { mimeType: 'video/mp4;codecs=h264', extension: 'mp4' },
@@ -146,24 +159,22 @@ export const ExportWidget: React.FC<ExportWidgetProps> = ({
       let format = formats.find(f => MediaRecorder.isTypeSupported(f.mimeType));
 
       if (!format) {
-        // Fallback: try without specifying mimeType (let browser choose)
         format = { mimeType: '', extension: 'webm' };
       }
 
       console.log('[ExportWidget] Using video format:', format.mimeType || 'browser default');
 
       const recorderOptions: MediaRecorderOptions = {
-        videoBitsPerSecond: 5_000_000, // 5 Mbps - good quality without being too large
+        videoBitsPerSecond: 5_000_000,
       };
 
-      // Only set mimeType if we have one (some browsers work better without it)
       if (format.mimeType) {
         recorderOptions.mimeType = format.mimeType;
       }
 
       const recorder = new MediaRecorder(stream, recorderOptions);
-
       const chunks: Blob[] = [];
+      recordedChunksRef.current = chunks;
 
       recorder.addEventListener('dataavailable', (event) => {
         if (event.data?.size) {
@@ -172,7 +183,6 @@ export const ExportWidget: React.FC<ExportWidgetProps> = ({
       });
 
       recorder.addEventListener('stop', () => {
-        // Use the actual mimeType from the recorder if available
         const mimeType = format.mimeType || recorder.mimeType || 'video/webm';
         const blob = new Blob(chunks, { type: mimeType });
 
@@ -183,124 +193,122 @@ export const ExportWidget: React.FC<ExportWidgetProps> = ({
         });
 
         downloadBlob(blob, `${filename}.${format.extension}`);
-        showStatus('Recording saved', 'success');
         stream.getTracks().forEach((track) => track.stop());
         setRecording(false);
         recorderRef.current = null;
+        recordedChunksRef.current = [];
       });
 
       recorder.start();
       recorderRef.current = recorder;
       setRecording(true);
-      showStatus('Recording in progress…');
+      console.log('Recording started');
     } catch (error) {
       console.error('[ExportWidget] Failed to start recording:', error);
-      showStatus((error as Error).message || 'Failed to record video', 'error');
       setRecording(false);
       recorderRef.current = null;
     }
-  };
+  }, [getContainer, filename, downloadBlob]);
 
-  const stopRecording = () => {
-    if (!recorderRef.current) {
-      console.warn('[ExportWidget] No active recorder to stop');
-      return;
+  const handleToggleRecording = useCallback(async () => {
+    if (recording) {
+      stopRecording();
+    } else {
+      await startRecording();
     }
+  }, [recording, stopRecording, startRecording]);
 
-    showStatus('Finishing recording…');
-    recorderRef.current.stop();
-    // The 'stop' event handler will handle the rest (download, cleanup, etc.)
-  };
-
-  const downloadBlob = (blob: Blob, filename: string) => {
-    const url = URL.createObjectURL(blob);
-    const anchor = document.createElement('a');
-    anchor.href = url;
-    anchor.download = filename;
-    anchor.rel = 'noopener';
-    anchor.style.display = 'none';
-    document.body.appendChild(anchor);
-    anchor.click();
-    document.body.removeChild(anchor);
-    URL.revokeObjectURL(url);
-  };
-
-  const positionStyles = {
-    'top-left': { top: '1rem', left: '1rem' },
-    'top-right': { top: '1rem', right: '1rem' },
-    'bottom-left': { bottom: '1rem', left: '1rem' },
-    'bottom-right': { bottom: '1rem', right: '1rem' },
-  };
+  // Handle download directly by sending message to parent
+  const handleDownload = useCallback(() => {
+    window.parent.postMessage({
+      type: 'HYPERTOOL_DOWNLOAD_CODE',
+      source: 'hypertool-iframe'
+    }, '*');
+  }, []);
 
   return (
-    <div
-      className="hyper-frame-export-widget"
-      style={{
-        position: 'fixed',
-        display: 'flex',
-        flexDirection: 'column',
-        gap: '0.25rem',
-        borderRadius: '0.75rem',
-        color: '#f8fafc',
-        fontSize: '12px',
-        lineHeight: '16px',
-        zIndex: 2147483646,
-        pointerEvents: 'auto',
-        ...positionStyles[position],
-      }}
-    >
-      <div style={{ display: 'flex', flexDirection: 'row', gap: '0.5rem', alignItems: 'center' }}>
+    <div className="export-widget-container absolute top-0 left-0 py-2 px-2 z-[9999]">
+      <div className="flex items-center gap-4">
+        {/* Export buttons */}
         <button
           type="button"
-          onClick={handleImageCapture}
+          className={`inline-flex items-center gap-2 rounded-lg border border-border bg-background px-2 py-1 text-sm text-text transition hover:bg-muted/80 whitespace-nowrap ${
+            !imageEnabled ? 'opacity-60 cursor-not-allowed' : ''
+          }`}
+          onClick={handleCapturePNG}
           disabled={!imageEnabled}
-          style={{
-            flex: '1 1 auto',
-            padding: '0.35rem 0.6rem',
-            border: '0',
-            borderRadius: '0.5rem',
-            cursor: imageEnabled ? 'pointer' : 'not-allowed',
-            background: 'rgba(94, 234, 212, 0.2)',
-            color: '#5eead4',
-            fontWeight: '600',
-            opacity: imageEnabled ? '1' : '0.6',
-          }}
+          title="Screenshot"
         >
-          Capture PNG
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="18"
+            height="18"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"></path>
+            <circle cx="12" cy="13" r="3"></circle>
+          </svg>
+          <span>Screenshot</span>
         </button>
-
         <button
           type="button"
+          className={`inline-flex items-center gap-2 rounded-lg border transition hover:bg-muted/80 whitespace-nowrap px-2 py-1 text-sm ${
+            recording
+              ? 'bg-red-500/20 text-red-400 border-red-500/30'
+              : 'bg-background text-text border-border'
+          } ${!videoEnabled ? 'opacity-60 cursor-not-allowed' : ''}`}
           onClick={handleToggleRecording}
           disabled={!videoEnabled}
-          style={{
-            flex: '1 1 auto',
-            padding: '0.35rem 0.6rem',
-            border: '0',
-            borderRadius: '0.5rem',
-            cursor: videoEnabled ? 'pointer' : 'not-allowed',
-            background: recording ? 'rgba(248, 113, 113, 0.25)' : 'rgba(129, 140, 248, 0.2)',
-            color: recording ? '#fecaca' : '#a5b4fc',
-            fontWeight: '600',
-            opacity: videoEnabled ? '1' : '0.6',
-          }}
+          title={recording ? 'Stop Recording' : 'Record Video'}
         >
-          {recording ? 'Stop Recording' : 'Record Video'}
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="18"
+            height="18"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <path d="m22 8-6 4 6 4V8Z"></path>
+            <rect x="2" y="6" width="14" height="12" rx="2" ry="2"></rect>
+          </svg>
+          <span>{recording ? 'Stop' : 'Rec'}</span>
+        </button>
+
+        {/* Download Code Button */}
+        <button
+          type="button"
+          className="inline-flex items-center gap-2 rounded-lg border border-border bg-background px-2 py-1 text-sm text-text transition hover:bg-muted/80 whitespace-nowrap"
+          onClick={handleDownload}
+          title="Download Code"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="18"
+            height="18"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+            <polyline points="7 10 12 15 17 10"></polyline>
+            <line x1="12" y1="15" x2="12" y2="3"></line>
+          </svg>
+          <span>Code</span>
         </button>
       </div>
-
-      {status && (
-        <span
-          style={{
-            display: 'block',
-            color: statusTone === 'error' ? '#fca5a5' : statusTone === 'success' ? '#bbf7d0' : '#e2e8f0',
-            opacity: '0.8',
-            minHeight: '16px',
-          }}
-        >
-          {status}
-        </span>
-      )}
     </div>
   );
 };
+
