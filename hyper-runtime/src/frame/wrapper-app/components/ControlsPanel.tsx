@@ -78,11 +78,6 @@ export const ControlsPanel: React.FC<ControlsPanelProps> = ({
     <div
       ref={containerRef}
       className="hyper-frame-controls-panel"
-      style={{
-        position: 'absolute',
-        zIndex: 1000,
-        pointerEvents: 'auto',
-      }}
     />
   );
 };
