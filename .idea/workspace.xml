@@ -4,9 +4,16 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="51bc1ced-b378-46bc-8004-9aa3de836607" name="Changes" comment="Gpt-5 model name fix">
-      <change beforePath="$PROJECT_DIR$/hyper-runtime/src/frame/cssBridge.ts" beforeDir="false" afterPath="$PROJECT_DIR$/hyper-runtime/src/frame/cssBridge.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/components/Preview/CssSyncManager.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/components/Preview/CssSyncManager.ts" afterDir="false" />
+    <list default="true" id="51bc1ced-b378-46bc-8004-9aa3de836607" name="Changes" comment="fix watch">
+      <change beforePath="$PROJECT_DIR$/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/boilerplate-presets/maga/index.html" beforeDir="false" afterPath="$PROJECT_DIR$/boilerplate-presets/maga/index.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/boilerplate-presets/maga/main.ts" beforeDir="false" afterPath="$PROJECT_DIR$/boilerplate-presets/maga/main.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/boilerplate-presets/start/index.html" beforeDir="false" afterPath="$PROJECT_DIR$/boilerplate-presets/start/index.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/boilerplate-presets/start/main.ts" beforeDir="false" afterPath="$PROJECT_DIR$/boilerplate-presets/start/main.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/boilerplate-presets/sviat/index.html" beforeDir="false" afterPath="$PROJECT_DIR$/boilerplate-presets/sviat/index.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/boilerplate-presets/sviat/main.ts" beforeDir="false" afterPath="$PROJECT_DIR$/boilerplate-presets/sviat/main.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/lib/boilerplate.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/lib/boilerplate.ts" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />

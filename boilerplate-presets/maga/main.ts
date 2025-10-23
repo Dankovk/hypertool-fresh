@@ -1,3 +1,4 @@
+import { createSandbox } from "./__hypertool__/frame/index.js";
 // Using HyperFrame global injected by the parent
 type ControlDefinitions = Record<string, any>;
 type SandboxContext = any;
@@ -118,8 +119,8 @@ const controlDefinitions: ControlDefinitions = {
   },
 };
 
-(window as any).hyperFrame
-  .createSandbox({
+
+createSandbox({
     dependencies: [],
     controls: {
       definitions: controlDefinitions,

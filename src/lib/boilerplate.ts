@@ -313,7 +313,7 @@ function injectFrameLibrary(files: FileMap): ScriptDescriptor[] {
 // `.trimStart();
 
     // files[FRAME_GLOBALS_PATH] = globalsCode;
-    scripts.push({ src: "./__hypertool__/frame/globals.js", module: true });
+    // scripts.push({ src: "./__hypertool__/frame/globals.js", module: true });
     logger.info('Frame library injected successfully');
   } catch (error) {
     logger.error('Failed to inject frame library', error);

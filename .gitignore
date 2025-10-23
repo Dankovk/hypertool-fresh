@@ -18,8 +18,11 @@ next
 
 
 .idea
+.idea/
+.idea/*
 dist
 dist/*
 dist/
 
+.turbo
 
