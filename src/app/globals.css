@@ -240,8 +240,8 @@
   
 }
 
-.top-bar-container {
-
+.bottom-bar-container {
+  bottom: 54px;
 }
 
 .export-widget-container {
@@ -249,6 +249,7 @@
 
 .canvas-size-widget-container {
 }
+
 
 .controls-container {
   top: 0.5rem !important;
@@ -341,6 +342,9 @@
   }
   .text-text {
     color: var(--ht-text-color-offwhite);
+  }
+  .text-accent {
+    color: var(--text-cyan);
   }
   .border-border {
     border-color: var(--ht-border-color);

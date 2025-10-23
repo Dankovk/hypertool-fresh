@@ -65,7 +65,7 @@ export const CanvasSizeWidget: React.FC = () => {
     <div className="canvas-size-widget-container absolute top-0 center px-2 py-2 z-[9999] flex items-center gap-2">
       {/* Width Input */}
       <div className="flex items-center gap-2">
-        <label className="text-sm text-text-secondary">W:</label>
+        <label className="text-sm text-accent">W:</label>
         <input
           type="number"
           value={widthInput}
@@ -81,7 +81,7 @@ export const CanvasSizeWidget: React.FC = () => {
 
       {/* Height Input */}
       <div className="flex items-center gap-2">
-        <label className="text-sm text-text-secondary">H:</label>
+        <label className="text-sm text-accent">H:</label>
         <input
           type="number"
           value={heightInput}
