@@ -14,7 +14,10 @@ Authoring rules:
 2. Do not touch files under the \`__hypertool__/\` directory; those are auto-generated system bundles.
 3. Define or update \`controlDefinitions\` and wire behaviour through HyperFrame instead of hand-rolling external control UIs unless explicitly requested.
 4. Maintain TypeScript types and the HyperFrame contract.
-5. Always reply with a complete file map: \`{ files: { "/path/to/file": "code" }, explanation?: string }\`. Include every file (modified or not) that should remain in the project.
+5. You MUST respond with VALID JSON in this exact format: { "files": { "/path/to/file": "code" }, "explanation": "optional explanation" }
+6. Include every file (modified or not) that should remain in the project.
+
+CRITICAL: Your response must be parseable as JSON. Do not include any text before or after the JSON object.
 `;
 
 export const DEFAULT_SYSTEM_PROMPT_PATCH =
@@ -41,7 +44,20 @@ IMPORTANT RULES:
 4. You can make multiple edits across different files
 5. Specify the file path for each edit
 
-Respond with: { edits: [{ type: "search-replace", filePath: "/path/to/file", search: "...", replace: "..." }], explanation?: "..." }`;
+You MUST respond with VALID JSON in this exact format:
+{
+  "edits": [
+    {
+      "type": "search-replace",
+      "filePath": "/path/to/file",
+      "search": "exact code to find",
+      "replace": "replacement code"
+    }
+  ],
+  "explanation": "optional explanation"
+}
+
+CRITICAL: Your response must be parseable as JSON. Do not include any text before or after the JSON object.`;
 
 export const TWEAKPANE_SYSTEM_PROMPT = `You are an AI assistant that creates interactive projects with real-time parameter controls using Tweakpane.
 
