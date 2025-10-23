@@ -23,12 +23,12 @@ export function SettingsPanel({
   onSystemPromptChange,
 }: SettingsPanelProps) {
   return (
-    <div className="flex flex-col gap-4 border-b border-border bg-dark-green px-5 py-4">
+    <div className="flex flex-col gap-4 border-b border-border bg-dark-base px-5 py-4">
       <div className="grid grid-cols-3 gap-4">
         <label className="flex flex-col gap-2">
           <span className="text-xs font-semibold uppercase tracking-[0.12em] text-text-secondary">Model</span>
           <select
-            className="rounded-lg border border-border bg-background px-3 py-2 text-sm text-text shadow-sm focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/30"
+            className="rounded-lg bg-dark-accent px-3 py-2 text-sm text-text shadow-sm focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/30"
             value={model}
             onChange={(e) => onModelChange(e.target.value)}
           >
@@ -60,7 +60,7 @@ export function SettingsPanel({
             Edit Mode
           </span>
           <select
-            className="rounded-lg border border-border bg-background px-3 py-2 text-sm text-text shadow-sm focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/30"
+            className="rounded-lg bg-dark-accent px-3 py-2 text-sm text-text shadow-sm focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/30"
             value={editMode}
             onChange={(e) => {
               const mode = e.target.value as "full" | "patch";
@@ -76,7 +76,7 @@ export function SettingsPanel({
         <label className="flex flex-col gap-2">
           <span className="text-xs font-semibold uppercase tracking-[0.12em] text-text-secondary">API Key</span>
           <input
-            className="rounded-lg border border-border bg-background px-3 py-2 text-sm text-text shadow-sm focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/30"
+            className="rounded-lg bg-dark-accent px-3 py-2 text-sm text-text shadow-sm focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/30"
             type="password"
             placeholder="Optional: overrides env key"
             value={apiKey}
@@ -88,7 +88,7 @@ export function SettingsPanel({
       <label className="flex flex-col gap-2">
         <span className="text-xs font-semibold uppercase tracking-[0.12em] text-text-secondary">System Prompt</span>
         <textarea
-          className="min-h-[120px] rounded-lg border border-border bg-background px-3 py-2 text-sm text-text shadow-sm focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/30"
+          className="min-h-[120px] rounded-lg bg-dark-accent px-3 py-2 text-sm text-text shadow-sm focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/30"
           value={systemPrompt}
           onChange={(e) => onSystemPromptChange(e.target.value)}
           rows={4}

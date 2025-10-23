@@ -40,13 +40,6 @@ export interface ControlsPanelProps {
   onReady?: (controls: any) => void;
 }
 
-export interface ExportWidgetProps {
-  getContainer: () => HTMLElement | null;
-  position?: 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right';
-  filename?: string;
-  useCanvasCapture?: boolean;
-}
-
 export interface SandboxContainerProps {
   /**
    * Callback when the container is mounted and ready

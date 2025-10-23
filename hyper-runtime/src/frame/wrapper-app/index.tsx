@@ -5,4 +5,5 @@
  */
 
 export { WrapperApp } from './WrapperApp';
-export type { WrapperAppProps, ControlsPanelProps, ExportWidgetProps, SandboxContainerProps } from './types';
+export type { WrapperAppProps, ControlsPanelProps, SandboxContainerProps } from './types';
+export { CanvasProvider, useCanvas } from './context';
