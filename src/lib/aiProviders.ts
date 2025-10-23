@@ -1,6 +1,6 @@
 import { createOpenAI } from "@ai-sdk/openai";
 import { createAnthropic } from "@ai-sdk/anthropic";
-import { google } from "@ai-sdk/google";
+import { createGoogleGenerativeAI } from "@ai-sdk/google";
 import { createLogger } from "@/lib/logger";
 
 const logger = createLogger('aiProviders');
@@ -23,9 +23,9 @@ const PROVIDER_CONFIGS: ProviderConfig[] = [
   },
   {
     name: "google",
-    envKeys: ["GOOGLE_API_KEY", "GOOGLE_GENERATIVE_AI_API_KEY"],
+    envKeys: ["GOOGLE_API_KEY"],
     modelPrefixes: ["gemini-", "models/gemini"],
-    create: (apiKey) => google(apiKey),
+    create: (apiKey) => createGoogleGenerativeAI({ apiKey }),
   },
   {
     name: "openai",

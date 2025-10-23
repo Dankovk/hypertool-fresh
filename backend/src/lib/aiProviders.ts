@@ -1,6 +1,6 @@
 import { createOpenAI } from "@ai-sdk/openai";
 import { createAnthropic } from "@ai-sdk/anthropic";
-import { google } from "@ai-sdk/google";
+import { createGoogleGenerativeAI } from "@ai-sdk/google";
 
 export type ProviderType = "openai" | "anthropic" | "google";
 
@@ -20,9 +20,9 @@ const PROVIDER_CONFIGS: ProviderConfig[] = [
   },
   {
     name: "google",
-    envKeys: ["GOOGLE_API_KEY", "GOOGLE_GENERATIVE_AI_API_KEY"],
+    envKeys: ["GOOGLE_GENERATIVE_AI_API_KEY", "GOOGLE_API_KEY"],
     modelPrefixes: ["gemini-", "models/gemini"],
-    create: (apiKey) => google(apiKey),
+    create: (apiKey) => createGoogleGenerativeAI({ apiKey: apiKey }),
   },
   {
     name: "openai",
