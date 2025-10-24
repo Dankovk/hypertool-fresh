@@ -17,9 +17,9 @@ next
 .next/
 
 
-.idea
-.idea/
-.idea/*
+#.idea
+#.idea/
+#.idea/*
 dist
 dist/*
 dist/
