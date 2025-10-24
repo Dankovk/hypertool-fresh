@@ -19,8 +19,8 @@ interface PresetInfo {
 const currentDir = process.cwd()
 const pathToRootDir = resolve(currentDir);
 
-const DEFAULT_RELATIVE_PATH = "../boilerplate-presets/universal";
-const PRESETS_RELATIVE_PATH = "../boilerplate-presets";
+const DEFAULT_RELATIVE_PATH = "./public/boilerplate-presets/universal";
+const PRESETS_RELATIVE_PATH = "./public/boilerplate-presets";
 const FALLBACK_RELATIVE_PATHS = [
   "../boilerplate-presets/universal",
   "../../boilerplate-presets/universal",
