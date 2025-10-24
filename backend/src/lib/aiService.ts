@@ -1,9 +1,9 @@
 import { generateObject } from "ai";
 import { z } from "zod";
-import { CodeEditSchema, type CodeEdit } from "@/types/ai";
-import { applyEditsToFiles, createHistoryEntry } from "@/lib/patches";
-import { getHistoryManager } from "@/lib/history";
-import type { FileMap } from "@/types/studio";
+import { CodeEditSchema, type CodeEdit } from "../types/ai.ts";
+import { applyEditsToFiles, createHistoryEntry } from "../lib/patches.ts";
+import { getHistoryManager } from "../lib/history.ts";
+import type { FileMap } from "../types/studio.ts";
 
 interface GenerateFullFilesParams {
   model: any;

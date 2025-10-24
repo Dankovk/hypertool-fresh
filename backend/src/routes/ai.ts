@@ -1,16 +1,16 @@
 import { Hono } from 'hono';
-import { loadBoilerplateFiles, ensureSystemFiles } from '@/lib/boilerplate';
-import { AiRequestSchema } from '@/types/ai';
-import { getProviderForModel } from '@/lib/aiProviders';
-import { DEFAULT_SYSTEM_PROMPT_FULL, DEFAULT_SYSTEM_PROMPT_PATCH } from '@/config/prompts';
+import { loadBoilerplateFiles, ensureSystemFiles } from '../lib/boilerplate.ts';
+import { AiRequestSchema } from '../types/ai.ts';
+import { getProviderForModel } from '../lib/aiProviders.ts';
+import { DEFAULT_SYSTEM_PROMPT_FULL, DEFAULT_SYSTEM_PROMPT_PATCH } from '../config/prompts.ts';
 import {
   generateFullFiles,
   generatePatches,
   buildConversationPrompt,
-} from '@/lib/aiService';
-import { createStubTransform } from '@/lib/fallbacks';
-import { normalizeFileMap } from '@/lib/fileUtils';
-import { createLogger } from '@/lib/logger';
+} from '../lib/aiService.ts';
+import { createStubTransform } from '../lib/fallbacks.ts';
+import { normalizeFileMap } from '../lib/fileUtils.ts';
+import { createLogger } from '../lib/logger.ts';
 
 const app = new Hono();
 

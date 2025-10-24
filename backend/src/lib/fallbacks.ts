@@ -1,4 +1,4 @@
-import type { FileMap } from "@/types/studio";
+import type { FileMap } from "../types/studio.ts";
 
 export function createStubTransform(files: FileMap, prompt: string): FileMap {
   const nextFiles = { ...files };

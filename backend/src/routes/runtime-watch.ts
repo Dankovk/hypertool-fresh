@@ -2,7 +2,7 @@ import { Hono } from 'hono';
 import { existsSync, watch } from 'node:fs';
 import { resolve, join } from 'node:path';
 import { stream } from 'hono/streaming';
-import { loadRuntimeBundles } from '@/lib/boilerplate';
+import { loadRuntimeBundles } from '../lib/boilerplate.ts';
 
 const app = new Hono();
 

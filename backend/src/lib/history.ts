@@ -1,4 +1,4 @@
-import { EditHistoryEntry } from "./patches";
+import { EditHistoryEntry } from "./patches.ts";
 
 /**
  * In-memory history manager with undo/redo support

@@ -1,5 +1,5 @@
 import { Hono } from 'hono';
-import { loadRuntimeBundles } from '@/lib/boilerplate';
+import { loadRuntimeBundles } from '../lib/boilerplate.ts';
 
 const app = new Hono();
 

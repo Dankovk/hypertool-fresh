@@ -1,16 +1,16 @@
 import { Hono } from 'hono';
 import { stream } from 'hono/streaming';
-import { loadBoilerplateFiles, ensureSystemFiles } from '@/lib/boilerplate';
-import { AiRequestSchema, CodeEditSchema } from '@/types/ai';
-import { getProviderForModel } from '@/lib/aiProviders';
-import { DEFAULT_SYSTEM_PROMPT_FULL, DEFAULT_SYSTEM_PROMPT_PATCH } from '@/config/prompts';
-import { buildConversationPrompt } from '@/lib/aiService';
-import { normalizeFileMap } from '@/lib/fileUtils';
-import { createLogger } from '@/lib/logger';
+import { loadBoilerplateFiles, ensureSystemFiles } from '../lib/boilerplate.ts';
+import { AiRequestSchema, CodeEditSchema } from '../types/ai.ts';
+import { getProviderForModel } from '../lib/aiProviders.ts';
+import { DEFAULT_SYSTEM_PROMPT_FULL, DEFAULT_SYSTEM_PROMPT_PATCH } from '../config/prompts.ts';
+import { buildConversationPrompt } from '../lib/aiService.ts';
+import { normalizeFileMap } from '../lib/fileUtils.ts';
+import { createLogger } from '../lib/logger.ts';
 import { streamObject, streamText } from 'ai';
 import { z } from 'zod';
-import { applyEditsToFiles, createHistoryEntry } from '@/lib/patches';
-import { getHistoryManager } from '@/lib/history';
+import { applyEditsToFiles, createHistoryEntry } from '../lib/patches.ts';
+import { getHistoryManager } from '../lib/history.ts';
 
 const app = new Hono();
 
