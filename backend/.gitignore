@@ -1,5 +1,4 @@
 node_modules
-src/lib/boilerplate-data.ts
 dist
 .env
 .env.local
