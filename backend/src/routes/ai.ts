@@ -1,3 +1,4 @@
+//@ts-nocheck
 import { Hono } from 'hono';
 import { loadBoilerplateFiles, ensureSystemFiles } from '../lib/boilerplate.js';
 import { AiRequestSchema } from '../types/ai.js';

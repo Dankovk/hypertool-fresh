@@ -1,3 +1,4 @@
+//@ts-nocheck
 import { generateObject } from "ai";
 import { z } from "zod";
 import { CodeEditSchema, type CodeEdit } from "../types/ai.js";

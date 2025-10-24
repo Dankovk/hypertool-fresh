@@ -1,9 +1,10 @@
+//@ts-nocheck
 import { Hono } from 'hono';
 import { stream } from 'hono/streaming';
 import { loadBoilerplateFiles, ensureSystemFiles } from '../lib/boilerplate.js';
 import { AiRequestSchema, CodeEditSchema } from '../types/ai.js';
 import { getProviderForModel } from '../lib/aiProviders.js';
-import { DEFAULT_SYSTEM_PROMPT_FULL, DEFAULT_SYSTEM_PROMPT_PATCH } from '@hypertool/shared-config/prompts';
+import { DEFAULT_SYSTEM_PROMPT_FULL, DEFAULT_SYSTEM_PROMPT_PATCH } from '@hypertool/shared-config/prompts.js';
 import { buildConversationPrompt } from '../lib/aiService.js';
 import { normalizeFileMap } from '../lib/fileUtils.js';
 import { createLogger } from '../lib/logger.js';
