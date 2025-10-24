@@ -4,6 +4,7 @@
     "module": "ESNext",
     "moduleResolution": "bundler",
     "jsx": "react-jsx",
+    "jsxImportSource": "hono/jsx",
     "lib": ["ESNext"],
     "strict": true,
     "esModuleInterop": true,
@@ -11,7 +12,7 @@
     "forceConsistentCasingInFileNames": true,
     "allowJs": true,
     "resolveJsonModule": true,
-    "types": ["bun-types"]
+    "types": ["bun-types", "node"],
   },
   "include": ["src/**/*"],
   "exclude": ["node_modules", "dist"]
