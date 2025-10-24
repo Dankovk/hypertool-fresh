@@ -11,7 +11,7 @@
     "transform:boilerplate": "bun run scripts/transform-boilerplates.ts",
     "transform:runtime": "bun run scripts/transform-runtime.ts",
     "prebuild": "bun run build:runtime && bun run transform:runtime && bun run transform:boilerplate",
-    "build": "bun run prebuild",
+    "build": "NODE_ENV=production bun run prebuild",
     "build:runtime": "cd ../packages/runtime && bun run build",
     "typecheck": "tsc --noEmit"
   },

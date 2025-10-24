@@ -14,7 +14,7 @@
  const HYPER_RUNTIME_DIST_FROM_BACKEND_DEV = "node_modules/@hypertool/runtime/dist";
  const HYPER_RUNTIME_DIST_FROM_BACKEND_PROD = "../packages/runtime/dist";
 
-export const HYPER_RUNTIME_DIST_FROM_BACKEND = HYPER_RUNTIME_DIST_FROM_BACKEND_DEV;
+export const HYPER_RUNTIME_DIST_FROM_BACKEND = process.env.NODE_ENV === 'development' ? HYPER_RUNTIME_DIST_FROM_BACKEND_DEV : HYPER_RUNTIME_DIST_FROM_BACKEND_PROD ;
 /**
  * Relative path from hyper-runtime/ to backend output location
  * Used by build-dev.config.ts (which runs from hyper-runtime/)

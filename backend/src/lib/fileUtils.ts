@@ -173,6 +173,7 @@ export function getBoilerplateFileMap(): BoilerplateData {
  */
 export function getRuntimeFileMap(): RuntimeData {
   const runtimeDistPath = resolve(HYPER_RUNTIME_DIST_FROM_BACKEND);
+  console.log(runtimeDistPath)
 
   if (!existsSync(runtimeDistPath)) {
     throw new Error(`Runtime dist directory not found at: ${runtimeDistPath}`);
