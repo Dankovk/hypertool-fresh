@@ -172,8 +172,7 @@ export function getBoilerplateFileMap(): BoilerplateData {
  * @returns RuntimeData with the runtime bundle files
  */
 export function getRuntimeFileMap(): RuntimeData {
-  const projectRoot = resolve(process.cwd(), "..");
-  const runtimeDistPath = resolve(projectRoot, "backend", HYPER_RUNTIME_DIST_FROM_BACKEND);
+  const runtimeDistPath = resolve(HYPER_RUNTIME_DIST_FROM_BACKEND);
 
   if (!existsSync(runtimeDistPath)) {
     throw new Error(`Runtime dist directory not found at: ${runtimeDistPath}`);
