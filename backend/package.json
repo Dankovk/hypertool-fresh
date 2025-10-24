@@ -4,10 +4,12 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "bun run --watch src/index.ts",
+    "dev": "bun run transform:boilerplate && bun run dev:server",
+    "dev:server": "bun run --watch src/index.ts",
+    "dev:boilerplates": "bun run scripts/watch-boilerplates.ts",
     "start": "NODE_ENV=production bun run src/index.js",
-    "copy:boilerplate": "cp -r ../boilerplate-presets public/bolerplate-presets",
-    "build": "rm -rf public/deps && mkdir public/deps/ && bun run build:runtime && cp -r ../packages/runtime public/",
+    "transform:boilerplate": "bun run scripts/transform-boilerplates.ts",
+    "prebuild": "bun run transform:boilerplate",
     "build:runtime": "cd ../packages/runtime && bun run build",
     "typecheck": "tsc --noEmit"
   },

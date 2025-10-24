@@ -1,4 +1,4 @@
-import { existsSync, readdirSync, readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { join, resolve } from "node:path";
 import { HYPER_RUNTIME_DIST_FROM_BACKEND, BUNDLE_PATH, VIRTUAL_PATH } from "@hypertool/shared-config/paths";
 
@@ -9,123 +9,27 @@ interface ScriptDescriptor {
   module?: boolean;
 }
 
-interface PresetInfo {
+export interface PresetInfo {
   id: string;
   name: string;
   description: string;
 }
 
+// Import generated boilerplate data (must exist - run 'bun run transform:boilerplate' first)
+const BOILERPLATE_DATA = await import('./boilerplate-data.js');
+console.log('[boilerplate] Using pre-generated boilerplate data');
+
 // Backend runs from backend/ directory, so go up one level to project root
 const currentDir = process.cwd()
 const pathToRootDir = resolve(currentDir);
 
-const DEFAULT_RELATIVE_PATH = "./public/boilerplate-presets/universal";
-const PRESETS_RELATIVE_PATH = "./public/boilerplate-presets";
-const FALLBACK_RELATIVE_PATHS = [
-  "../boilerplate-presets/universal",
-  "../../boilerplate-presets/universal",
-  "./boilerplate-presets/universal",
-  "../boilerplate-presets",
-  "../../boilerplate-presets",
-  "./boilerplate-presets",
-];
-
-export function resolveBoilerplatePath(): string {
-  const cwd = process.cwd();
-  const candidatePaths = [DEFAULT_RELATIVE_PATH, ...FALLBACK_RELATIVE_PATHS];
-
-  for (const relativePath of candidatePaths) {
-    const candidate = resolve(cwd, relativePath);
-    if (existsSync(candidate) && existsSync(join(candidate, "index.html"))) {
-      return candidate;
-    }
-  }
-
-  throw new Error(`Unable to locate boilerplate project from cwd: ${cwd}`);
-}
-
-export function resolvePresetsPath(): string | null {
-  const cwd = process.cwd();
-  const candidate = resolve(cwd, PRESETS_RELATIVE_PATH);
-  if (existsSync(candidate)) {
-    return candidate;
-  }
-  return null;
-}
-
-export function readDirectoryRecursive(dir: string, base: string = dir, out: FileMap = {}): FileMap {
-  const entries = readdirSync(dir, { withFileTypes: true });
-  for (const entry of entries) {
-    const full = join(dir, entry.name);
-    if (entry.isDirectory()) {
-      readDirectoryRecursive(full, base, out);
-    } else {
-      const rel = full.replace(base + "/", "");
-      out["/" + rel] = readFileSync(full, "utf8");
-    }
-  }
-  return out;
-}
-
 export function loadBoilerplateFiles(presetId?: string): FileMap {
-  let files: FileMap | null = null;
-
-  if (presetId) {
-    const presetsPath = resolvePresetsPath();
-    if (presetsPath) {
-      const presetPath = join(presetsPath, presetId);
-      if (existsSync(presetPath) && existsSync(join(presetPath, "index.html"))) {
-        files = readDirectoryRecursive(presetPath);
-      }
-    }
-  }
-
-  if (!files) {
-    const boilerplatePath = resolveBoilerplatePath();
-    files = readDirectoryRecursive(boilerplatePath);
-  }
-
+  const files = BOILERPLATE_DATA.loadBoilerplateFiles(presetId);
   return ensureSystemFiles(files);
 }
 
 export function listAvailablePresets(): PresetInfo[] {
-  const presetsPath = resolvePresetsPath();
-  if (!presetsPath) {
-    return [];
-  }
-
-  const presets: PresetInfo[] = [];
-  const entries = readdirSync(presetsPath, { withFileTypes: true });
-
-  for (const entry of entries) {
-    if (entry.isDirectory() && entry.name !== '__non-migrated__') {
-      const presetPath = join(presetsPath, entry.name);
-      const packageJsonPath = join(presetPath, "package.json");
-
-      let name = entry.name;
-      let description = "";
-
-      if (existsSync(packageJsonPath)) {
-        try {
-          const packageJson = JSON.parse(readFileSync(packageJsonPath, "utf8"));
-          name = packageJson.name || entry.name;
-          description = packageJson.description || "";
-        } catch (e) {
-          // Ignore invalid package.json
-        }
-      }
-
-
-
-      presets.push({
-        id: entry.name,
-        name,
-        description,
-      });
-    }
-  }
-
-  return presets;
+  return BOILERPLATE_DATA.listAvailablePresets();
 }
 
 function injectRuntimeLibrary(files: FileMap): ScriptDescriptor | null {
