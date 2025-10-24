@@ -4,7 +4,8 @@
   "private": true,
   "scripts": {
     "dev": "next dev --turbo -p 3030",
-    "build": "next build --turbo"
+    "build": "next build --turbo",
+    "start": "next start -p 3030"
   },
   "dependencies": {
     "@ai-sdk/anthropic": "^2.0.35",

@@ -16,6 +16,9 @@
         "GOOGLE_GENERATIVE_AI_API_KEY"
       ]
     },
+    "start": {
+      "dependsOn": ["^build"]
+    },
     "typecheck": {
       "outputs": []
     }

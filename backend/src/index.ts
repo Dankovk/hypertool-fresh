@@ -13,6 +13,8 @@ import history from './routes/history.js';
 
 const app = new Hono();
 
+
+
 // Middleware
 app.use('*', cors());
 app.use('*', logger());

@@ -15,3 +15,7 @@ index.js
 index.js.map
 
 hyper-runtime/index.js
+runtime-lib-copy
+runtime-lib-copy/*
+deps/*
+deps
