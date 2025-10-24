@@ -21,10 +21,10 @@ app.get('/', (c) => {
   }
 
   return stream(c, async (stream) => {
-    const runtimeRoot = resolve(process.cwd(), '../hyper-runtime');
-    const distRoot = join(runtimeRoot, 'dist');
+    // Watch the actual build output location (backend/hyper-runtime)
+    // This matches the DIST_TARGET_LOCATION in hyper-runtime/build-dev.config.ts
+    const distRoot = resolve(process.cwd(), 'hyper-runtime');
     const watchTargets = [
-      runtimeRoot,
       distRoot,
       join(distRoot, 'controls'),
       join(distRoot, 'frame'),

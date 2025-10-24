@@ -2,13 +2,21 @@
 // Bun dev build with persistent fs/promises.watch and CSS injection
 
 import { watch, readdir, stat } from "fs/promises";
-import { join } from "path";
+import { join, resolve } from "path";
+import {$} from 'bun'
+
 
 const entrypoints = [
     "src/index.ts",
     "src/controls/index.ts",
     "src/frame/index.ts",
 ];
+
+const currentDir = join(__dirname, '');
+
+const DIST_TARGET_RELATIVE_LOCATION = '../backend/hyper-runtime';
+const DIST_TARGET_LOCATION = join(currentDir, DIST_TARGET_RELATIVE_LOCATION);
+
 
 // --- CSS Injection Plugin ---
 const cssInjector = {
@@ -37,7 +45,7 @@ async function runBuild() {
     if (builder) builder.stop?.();
     builder = await Bun.build({
         entrypoints,
-        outdir: "dist",
+        outdir: DIST_TARGET_LOCATION,
         target: "browser",
         format: "esm",
         sourcemap: "external",
@@ -50,12 +58,17 @@ async function runBuild() {
                     console.error(`[${now}] ❌ Rebuild failed`);
                     for (const log of logs) console.error(log);
                 }
+
             },
         },
     });
 
-    if (builder.success) console.log("🚀 Build complete, watching...");
-    else for (const log of builder.logs) console.error(log);
+    if (builder.success) {
+        console.log("🚀 Build complete, watching...");
+
+    } else {
+        for (const log of builder.logs) console.error(log);
+    }
 }
 
 // --- Spawn a persistent recursive watcher ---
@@ -78,6 +91,7 @@ async function startRecursiveWatcher(dir: string) {
             if (!file || !/\.(ts|tsx|css)$/.test(file)) continue;
             console.log(`🔁 Detected ${event.eventType} in ${file}`);
             await runBuild();
+
         }
     })().catch((err) => console.error("Watcher error:", err));
 }

@@ -15,7 +15,8 @@ interface PresetInfo {
 }
 
 // Backend runs from backend/ directory, so go up one level to project root
-const pathToRootDir = resolve(process.cwd(), "..");
+const currentDir = process.cwd()
+const pathToRootDir = resolve(currentDir);
 
 const DEFAULT_RELATIVE_PATH = "../boilerplate-presets/universal";
 const PRESETS_RELATIVE_PATH = "../boilerplate-presets";
@@ -126,10 +127,10 @@ export function listAvailablePresets(): PresetInfo[] {
   return presets;
 }
 
-const CONTROLS_DIST_RELATIVE_PATH = "hyper-runtime/dist/controls/index.js";
+const CONTROLS_DIST_RELATIVE_PATH = "hyper-runtime/controls/index.js";
 const CONTROLS_BUNDLE_PATH = "/__hypertool__/controls/index.js";
 const CONTROLS_GLOBALS_PATH = "/__hypertool__/controls/globals.js";
-const FRAME_DIST_RELATIVE_PATH = "hyper-runtime/dist/frame/index.js";
+const FRAME_DIST_RELATIVE_PATH = "hyper-runtime/frame/index.js";
 const FRAME_BUNDLE_PATH = "/__hypertool__/frame/index.js";
 const FRAME_GLOBALS_PATH = "/__hypertool__/frame/globals.js";
 

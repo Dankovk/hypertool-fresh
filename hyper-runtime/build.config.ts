@@ -1,11 +1,19 @@
 // build.ts
+import {join} from "path";
+
+const currentDir = join(__dirname, '');
+
+const DIST_TARGET_RELATIVE_LOCATION = '../backend/hyper-runtime';
+const DIST_TARGET_LOCATION = join(currentDir, DIST_TARGET_RELATIVE_LOCATION);
+
+
 await Bun.build({
     entrypoints: [
         "src/index.ts",
         "src/controls/index.ts",
         "src/frame/index.ts"
     ],
-    outdir: "dist",
+    outdir: DIST_TARGET_LOCATION,
     target: "browser",
     format: "esm",
     minify: true,
