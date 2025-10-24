@@ -1,6 +1,4 @@
 {
-  "buildCommand": "bun install && bun run build && cp dist/index.js api/index.js && cp dist/index.js.map api/index.js.map",
-  "installCommand": "bun install",
   "functions": {
     "api/index.js": {
       "memory": 1024,
