@@ -1,92 +1,49 @@
 import { createSandbox } from "./__hypertool__";
 
 const controlDefinitions: ControlDefinitions = {
-  accent: {
+  playerXColor: {
     type: "color",
-    label: "Accent",
-    value: "#38bdf8",
+    label: "Player X Color",
+    value: "#06b6d4",
+  },
+  playerOColor: {
+    type: "color",
+    label: "Player O Color",
+    value: "#ec4899",
   },
   background: {
     type: "color",
     label: "Background",
-    value: "#020617",
+    value: "#0f172a",
   },
-  pulseSpeed: {
+  gridColor: {
+    type: "color",
+    label: "Grid Color",
+    value: "#1e293b",
+  },
+  particleCount: {
     type: "number",
-    label: "Pulse Speed",
-    value: 0.4,
+    label: "Particle Trail",
+    value: 30,
+    min: 0,
+    max: 100,
+    step: 5,
+  },
+  rippleIntensity: {
+    type: "number",
+    label: "Ripple Intensity",
+    value: 1,
+    min: 0,
+    max: 2,
+    step: 0.1,
+  },
+  glowIntensity: {
+    type: "number",
+    label: "Glow Intensity",
+    value: 0.8,
     min: 0,
     max: 1,
-    step: 0.01,
-  },
-  noise: {
-    type: "number",
-    label: "Noise",
-    value: 0.35,
-    min: 0,
-    max: 1,
-    step: 0.01,
-  },
-  rainbow: {
-    type: "boolean",
-    label: "Rainbow",
-    value: true,
-  },
-  saturation: {
-    type: "number",
-    label: "Saturation",
-    value: 0.9,
-    min: 0,
-    max: 1,
-    step: 0.01,
-  },
-  lightness: {
-    type: "number",
-    label: "Lightness",
-    value: 0.6,
-    min: 0,
-    max: 1,
-    step: 0.01,
-  },
-  ringCount: {
-    type: "number",
-    label: "Rings",
-    value: 14,
-    min: 6,
-    max: 24,
-    step: 1,
-  },
-  ringThickness: {
-    type: "number",
-    label: "Ring Thickness",
-    value: 45,
-    min: 10,
-    max: 80,
-    step: 1,
-  },
-  kaleidoSegments: {
-    type: "number",
-    label: "Kaleido Segments",
-    value: 8,
-    min: 1,
-    max: 12,
-    step: 1,
-  },
-  petalSize: {
-    type: "number",
-    label: "Orb Size",
-    value: 60,
-    min: 20,
-    max: 120,
-    step: 1,
-  },
-  grain: {
-    type: "number",
-    label: "Grain",
-    value: 0.2,
-    min: 0,
-    max: 1,
-    step: 0.01,
+    step: 0.1,
   },
 };
 
@@ -94,26 +51,47 @@ createSandbox({
   controls: {
     definitions: controlDefinitions,
     options: {
-      title: "Hippie Pulse",
+      title: "Tic-Tac-Toe",
     },
   },
   exportWidget: {
-    filename: "hippie-pulse",
+    filename: "tic-tac-toe",
     useCanvasCapture: true,
-      enabled: true,
+    enabled: true,
   },
-  setup: (context: SandboxContext) => initialisePulse(context),
+  setup: (context: SandboxContext) => initialiseTicTacToe(context),
 }).catch((error) => {
-  console.error("[hyper-pulse] Failed to initialise sandbox", error);
+  console.error("[tic-tac-toe] Failed to initialise sandbox", error);
 });
 
-function initialisePulse(context: SandboxContext) {
+interface Particle {
+  x: number;
+  y: number;
+  vx: number;
+  vy: number;
+  life: number;
+  maxLife: number;
+  size: number;
+  hue: number;
+}
+
+interface Ripple {
+  x: number;
+  y: number;
+  radius: number;
+  maxRadius: number;
+  alpha: number;
+  color: string;
+}
+
+function initialiseTicTacToe(context: SandboxContext) {
   const { mount, params, exports, environment } = context;
 
   const canvas = document.createElement("canvas");
   canvas.style.width = "100%";
   canvas.style.height = "100%";
   canvas.style.display = "block";
+  canvas.style.cursor = "pointer";
   mount.appendChild(canvas);
 
   const ctx = canvas.getContext("2d");
@@ -121,26 +99,146 @@ function initialisePulse(context: SandboxContext) {
     throw new Error("Unable to obtain 2D rendering context");
   }
 
-  // Hippie helpers: noise texture for grain overlay
-  const noiseCanvas = document.createElement("canvas");
-  noiseCanvas.width = 128;
-  noiseCanvas.height = 128;
-  const nctx = noiseCanvas.getContext("2d");
-  const updateNoise = () => {
-    if (!nctx) return;
-    const imageData = nctx.createImageData(noiseCanvas.width, noiseCanvas.height);
-    for (let i = 0; i < imageData.data.length; i += 4) {
-      const v = Math.floor(Math.random() * 255);
-      imageData.data[i] = v;
-      imageData.data[i + 1] = v;
-      imageData.data[i + 2] = v;
-      imageData.data[i + 3] = 255;
+  exports.setFilename("tic-tac-toe");
+  exports.useDefaultCanvasCapture(true);
+
+  // Game state
+  const board: (null | "X" | "O")[] = Array(9).fill(null);
+  let currentPlayer: "X" | "O" = "X";
+  let winner: null | "X" | "O" | "draw" = null;
+  let winningLine: number[] | null = null;
+  let hoveredCell: number | null = null;
+  let mouseX = 0;
+  let mouseY = 0;
+  const particles: Particle[] = [];
+  const ripples: Ripple[] = [];
+  let animationProgress = 0;
+
+  // Helper functions
+  const checkWinner = (): null | "X" | "O" | "draw" => {
+    const lines = [
+      [0, 1, 2], [3, 4, 5], [6, 7, 8], // rows
+      [0, 3, 6], [1, 4, 7], [2, 5, 8], // columns
+      [0, 4, 8], [2, 4, 6], // diagonals
+    ];
+
+    for (const line of lines) {
+      const [a, b, c] = line;
+      if (board[a] && board[a] === board[b] && board[a] === board[c]) {
+        winningLine = line;
+        return board[a];
+      }
     }
-    nctx.putImageData(imageData, 0, 0);
+
+    if (board.every((cell) => cell !== null)) {
+      return "draw";
+    }
+
+    return null;
   };
 
-  exports.setFilename("hippie-pulse");
-  exports.useDefaultCanvasCapture(true);
+  const resetGame = () => {
+    board.fill(null);
+    currentPlayer = "X";
+    winner = null;
+    winningLine = null;
+    animationProgress = 0;
+  };
+
+  const getCellFromPosition = (x: number, y: number): number | null => {
+    const width = canvas.clientWidth;
+    const height = canvas.clientHeight;
+    const size = Math.min(width, height) * 0.7;
+    const cellSize = size / 3;
+    const offsetX = (width - size) / 2;
+    const offsetY = (height - size) / 2;
+
+    if (x < offsetX || x > offsetX + size || y < offsetY || y > offsetY + size) {
+      return null;
+    }
+
+    const col = Math.floor((x - offsetX) / cellSize);
+    const row = Math.floor((y - offsetY) / cellSize);
+    return row * 3 + col;
+  };
+
+  const addParticles = (x: number, y: number, count: number) => {
+    for (let i = 0; i < count; i++) {
+      const angle = Math.random() * Math.PI * 2;
+      const speed = Math.random() * 2 + 1;
+      particles.push({
+        x,
+        y,
+        vx: Math.cos(angle) * speed,
+        vy: Math.sin(angle) * speed,
+        life: 1,
+        maxLife: Math.random() * 60 + 30,
+        size: Math.random() * 3 + 1,
+        hue: Math.random() * 60 + (currentPlayer === "X" ? 180 : 320),
+      });
+    }
+  };
+
+  const addRipple = (x: number, y: number, color: string) => {
+    ripples.push({
+      x,
+      y,
+      radius: 0,
+      maxRadius: 150,
+      alpha: 1,
+      color,
+    });
+  };
+
+  // Event listeners
+  const handleMouseMove = (e: MouseEvent) => {
+    const rect = canvas.getBoundingClientRect();
+    mouseX = e.clientX - rect.left;
+    mouseY = e.clientY - rect.top;
+    hoveredCell = getCellFromPosition(mouseX, mouseY);
+
+    // Add trailing particles
+    const maxParticles = Math.floor(params.particleCount ?? 30);
+    if (particles.length < maxParticles && Math.random() < 0.3) {
+      particles.push({
+        x: mouseX,
+        y: mouseY,
+        vx: (Math.random() - 0.5) * 0.5,
+        vy: (Math.random() - 0.5) * 0.5,
+        life: 1,
+        maxLife: 60,
+        size: Math.random() * 2 + 1,
+        hue: Math.random() * 360,
+      });
+    }
+  };
+
+  const handleClick = (e: MouseEvent) => {
+    if (winner) {
+      resetGame();
+      return;
+    }
+
+    const rect = canvas.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+    const cell = getCellFromPosition(x, y);
+
+    if (cell !== null && board[cell] === null) {
+      board[cell] = currentPlayer;
+      const color = currentPlayer === "X" ? (params.playerXColor ?? "#06b6d4") : (params.playerOColor ?? "#ec4899");
+      addRipple(x, y, color);
+      addParticles(x, y, 20);
+      
+      winner = checkWinner();
+      if (!winner) {
+        currentPlayer = currentPlayer === "X" ? "O" : "X";
+      }
+    }
+  };
+
+  canvas.addEventListener("mousemove", handleMouseMove);
+  canvas.addEventListener("click", handleClick);
 
   const resize = () => {
     const { clientWidth, clientHeight } = mount;
@@ -155,110 +253,231 @@ function initialisePulse(context: SandboxContext) {
   environment.onResize(resize);
 
   let animationFrame = 0;
-  let startTime = performance.now();
 
   const render = () => {
-    const now = performance.now();
-    const elapsed = (now - startTime) * (params.pulseSpeed ?? 0.4);
-
     const width = canvas.clientWidth;
     const height = canvas.clientHeight;
 
     // Background
-    ctx.globalCompositeOperation = "source-over";
-    ctx.fillStyle = params.background ?? "#020617";
+    ctx.fillStyle = params.background ?? "#0f172a";
     ctx.fillRect(0, 0, width, height);
 
-    const centerX = width / 2;
-    const centerY = height / 2;
-    const maxRadius = Math.sqrt(centerX ** 2 + centerY ** 2);
+    // Update and draw ripples
+    for (let i = ripples.length - 1; i >= 0; i--) {
+      const ripple = ripples[i];
+      ripple.radius += 5 * (params.rippleIntensity ?? 1);
+      ripple.alpha -= 0.02;
 
-    const ringCount = Math.max(1, Math.floor(params.ringCount ?? 14));
-    const ringThickness = Math.max(1, Math.floor(params.ringThickness ?? 45));
-    const useRainbow = params.rainbow ?? true;
-
-    if (useRainbow) {
-      ctx.globalCompositeOperation = "lighter";
-    }
-
-    for (let i = 0; i < ringCount; i += 1) {
-      const progress = ((elapsed * 0.0005 + i / ringCount) % 1);
-      const radius = progress * maxRadius;
-      const alpha = Math.max(0, 1 - progress);
-
-      const wobbleAmp = (params.noise ?? 0.35) * 80;
-      const wobble = Math.sin((elapsed * 0.002 + i) * 2.4) * wobbleAmp;
-
-      const innerRadius = Math.max(0, radius - ringThickness + wobble);
-      const outerRadius = Math.max(0, radius + wobble);
-
-      const gradient = ctx.createRadialGradient(
-        centerX,
-        centerY,
-        innerRadius,
-        centerX,
-        centerY,
-        outerRadius,
-      );
-
-      let color = params.accent ?? "#38bdf8";
-      if (useRainbow) {
-        const hueBase = (elapsed * 0.02) % 360;
-        const hue = (hueBase + (i * 360) / ringCount) % 360;
-        const sat = Math.max(0, Math.min(1, params.saturation ?? 0.9)) * 100;
-        const lit = Math.max(0, Math.min(1, params.lightness ?? 0.6)) * 100;
-        color = `hsl(${hue.toFixed(1)}deg, ${sat.toFixed(1)}%, ${lit.toFixed(1)}%)`;
+      if (ripple.alpha <= 0) {
+        ripples.splice(i, 1);
+        continue;
       }
 
-      gradient.addColorStop(0, withAlpha(color, alpha * 0.75));
-      gradient.addColorStop(1, withAlpha(color, 0));
-
+      ctx.save();
+      ctx.globalAlpha = ripple.alpha;
+      ctx.strokeStyle = ripple.color;
+      ctx.lineWidth = 3;
       ctx.beginPath();
-      ctx.fillStyle = gradient;
-      ctx.arc(centerX, centerY, outerRadius, 0, Math.PI * 2);
+      ctx.arc(ripple.x, ripple.y, ripple.radius, 0, Math.PI * 2);
+      ctx.stroke();
+
+      ctx.strokeStyle = ripple.color;
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.arc(ripple.x, ripple.y, ripple.radius * 0.7, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.restore();
+    }
+
+    // Update and draw particles
+    for (let i = particles.length - 1; i >= 0; i--) {
+      const p = particles[i];
+      p.x += p.vx;
+      p.y += p.vy;
+      p.life--;
+      p.vy += 0.05; // gravity
+
+      if (p.life <= 0) {
+        particles.splice(i, 1);
+        continue;
+      }
+
+      const alpha = p.life / p.maxLife;
+      ctx.save();
+      ctx.globalAlpha = alpha;
+      ctx.fillStyle = `hsl(${p.hue}, 70%, 60%)`;
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
       ctx.fill();
+      ctx.restore();
     }
 
-    // Kaleidoscopic orbs
-    const segments = Math.max(1, Math.floor(params.kaleidoSegments ?? 8));
-    if (segments > 1) {
-      const petalSize = Math.max(5, Math.floor(params.petalSize ?? 60));
-      const hueBase = (elapsed * 0.02) % 360;
-      for (let s = 0; s < segments; s += 1) {
-        const angle = s * ((Math.PI * 2) / segments) + (elapsed * 0.0006);
-        const r = (Math.sin(elapsed * 0.001 + s) * 0.5 + 0.5) * Math.min(centerX, centerY) * 0.85;
-        const x = centerX + Math.cos(angle) * r;
-        const y = centerY + Math.sin(angle) * r;
+    // Calculate board dimensions
+    const size = Math.min(width, height) * 0.7;
+    const cellSize = size / 3;
+    const offsetX = (width - size) / 2;
+    const offsetY = (height - size) / 2;
 
-        const orbGradient = ctx.createRadialGradient(x, y, 0, x, y, petalSize);
-        const hue = (hueBase + (s * 360) / segments) % 360;
-        const sat = Math.max(0, Math.min(1, params.saturation ?? 0.9)) * 100;
-        const lit = Math.max(0, Math.min(1, params.lightness ?? 0.6)) * 100;
-        const c = useRainbow ? `hsl(${hue.toFixed(1)}deg, ${sat.toFixed(1)}%, ${lit.toFixed(1)}%)` : (params.accent ?? "#38bdf8");
+    // Draw grid
+    ctx.strokeStyle = params.gridColor ?? "#1e293b";
+    ctx.lineWidth = 3;
+    ctx.lineCap = "round";
 
-        orbGradient.addColorStop(0, withAlpha(c, 0.85));
-        orbGradient.addColorStop(1, withAlpha(c, 0));
+    for (let i = 1; i < 3; i++) {
+      // Vertical lines
+      ctx.beginPath();
+      ctx.moveTo(offsetX + i * cellSize, offsetY);
+      ctx.lineTo(offsetX + i * cellSize, offsetY + size);
+      ctx.stroke();
 
-        ctx.beginPath();
-        ctx.fillStyle = orbGradient;
-        ctx.arc(x, y, petalSize, 0, Math.PI * 2);
-        ctx.fill();
+      // Horizontal lines
+      ctx.beginPath();
+      ctx.moveTo(offsetX, offsetY + i * cellSize);
+      ctx.lineTo(offsetX + size, offsetY + i * cellSize);
+      ctx.stroke();
+    }
+
+    // Draw hover effect
+    if (hoveredCell !== null && board[hoveredCell] === null && !winner) {
+      const col = hoveredCell % 3;
+      const row = Math.floor(hoveredCell / 3);
+      const x = offsetX + col * cellSize;
+      const y = offsetY + row * cellSize;
+
+      const glowIntensity = params.glowIntensity ?? 0.8;
+      const gradient = ctx.createRadialGradient(
+        x + cellSize / 2,
+        y + cellSize / 2,
+        0,
+        x + cellSize / 2,
+        y + cellSize / 2,
+        cellSize / 2
+      );
+      const hoverColor = currentPlayer === "X" ? (params.playerXColor ?? "#06b6d4") : (params.playerOColor ?? "#ec4899");
+      gradient.addColorStop(0, withAlpha(hoverColor, 0.2 * glowIntensity));
+      gradient.addColorStop(1, withAlpha(hoverColor, 0));
+
+      ctx.fillStyle = gradient;
+      ctx.fillRect(x, y, cellSize, cellSize);
+    }
+
+    // Draw X's and O's
+    for (let i = 0; i < 9; i++) {
+      if (board[i]) {
+        const col = i % 3;
+        const row = Math.floor(i / 3);
+        const x = offsetX + col * cellSize + cellSize / 2;
+        const y = offsetY + row * cellSize + cellSize / 2;
+        const symbolSize = cellSize * 0.3;
+
+        if (board[i] === "X") {
+          ctx.strokeStyle = params.playerXColor ?? "#06b6d4";
+          ctx.lineWidth = 8;
+          ctx.lineCap = "round";
+
+          // X shape
+          ctx.beginPath();
+          ctx.moveTo(x - symbolSize, y - symbolSize);
+          ctx.lineTo(x + symbolSize, y + symbolSize);
+          ctx.stroke();
+
+          ctx.beginPath();
+          ctx.moveTo(x + symbolSize, y - symbolSize);
+          ctx.lineTo(x - symbolSize, y + symbolSize);
+          ctx.stroke();
+
+          // Glow effect
+          ctx.save();
+          ctx.shadowBlur = 20;
+          ctx.shadowColor = params.playerXColor ?? "#06b6d4";
+          ctx.strokeStyle = params.playerXColor ?? "#06b6d4";
+          ctx.lineWidth = 4;
+          ctx.beginPath();
+          ctx.moveTo(x - symbolSize, y - symbolSize);
+          ctx.lineTo(x + symbolSize, y + symbolSize);
+          ctx.moveTo(x + symbolSize, y - symbolSize);
+          ctx.lineTo(x - symbolSize, y + symbolSize);
+          ctx.stroke();
+          ctx.restore();
+        } else {
+          ctx.strokeStyle = params.playerOColor ?? "#ec4899";
+          ctx.lineWidth = 8;
+
+          ctx.beginPath();
+          ctx.arc(x, y, symbolSize, 0, Math.PI * 2);
+          ctx.stroke();
+
+          // Glow effect
+          ctx.save();
+          ctx.shadowBlur = 20;
+          ctx.shadowColor = params.playerOColor ?? "#ec4899";
+          ctx.strokeStyle = params.playerOColor ?? "#ec4899";
+          ctx.lineWidth = 4;
+          ctx.beginPath();
+          ctx.arc(x, y, symbolSize, 0, Math.PI * 2);
+          ctx.stroke();
+          ctx.restore();
+        }
       }
     }
 
-    // Grain overlay
-    const grainStrength = Math.max(0, Math.min(1, params.grain ?? 0.2));
-    if (grainStrength > 0) {
-      updateNoise();
-      const pattern = ctx.createPattern(noiseCanvas, "repeat");
-      if (pattern) {
-        ctx.save();
-        ctx.globalAlpha = grainStrength * 0.25;
-        ctx.globalCompositeOperation = "source-over";
-        ctx.fillStyle = pattern;
-        ctx.fillRect(0, 0, width, height);
-        ctx.restore();
-      }
+    // Draw winning line
+    if (winner && winner !== "draw" && winningLine) {
+      animationProgress = Math.min(animationProgress + 0.05, 1);
+      const [a, b, c] = winningLine;
+
+      const getCenter = (index: number) => {
+        const col = index % 3;
+        const row = Math.floor(index / 3);
+        return {
+          x: offsetX + col * cellSize + cellSize / 2,
+          y: offsetY + row * cellSize + cellSize / 2,
+        };
+      };
+
+      const start = getCenter(a);
+      const end = getCenter(c);
+
+      const currentX = start.x + (end.x - start.x) * animationProgress;
+      const currentY = start.y + (end.y - start.y) * animationProgress;
+
+      ctx.save();
+      ctx.strokeStyle = winner === "X" ? (params.playerXColor ?? "#06b6d4") : (params.playerOColor ?? "#ec4899");
+      ctx.lineWidth = 6;
+      ctx.lineCap = "round";
+      ctx.shadowBlur = 30;
+      ctx.shadowColor = ctx.strokeStyle;
+      ctx.beginPath();
+      ctx.moveTo(start.x, start.y);
+      ctx.lineTo(currentX, currentY);
+      ctx.stroke();
+      ctx.restore();
+    }
+
+    // Draw status text
+    ctx.font = "bold 32px sans-serif";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "top";
+
+    if (winner) {
+      const text = winner === "draw" ? "It's a Draw!" : `${winner} Wins!`;
+      ctx.fillStyle = winner === "draw" ? "#94a3b8" : (winner === "X" ? (params.playerXColor ?? "#06b6d4") : (params.playerOColor ?? "#ec4899"));
+      ctx.save();
+      ctx.shadowBlur = 20;
+      ctx.shadowColor = ctx.fillStyle;
+      ctx.fillText(text, width / 2, offsetY - 60);
+      ctx.restore();
+
+      ctx.font = "18px sans-serif";
+      ctx.fillStyle = "#94a3b8";
+      ctx.fillText("Click to play again", width / 2, offsetY - 25);
+    } else {
+      ctx.fillStyle = currentPlayer === "X" ? (params.playerXColor ?? "#06b6d4") : (params.playerOColor ?? "#ec4899");
+      ctx.save();
+      ctx.shadowBlur = 15;
+      ctx.shadowColor = ctx.fillStyle;
+      ctx.fillText(`${currentPlayer}'s Turn`, width / 2, offsetY - 60);
+      ctx.restore();
     }
 
     animationFrame = window.requestAnimationFrame(render);
@@ -268,6 +487,8 @@ function initialisePulse(context: SandboxContext) {
 
   return () => {
     window.cancelAnimationFrame(animationFrame);
+    canvas.removeEventListener("mousemove", handleMouseMove);
+    canvas.removeEventListener("click", handleClick);
   };
 }
 

@@ -15,5 +15,5 @@ dist/
 
 
 
-boileplate-data.ts
-runtime-data.tss
+data
+data/

@@ -1,5 +1,5 @@
 {
-  "name": "hyper-pulse",
+  "name": "tic-tac-toe",
   "description": "Universal HyperFrame sandbox with pulse animation",
   "version": "0.1.0",
   "type": "module",
