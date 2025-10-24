@@ -3,13 +3,13 @@ import { cors } from 'hono/cors';
 import { logger } from 'hono/logger';
 
 // Import routes
-import boilerplate from '../src/routes/boilerplate';
-import download from '../src/routes/download';
-import runtimeWatch from '../src/routes/runtime-watch';
-import runtimeWatchSnapshot from '../src/routes/runtime-watch-snapshot';
-import ai from '../src/routes/ai';
-import aiStream from '../src/routes/ai-stream';
-import history from '../src/routes/history';
+import boilerplate from '../src/routes/boilerplate.js';
+import download from '../src/routes/download.js';
+import runtimeWatch from '../src/routes/runtime-watch.js';
+import runtimeWatchSnapshot from '../src/routes/runtime-watch-snapshot.js';
+import ai from '../src/routes/ai.js';
+import aiStream from '../src/routes/ai-stream.js';
+import history from '../src/routes/history.js';
 
 const app = new Hono();
 
