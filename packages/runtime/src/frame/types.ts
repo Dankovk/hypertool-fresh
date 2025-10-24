@@ -1,49 +1,27 @@
-import type { ExternalDependency } from './dependencyManager';
+// Type imports
 
-export type ControlType = 'number' | 'color' | 'boolean' | 'string' | 'select';
+import type {
+  ControlType,
+  ControlDefinition,
+  ControlDefinitions,
+  NumberControlDefinition,
+  ColorControlDefinition,
+  BooleanControlDefinition,
+  StringControlDefinition,
+  SelectControlDefinition,
+} from '../controls/types';
 
-export interface BaseControlDefinition {
-  label?: string;
-  value: any;
-}
-
-export interface NumberControlDefinition extends BaseControlDefinition {
-  type: 'number';
-  value: number;
-  min?: number;
-  max?: number;
-  step?: number;
-}
-
-export interface ColorControlDefinition extends BaseControlDefinition {
-  type: 'color';
-  value: string;
-}
-
-export interface BooleanControlDefinition extends BaseControlDefinition {
-  type: 'boolean';
-  value: boolean;
-}
-
-export interface StringControlDefinition extends BaseControlDefinition {
-  type: 'string';
-  value: string;
-}
-
-export interface SelectControlDefinition extends BaseControlDefinition {
-  type: 'select';
-  value: string | number;
-  options: Record<string, string | number> | Array<string | number>;
-}
-
-export type ControlDefinition =
-  | NumberControlDefinition
-  | ColorControlDefinition
-  | BooleanControlDefinition
-  | StringControlDefinition
-  | SelectControlDefinition;
-
-export type ControlDefinitions = Record<string, ControlDefinition>;
+// Re-export control types for convenience
+export type {
+  ControlType,
+  ControlDefinition,
+  ControlDefinitions,
+  NumberControlDefinition,
+  ColorControlDefinition,
+  BooleanControlDefinition,
+  StringControlDefinition,
+  SelectControlDefinition,
+};
 
 export interface ControlChangePayload {
   key: string;
@@ -136,7 +114,7 @@ export interface HyperFrameRuntimeConfig {
 
 export interface HyperFrameSandboxOptions {
   name?: string;
-  dependencies?: ExternalDependency[];
+
   mirrorCss?: boolean;
   mount?: MountOptions | Record<string, any>;
   controls?: {
@@ -154,9 +132,9 @@ export interface HyperFrameSandboxOptions {
 }
 
 export interface HyperFrameRuntimeApi {
-  ensureDependencies(dependencies?: ExternalDependency[]): Promise<void>;
+
   mirrorCss(): void;
   createSandbox(options: HyperFrameSandboxOptions): Promise<HyperFrameSandboxHandle>;
 }
 
-export type { ExternalDependency };
+

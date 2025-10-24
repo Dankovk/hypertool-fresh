@@ -15,8 +15,8 @@ export interface PresetInfo {
 }
 
 // Import generated data files (must exist - run 'bun run transform:boilerplate' and 'bun run transform:runtime' first)
-const BOILERPLATE_DATA = await import('./boilerplate-data.js');
-const RUNTIME_DATA = await import('./runtime-data.js');
+const BOILERPLATE_DATA = await import('../data/boilerplate-data.js');
+const RUNTIME_DATA = await import('../data/runtime-data.js');
 
 const isDevelopment = process.env.NODE_ENV !== 'production';
 console.log(`[boilerplate] Using pre-generated boilerplate data and ${isDevelopment ? 'dynamic' : 'pre-generated'} runtime data`);

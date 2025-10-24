@@ -36,12 +36,12 @@ try {
   const moduleCode = generateModule(data);
 
   // Ensure lib directory exists
-  const libDir = join(process.cwd(), "src", "lib");
-  if (!existsSync(libDir)) {
-    mkdirSync(libDir, { recursive: true });
+  const dataDir = join(process.cwd(), "src", "data");
+  if (!existsSync(dataDir)) {
+    mkdirSync(dataDir, { recursive: true });
   }
 
-  const outputPath = join(libDir, "runtime-data.ts");
+  const outputPath = join(dataDir, "runtime-data.ts");
   writeFileSync(outputPath, moduleCode, "utf8");
 
   console.log(`\n✅ Generated: ${outputPath}`);

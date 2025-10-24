@@ -19,6 +19,7 @@ export const ExportWidget: React.FC<ExportWidgetProps> = ({
   filename = 'hyperframe-export',
   useCanvasCapture = true,
 }) => {
+
   const [imageEnabled, setImageEnabled] = useState(false);
   const [videoEnabled, setVideoEnabled] = useState(false);
   const [recording, setRecording] = useState(false);
@@ -213,7 +214,8 @@ export const ExportWidget: React.FC<ExportWidgetProps> = ({
   }, [recording, stopRecording, startRecording]);
 
   return (
-    <div className="export-widget-container absolute top-0 left-0 py-2 px-2 z-[9999]">
+    <div className="export-widget-container absolute top-0 left-0 py-2 px-2 z-[9999]"
+    >
       <div className="flex items-center gap-2">
         {/* Export buttons */}
         <button

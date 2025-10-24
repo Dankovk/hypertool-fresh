@@ -100,6 +100,7 @@ createSandbox({
   exportWidget: {
     filename: "hippie-pulse",
     useCanvasCapture: true,
+      enabled: true,
   },
   setup: (context: SandboxContext) => initialisePulse(context),
 }).catch((error) => {

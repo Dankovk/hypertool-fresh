@@ -5,7 +5,11 @@
  * Auto-initializes window APIs when loaded in browser
  */
 
-// Import everything we need for local use AND re-export
+// ============================================================================
+// Imports
+// ============================================================================
+
+// Controls - implementation and types
 import {
   HypertoolControls,
   createControlPanel,
@@ -14,17 +18,18 @@ import {
   studioTheme,
 } from "./controls/index";
 
-
+// Frame - implementation and types
 import {
   runtime,
-  ensureDependencies,
   mirrorCss,
   createSandbox,
   configureRuntime,
 } from "./frame/index";
 
-// Re-export everything from controls
-export * as controls from "./controls/index";
+// ============================================================================
+// Controls Exports
+// ============================================================================
+
 export {
   HypertoolControls,
   createControlPanel,
@@ -34,56 +39,65 @@ export {
 };
 
 export type {
-  ControlDefinitions,
+  // Control definition types
+  ControlType,
+  BaseControlDefinition,
   ControlDefinition,
+  ControlDefinitions,
   NumberControlDefinition,
   ColorControlDefinition,
   BooleanControlDefinition,
   StringControlDefinition,
   SelectControlDefinition,
+
+  // Options and configuration
   HypertoolControlsOptions,
   ControlPosition,
+
+  // Runtime types
   ParameterValues,
   ControlChangeContext,
 } from "./controls/types";
 
-// Re-export everything from frame
-export * as frame from "./frame/index";
+// ============================================================================
+// Frame Exports
+// ============================================================================
+
 export {
   runtime,
-  ensureDependencies,
+
   mirrorCss,
   createSandbox,
   configureRuntime,
 };
 
 export type {
-  MountOptions,
-  MountResult,
-  ControlType,
-  BaseControlDefinition,
-  NumberControlDefinition as FrameNumberControlDefinition,
-  ColorControlDefinition as FrameColorControlDefinition,
-  BooleanControlDefinition as FrameBooleanControlDefinition,
-  StringControlDefinition as FrameStringControlDefinition,
-  SelectControlDefinition as FrameSelectControlDefinition,
-  ControlDefinition as FrameControlDefinition,
-  ControlDefinitions as FrameControlDefinitions,
-  ControlChangePayload,
-  ControlPanelOptions,
+  // Core runtime types
+  HyperFrameRuntimeConfig,
+  HyperFrameRuntimeApi,
+  HyperFrameSandboxOptions,
+  HyperFrameSandboxHandle,
+
+  // Sandbox types
   SandboxContext,
+  SandboxEnvironment,
+  SandboxControlsHandle,
   SandboxExportsApi,
+  SandboxCaptureFn,
+  SandboxCaptureResult,
   SandboxImageCaptureHandler,
   SandboxVideoCaptureHandler,
   SandboxControlChangeHandler,
-  SandboxCaptureFn,
-  SandboxCaptureResult,
-  SandboxControlsHandle,
-  HyperFrameSandboxOptions,
-  HyperFrameSandboxHandle,
-  HyperFrameRuntimeConfig,
-  HyperFrameRuntimeApi,
-  ExternalDependency,
+
+  // Control panel types (used by frame)
+  ControlChangePayload,
+  ControlPanelOptions,
+
+  // Mount types
+  MountOptions,
+  MountResult,
+
+
 } from "./frame/types";
 
 // ============================================================================
@@ -107,7 +121,6 @@ if (typeof window !== 'undefined') {
     version: 'universal',
     runtime,
     createSandbox,
-    ensureDependencies,
     mirrorCss,
   };
 

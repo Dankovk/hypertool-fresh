@@ -4,7 +4,6 @@ import { HYPER_RUNTIME_DIST_FROM_SOURCE } from '@hypertool/shared-config/paths';
 
 const currentDir = join(__dirname, '');
 
-const DIST_TARGET_LOCATION = join(currentDir, HYPER_RUNTIME_DIST_FROM_SOURCE);
 
 
 // Single unified bundle containing both controls and frame

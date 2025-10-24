@@ -2,7 +2,7 @@
 module.exports = {
   content: [
     "./src/**/*.{js,ts,jsx,tsx}",
-    "./hyper-runtime/src/**/*.{js,ts,jsx,tsx}",
+    "../packages/runtime/src/**/*.{js,ts,jsx,tsx}",
   ],
   theme: {
     extend: {

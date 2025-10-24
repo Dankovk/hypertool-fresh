@@ -1,7 +1,7 @@
 import React from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { CssBridge } from './cssBridge';
-import { DependencyManager, ExternalDependency } from './dependencyManager';
+
 import {
   HyperFrameRuntimeApi,
   HyperFrameRuntimeConfig,
@@ -28,7 +28,7 @@ function runCleanups(cleanups: Array<() => void>) {
 }
 
 export class HyperFrameRuntime implements HyperFrameRuntimeApi {
-  private dependencyManager = new DependencyManager();
+
   private cssBridge: CssBridge | null = null;
   private config: HyperFrameRuntimeConfig;
 
@@ -39,15 +39,7 @@ export class HyperFrameRuntime implements HyperFrameRuntimeApi {
 
   }
 
-  async ensureDependencies(dependencies: ExternalDependency[] = []): Promise<void> {
-    if (!dependencies.length) {
-      return;
-    }
 
-
-
-    await this.dependencyManager.ensureAll(dependencies);
-  }
 
   mirrorCss(): void {
     if (this.cssBridge) {
@@ -61,9 +53,7 @@ export class HyperFrameRuntime implements HyperFrameRuntimeApi {
 
 
   async createSandbox(options: HyperFrameSandboxOptions): Promise<HyperFrameSandboxHandle> {
-    if (options.dependencies?.length) {
-      await this.ensureDependencies(options.dependencies);
-    }
+
 
     if (this.config.mirrorCss !== false && options.mirrorCss !== false) {
       this.mirrorCss();
