@@ -5,6 +5,9 @@
   "exports": {
     "./models": "./models.js",
     "./paths": "./paths.js",
-    "./prompts": "./prompts.js"
+    "./prompts": "./prompts.js",
+    "./models.js": "./models.js",
+    "./paths.js": "./paths.js",
+    "./prompts.js": "./prompts.js"
   }
 }
