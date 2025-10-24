@@ -15,6 +15,7 @@
  const HYPER_RUNTIME_DIST_FROM_BACKEND_PROD = "../packages/runtime/dist";
 
 export const HYPER_RUNTIME_DIST_FROM_BACKEND = process.env.NODE_ENV === 'development' ? HYPER_RUNTIME_DIST_FROM_BACKEND_DEV : HYPER_RUNTIME_DIST_FROM_BACKEND_PROD ;
+export const BOILERPLATE_PRESETS_PATH_FROM_ROOT = 'packages/boilerplate-presets'
 /**
  * Relative path from hyper-runtime/ to backend output location
  * Used by build-dev.config.ts (which runs from hyper-runtime/)
