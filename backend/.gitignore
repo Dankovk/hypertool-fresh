@@ -10,12 +10,5 @@ dist/*
 dist/
 .env
 
-# Generated bundled files for Vercel
-index.js
-index.js.map
 
-hyper-runtime/index.js
-runtime-lib-copy
-runtime-lib-copy/*
-deps/*
-deps
+

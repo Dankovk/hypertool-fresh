@@ -1,0 +1,10 @@
+/**
+ * Controls Panel Styles
+ **/
+
+.hyper-frame-controls-panel {
+  position: absolute;
+  z-index: 1000;
+  pointer-events: auto;
+}
+
