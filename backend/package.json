@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "bun run --watch src/index.ts",
-    "build": "bun build api/index.ts --outdir dist --target node --minify --sourcemap && cp dist/index.js api/index.js && cp dist/index.js.map api/index.js.map && cp dist/index.js index.js",
+    "build": "bun build api/index.ts --outdir src --target node --minify --sourcemap ",
     "start": "bun run dist/index.js",
     "typecheck": "tsc --noEmit"
   },

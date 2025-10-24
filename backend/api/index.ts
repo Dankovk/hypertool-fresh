@@ -21,13 +21,13 @@ app.use('*', logger());
 app.get('/', (c) => c.json({ status: 'ok', message: 'Hypertool Backend API' }));
 
 // Routes
-app.route('/api/boilerplate', boilerplate);
-app.route('/api/download', download);
-app.route('/api/runtime-watch', runtimeWatch);
-app.route('/api/runtime-watch/snapshot', runtimeWatchSnapshot);
-app.route('/api/ai', ai);
-app.route('/api/ai/stream', aiStream);
-app.route('/api/history', history);
+app.route('/boilerplate', boilerplate);
+app.route('/download', download);
+app.route('/runtime-watch', runtimeWatch);
+app.route('/runtime-watch/snapshot', runtimeWatchSnapshot);
+app.route('/ai', ai);
+app.route('/ai/stream', aiStream);
+app.route('/history', history);
 
 // 404 handler
 app.notFound((c) => c.json({ error: 'Not found' }, 404));

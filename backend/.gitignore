@@ -13,4 +13,3 @@ dist/
 # Generated bundled files for Vercel
 api/index.js
 api/index.js.map
-index.js
