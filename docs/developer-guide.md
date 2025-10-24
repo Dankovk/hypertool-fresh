@@ -52,6 +52,6 @@ This document captures the current expectations for presets that run inside the 
 
 ## 7. AI Prompt Alignment
 
-System prompts (see `src/config/prompts.ts`) now describe this universal sandbox. AI responses must not reference the old `window.hyperFrame.p5`/`three` helpers. When reviewing patches, reject any change that reintroduces hard-coded framework bootstrappers.
+System prompts (see `src/config/prompts.js`) now describe this universal sandbox. AI responses must not reference the old `window.hyperFrame.p5`/`three` helpers. When reviewing patches, reject any change that reintroduces hard-coded framework bootstrappers.
 
 With this model, HyperFrame becomes a thin but universal runtime shell: it handles controls, CSS, exports, and dependency loading while giving presets freedom to structure their creative code however they like.

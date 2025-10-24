@@ -1,11 +1,6 @@
-export interface ModelOption {
-  value: string;
-  label: string;
-  provider: string;
-  tags: string[];
-}
 
-export const MODEL_OPTIONS: ModelOption[] = [
+
+export const MODEL_OPTIONS = [
   // OpenAI
   { value: "gpt-5", label: "GPT-5", provider: "OpenAI", tags: ["latest", "fast"] },
   { value: "gpt-4o", label: "GPT-4o", provider: "OpenAI", tags: ["fast", "creative"] },

@@ -3,7 +3,7 @@ import { existsSync, watch } from 'node:fs';
 import { resolve, join } from 'node:path';
 import { stream } from 'hono/streaming';
 import { loadRuntimeBundles } from '../lib/boilerplate.js';
-import { HYPER_RUNTIME_DIST_FROM_BACKEND } from '@hypertool/shared-config/paths.js';
+import { HYPER_RUNTIME_DIST_FROM_BACKEND } from '@hypertool/shared-config/paths';
 
 const app = new Hono();
 

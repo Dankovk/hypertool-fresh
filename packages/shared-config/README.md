@@ -8,7 +8,7 @@ This package contains configuration that needs to be consistent across multiple 
 
 - **models.ts** - AI model options and defaults for both frontend and backend
 - **paths.ts** - Build paths and locations for hyper-runtime bundles
-- **prompts.ts** - System prompts for AI assistants
+- **prompts.js** - System prompts for AI assistants
 
 ## Usage
 
@@ -19,7 +19,7 @@ Import from the shared config package using the workspace alias:
 import { MODEL_OPTIONS, DEFAULT_MODEL } from '@hypertool/shared-config/models';
 
 // Paths config
-import { HYPER_RUNTIME_DIST_FROM_BACKEND, BUNDLE_PATH } from '@hypertool/shared-config/paths';
+import { HYPER_RUNTIME_DIST_FROM_BACKEND, BUNDLE_PATH } from '@hypertool/shared-config';
 
 // Prompts config
 import { DEFAULT_SYSTEM_PROMPT, DEFAULT_SYSTEM_PROMPT_FULL } from '@hypertool/shared-config/prompts';
@@ -39,6 +39,6 @@ shared-config/
 ├── package.json       # Package metadata and exports
 ├── models.ts          # AI model options
 ├── paths.ts           # Build and runtime paths
-├── prompts.ts         # AI system prompts
+├── prompts.js         # AI system prompts
 └── README.md          # This file
 ```

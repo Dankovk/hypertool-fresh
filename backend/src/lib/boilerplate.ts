@@ -1,6 +1,6 @@
 import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { join, resolve } from "node:path";
-import { HYPER_RUNTIME_DIST_FROM_BACKEND, BUNDLE_PATH, VIRTUAL_PATH } from "@hypertool/shared-config/paths.js";
+import { HYPER_RUNTIME_DIST_FROM_BACKEND, BUNDLE_PATH, VIRTUAL_PATH } from "@hypertool/shared-config/paths";
 
 type FileMap = Record<string, string>;
 
