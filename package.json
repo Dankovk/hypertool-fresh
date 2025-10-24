@@ -13,7 +13,7 @@
     "dev:frontend": "bun --cwd=frontend run dev",
     "dev:backend": "bun --cwd=backend run dev",
     "dev:hyper-runtim": "bun --cwd=hyper-runtime run dev",
-    "build": "bunx --bun turbo run build",
+    "build": "turbo run build",
     "build:frontend": "cd hyper-runtime && bun run build && cd .. && next build --turbo",
     "build:backend": "cd backend && bun run build",
     "start": "next start -p 3030",

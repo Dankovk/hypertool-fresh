@@ -5,8 +5,7 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="51bc1ced-b378-46bc-8004-9aa3de836607" name="Changes" comment="Merge branch 'main' into separate-back&#10;&#10;# Conflicts:&#10;#&#9;.gitignore&#10;#&#9;.idea/workspace.xml&#10;#&#9;frontend/src/app/globals.css&#10;#&#9;frontend/src/components/ControlPanel/ControlGenerator.tsx&#10;#&#9;frontend/src/components/ControlPanel/ControlPanel.tsx&#10;#&#9;frontend/src/components/ControlPanel/TweakpaneControlGenerator.tsx&#10;#&#9;frontend/src/components/ControlPanel/index.ts&#10;#&#9;frontend/src/components/Preview/PreviewPanel.tsx&#10;#&#9;frontend/src/components/TopBar/TopBar.tsx&#10;#&#9;frontend/src/components/TopBar/index.ts&#10;#&#9;frontend/src/lib/boilerplate.ts&#10;#&#9;src/components/Chat/ChatMessages.tsx">
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/tsconfig.json" beforeDir="false" afterPath="$PROJECT_DIR$/backend/tsconfig.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/package.json" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -132,7 +131,7 @@
       <workItem from="1760810996629" duration="18552000" />
       <workItem from="1760851696574" duration="5478000" />
       <workItem from="1761255300356" duration="1715000" />
-      <workItem from="1761292932476" duration="387000" />
+      <workItem from="1761292932476" duration="649000" />
     </task>
     <task id="LOCAL-00001" summary="Added controls lib">
       <option name="closed" value="true" />
