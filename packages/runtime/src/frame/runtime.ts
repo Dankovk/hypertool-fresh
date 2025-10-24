@@ -34,12 +34,17 @@ export class HyperFrameRuntime implements HyperFrameRuntimeApi {
 
   constructor(config: HyperFrameRuntimeConfig = {}) {
     this.config = config;
+
+
+
   }
 
   async ensureDependencies(dependencies: ExternalDependency[] = []): Promise<void> {
     if (!dependencies.length) {
       return;
     }
+
+
 
     await this.dependencyManager.ensureAll(dependencies);
   }

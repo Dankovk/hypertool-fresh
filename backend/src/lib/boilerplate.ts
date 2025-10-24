@@ -1,6 +1,5 @@
-import { existsSync, readFileSync } from "node:fs";
-import { join, resolve } from "node:path";
-import { HYPER_RUNTIME_DIST_FROM_BACKEND, BUNDLE_PATH, VIRTUAL_PATH } from "@hypertool/shared-config/paths";
+import { VIRTUAL_PATH } from "@hypertool/shared-config/paths";
+import { getRuntimeFileMap } from "./fileUtils.js";
 
 type FileMap = Record<string, string>;
 
@@ -15,13 +14,12 @@ export interface PresetInfo {
   description: string;
 }
 
-// Import generated boilerplate data (must exist - run 'bun run transform:boilerplate' first)
+// Import generated data files (must exist - run 'bun run transform:boilerplate' and 'bun run transform:runtime' first)
 const BOILERPLATE_DATA = await import('./boilerplate-data.js');
-console.log('[boilerplate] Using pre-generated boilerplate data');
+const RUNTIME_DATA = await import('./runtime-data.js');
 
-// Backend runs from backend/ directory, so go up one level to project root
-const currentDir = process.cwd()
-const pathToRootDir = resolve(currentDir);
+const isDevelopment = process.env.NODE_ENV !== 'production';
+console.log(`[boilerplate] Using pre-generated boilerplate data and ${isDevelopment ? 'dynamic' : 'pre-generated'} runtime data`);
 
 export function loadBoilerplateFiles(presetId?: string): FileMap {
   const files = BOILERPLATE_DATA.loadBoilerplateFiles(presetId);
@@ -34,16 +32,9 @@ export function listAvailablePresets(): PresetInfo[] {
 
 function injectRuntimeLibrary(files: FileMap): ScriptDescriptor | null {
   try {
-    // Load unified runtime bundle (includes both controls and frame with globals setup)
-    const bundlePath = resolve(pathToRootDir, join(HYPER_RUNTIME_DIST_FROM_BACKEND, BUNDLE_PATH));
-    if (!existsSync(bundlePath)) {
-      console.warn(`[boilerplate] Runtime bundle not found at ${bundlePath}`);
-      return null;
-    }
-    const bundleCode = readFileSync(bundlePath, "utf8");
-    console.log(`[boilerplate] Loaded runtime bundle: ${bundleCode.length} bytes`);
-    files[VIRTUAL_PATH] = bundleCode;
-
+    // Load unified runtime bundle (dynamically from disk in dev, pre-generated in production)
+    const bundles = loadRuntimeBundles();
+    Object.assign(files, bundles);
     return { src: "./__hypertool__/index.js", module: true };
   } catch (error) {
     console.error("[boilerplate] Failed to inject runtime library:", error);
@@ -112,8 +103,17 @@ export function ensureSystemFiles(original: FileMap): FileMap {
 }
 
 export function loadRuntimeBundles(): FileMap {
-  const files = ensureSystemFiles({});
-  return Object.fromEntries(
-    Object.entries(files).filter(([path]) => path.startsWith("/__hypertool__/")),
-  );
+  // In development, read fresh runtime files from disk to pick up hot reload changes
+  // In production, use pre-generated data for better performance
+  if (isDevelopment) {
+    try {
+      const runtimeData = getRuntimeFileMap();
+      return runtimeData.files;
+    } catch (error) {
+      console.error('[boilerplate] Failed to load runtime from disk, falling back to pre-generated:', error);
+      return RUNTIME_DATA.loadRuntimeBundles();
+    }
+  }
+
+  return RUNTIME_DATA.loadRuntimeBundles();
 }

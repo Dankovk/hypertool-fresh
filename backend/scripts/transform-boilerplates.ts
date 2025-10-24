@@ -4,101 +4,9 @@
  * This ensures they survive Vercel deployments where only imported files are included
  */
 
-import { existsSync, readdirSync, readFileSync, writeFileSync, mkdirSync } from "node:fs";
-import { join, resolve } from "node:path";
-
-type FileMap = Record<string, string>;
-
-interface PresetData {
-  id: string;
-  name: string;
-  description: string;
-  files: FileMap;
-}
-
-interface BoilerplateData {
-  presets: PresetData[];
-  universal: FileMap;
-}
-
-function readDirectoryRecursive(dir: string, base: string = dir, out: FileMap = {}): FileMap {
-  const entries = readdirSync(dir, { withFileTypes: true });
-  for (const entry of entries) {
-    const full = join(dir, entry.name);
-    if (entry.isDirectory()) {
-      readDirectoryRecursive(full, base, out);
-    } else {
-      const rel = full.replace(base + "/", "");
-      out["/" + rel] = readFileSync(full, "utf8");
-    }
-  }
-  return out;
-}
-
-function transformPresets(): BoilerplateData {
-  const projectRoot = resolve(process.cwd(), "..");
-  const presetsPath = join(projectRoot, "boilerplate-presets");
-
-  if (!existsSync(presetsPath)) {
-    throw new Error(`Presets directory not found at: ${presetsPath}`);
-  }
-
-  const data: BoilerplateData = {
-    presets: [],
-    universal: {},
-  };
-
-  const entries = readdirSync(presetsPath, { withFileTypes: true });
-
-  for (const entry of entries) {
-    if (!entry.isDirectory() || entry.name === '__non-migrated__') {
-      continue;
-    }
-
-    const presetPath = join(presetsPath, entry.name);
-    const packageJsonPath = join(presetPath, "package.json");
-    const indexHtmlPath = join(presetPath, "index.html");
-
-    // Skip if no index.html
-    if (!existsSync(indexHtmlPath)) {
-      console.log(`⚠️  Skipping ${entry.name} (no index.html)`);
-      continue;
-    }
-
-    let name = entry.name;
-    let description = "";
-
-    // Read package.json if exists
-    if (existsSync(packageJsonPath)) {
-      try {
-        const packageJson = JSON.parse(readFileSync(packageJsonPath, "utf8"));
-        name = packageJson.name || entry.name;
-        description = packageJson.description || "";
-      } catch (e) {
-        console.warn(`⚠️  Failed to parse package.json for ${entry.name}`);
-      }
-    }
-
-    // Read all files in this preset
-    const files = readDirectoryRecursive(presetPath);
-
-    console.log(`✅ Loaded preset: ${entry.name} (${Object.keys(files).length} files)`);
-
-    data.presets.push({
-      id: entry.name,
-      name,
-      description,
-      files,
-    });
-
-    // If this is the universal preset, store it separately
-    if (entry.name === "universal") {
-      data.universal = files;
-    }
-  }
-
-  return data;
-}
+import { writeFileSync, mkdirSync, existsSync } from "node:fs";
+import { join } from "node:path";
+import { getBoilerplateFileMap, type BoilerplateData } from "../src/lib/fileUtils.js";
 
 function generateModule(data: BoilerplateData): string {
   return `/**
@@ -145,7 +53,7 @@ export function loadBoilerplateFiles(presetId?: string): FileMap {
 try {
   console.log("🔄 Transforming boilerplate presets...\n");
 
-  const data = transformPresets();
+  const data = getBoilerplateFileMap();
   const moduleCode = generateModule(data);
 
   // Ensure lib directory exists
