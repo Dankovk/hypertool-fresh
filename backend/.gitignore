@@ -9,3 +9,7 @@ dist
 dist/*
 dist/
 .env
+
+# Generated bundled file for Vercel
+api/index.js
+api/index.js.map
