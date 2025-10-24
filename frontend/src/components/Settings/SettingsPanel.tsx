@@ -1,5 +1,5 @@
-import { MODEL_OPTIONS } from "@/config/models";
-import { DEFAULT_SYSTEM_PROMPT_FULL, DEFAULT_SYSTEM_PROMPT_PATCH } from "@/config/prompts";
+import { MODEL_OPTIONS } from "@hypertool/shared-config/models";
+import { DEFAULT_SYSTEM_PROMPT_FULL, DEFAULT_SYSTEM_PROMPT_PATCH } from "@hypertool/shared-config/prompts";
 
 interface SettingsPanelProps {
   model: string;

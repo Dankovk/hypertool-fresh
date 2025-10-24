@@ -4,18 +4,15 @@
 import { watch, readdir, stat } from "fs/promises";
 import { join, resolve } from "path";
 import {$} from 'bun'
+import { HYPER_RUNTIME_DIST_FROM_SOURCE } from '@hypertool/shared-config/paths';
 
 
-const entrypoints = [
-    "src/index.ts",
-    "src/controls/index.ts",
-    "src/frame/index.ts",
-];
+// Single unified bundle containing both controls and frame
+const entrypoints = ["src/index.ts"];
 
 const currentDir = join(__dirname, '');
 
-const DIST_TARGET_RELATIVE_LOCATION = '../backend/hyper-runtime';
-const DIST_TARGET_LOCATION = join(currentDir, DIST_TARGET_RELATIVE_LOCATION);
+const DIST_TARGET_LOCATION = join(currentDir, HYPER_RUNTIME_DIST_FROM_SOURCE);
 
 
 // --- CSS Injection Plugin ---
@@ -45,7 +42,7 @@ async function runBuild() {
     if (builder) builder.stop?.();
     builder = await Bun.build({
         entrypoints,
-        outdir: DIST_TARGET_LOCATION,
+        outdir: 'dist',
         target: "browser",
         format: "esm",
         sourcemap: "external",

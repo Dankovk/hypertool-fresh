@@ -1,5 +1,6 @@
 import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { join, resolve } from "node:path";
+import { HYPER_RUNTIME_DIST_FROM_BACKEND, BUNDLE_PATH, VIRTUAL_PATH } from "@hypertool/shared-config/paths";
 
 type FileMap = Record<string, string>;
 
@@ -127,184 +128,23 @@ export function listAvailablePresets(): PresetInfo[] {
   return presets;
 }
 
-const CONTROLS_DIST_RELATIVE_PATH = "hyper-runtime/controls/index.js";
-const CONTROLS_BUNDLE_PATH = "/__hypertool__/controls/index.js";
-const CONTROLS_GLOBALS_PATH = "/__hypertool__/controls/globals.js";
-const FRAME_DIST_RELATIVE_PATH = "hyper-runtime/frame/index.js";
-const FRAME_BUNDLE_PATH = "/__hypertool__/frame/index.js";
-const FRAME_GLOBALS_PATH = "/__hypertool__/frame/globals.js";
-
-function injectControlsLibrary(files: FileMap): ScriptDescriptor | null {
+function injectRuntimeLibrary(files: FileMap): ScriptDescriptor | null {
   try {
-    const distPath = resolve(pathToRootDir, CONTROLS_DIST_RELATIVE_PATH);
-    if (!existsSync(distPath)) {
-      console.warn(`[boilerplate] Controls dist not found at ${distPath}`);
+    // Load unified runtime bundle (includes both controls and frame with globals setup)
+    const bundlePath = resolve(pathToRootDir, join(HYPER_RUNTIME_DIST_FROM_BACKEND, BUNDLE_PATH));
+    if (!existsSync(bundlePath)) {
+      console.warn(`[boilerplate] Runtime bundle not found at ${bundlePath}`);
       return null;
     }
+    const bundleCode = readFileSync(bundlePath, "utf8");
+    console.log(`[boilerplate] Loaded runtime bundle: ${bundleCode.length} bytes`);
+    files[VIRTUAL_PATH] = bundleCode;
 
-    const distCode = readFileSync(distPath, "utf8");
-    console.log(`[boilerplate] Loaded controls bundle: ${distCode.length} bytes, hash: ${distCode.substring(0, 50)}`);
-    files[CONTROLS_BUNDLE_PATH] = distCode;
-
-    const globalsCode = `
-import { createControls, createControlPanel, HypertoolControls, injectThemeVariables, studioTheme } from "./index.js";
-
-if (typeof window !== "undefined") {
-  window.hypertoolControls = {
-    createControls,
-    createControlPanel,
-    HypertoolControls,
-    injectThemeVariables,
-    studioTheme,
-  };
-}
-`.trimStart();
-
-    files[CONTROLS_GLOBALS_PATH] = globalsCode;
-    return { src: "./__hypertool__/controls/globals.js", module: true };
+    return { src: "./__hypertool__/index.js", module: true };
   } catch (error) {
-    console.error("[boilerplate] Failed to inject controls library:", error);
+    console.error("[boilerplate] Failed to inject runtime library:", error);
     return null;
   }
-}
-
-function injectFrameLibrary(files: FileMap): ScriptDescriptor[] {
-  const scripts: ScriptDescriptor[] = [];
-
-  try {
-    const distPath = resolve(pathToRootDir, FRAME_DIST_RELATIVE_PATH);
-    if (!existsSync(distPath)) {
-      console.warn(`[boilerplate] Frame dist not found at ${distPath}`);
-      return scripts;
-    }
-
-    const distCode = readFileSync(distPath, "utf8");
-    console.log(`[boilerplate] Loaded frame bundle: ${distCode.length} bytes, hash: ${distCode.substring(0, 50)}`);
-    files[FRAME_BUNDLE_PATH] = distCode;
-
-    const globalsCode = `
-import { createSandbox, ensureDependencies, mirrorCss, runtime } from "./index.js";
-
-if (typeof window !== "undefined") {
-  const existing = window.hyperFrame || {};
-  window.hyperFrame = Object.assign({}, existing, {
-    version: "universal",
-    runtime,
-    createSandbox,
-    ensureDependencies,
-    mirrorCss,
-  });
-
-  // Add message handling for capture functionality
-  let recordingState = {
-    isRecording: false,
-    recorder: null,
-    recordedChunks: []
-  };
-
-  window.addEventListener('message', (event) => {
-    if (event.data?.source !== 'hypertool-main') return;
-    
-    const { type } = event.data;
-    
-    switch (type) {
-      case 'HYPERTOOL_CAPTURE_PNG':
-        handleCapturePNG();
-        break;
-      case 'HYPERTOOL_START_RECORDING':
-        handleStartRecording();
-        break;
-      case 'HYPERTOOL_STOP_RECORDING':
-        handleStopRecording();
-        break;
-    }
-  });
-
-  function handleCapturePNG() {
-    const canvas = document.querySelector('canvas');
-    if (canvas) {
-      canvas.toBlob((blob) => {
-        if (blob) {
-          window.parent.postMessage({
-            type: 'HYPERTOOL_CAPTURE_RESPONSE',
-            data: {
-              blob: blob,
-              filename: 'hypertool-capture.png'
-            }
-          }, '*');
-        }
-      }, 'image/png');
-    } else {
-      console.warn('No canvas found for capture');
-    }
-  }
-
-  function handleStartRecording() {
-    console.log('Starting recording...');
-    const canvas = document.querySelector('canvas');
-    if (canvas && typeof canvas.captureStream === 'function') {
-      const stream = canvas.captureStream(60);
-      const recorder = new MediaRecorder(stream, {
-        mimeType: 'video/webm;codecs=vp9',
-      });
-      
-      recordingState.recordedChunks = [];
-      
-      recorder.ondataavailable = (event) => {
-        if (event.data.size > 0) {
-          recordingState.recordedChunks.push(event.data);
-          console.log('Recording data available:', event.data.size, 'bytes');
-        }
-      };
-      
-      recorder.onstop = () => {
-        console.log('Recording stopped, processing...');
-        const blob = new Blob(recordingState.recordedChunks, { type: 'video/webm' });
-        console.log('Recording blob size:', blob.size, 'bytes');
-        window.parent.postMessage({
-          type: 'HYPERTOOL_RECORDING_RESPONSE',
-          data: {
-            blob: blob,
-            filename: 'hypertool-recording.webm'
-          }
-        }, '*');
-        recordingState.isRecording = false;
-        recordingState.recorder = null;
-      };
-      
-      recorder.start();
-      recordingState.recorder = recorder;
-      recordingState.isRecording = true;
-      console.log('Recording started successfully');
-    } else {
-      console.warn('Canvas not found or captureStream not supported');
-    }
-  }
-
-  function handleStopRecording() {
-    console.log('Stopping recording...');
-    if (recordingState.recorder) {
-      recordingState.recorder.stop();
-      // Send immediate stop confirmation
-      window.parent.postMessage({
-        type: 'HYPERTOOL_RECORDING_STOPPED',
-        data: {}
-      }, '*');
-      console.log('Stop recording message sent');
-    } else {
-      console.warn('No active recorder to stop');
-    }
-  }
-}
-`.trimStart();
-
-    files[FRAME_GLOBALS_PATH] = globalsCode;
-    scripts.push({ src: "./__hypertool__/frame/globals.js", module: true });
-  } catch (error) {
-    console.error("[boilerplate] Failed to inject frame library:", error);
-  }
-
-  return scripts;
 }
 
 function injectLibraryScripts(html: string, scriptSources: ScriptDescriptor[]): string {
@@ -354,14 +194,10 @@ export function ensureSystemFiles(original: FileMap): FileMap {
   const files = { ...original };
   const scriptSources: ScriptDescriptor[] = [];
 
-  const frameScripts = injectFrameLibrary(files);
-  if (frameScripts.length > 0) {
-    scriptSources.push(...frameScripts);
-  }
-
-  const controlsScript = injectControlsLibrary(files);
-  if (controlsScript) {
-    scriptSources.push(controlsScript);
+  // Inject unified runtime bundle (contains both controls and frame)
+  const runtimeScript = injectRuntimeLibrary(files);
+  if (runtimeScript) {
+    scriptSources.push(runtimeScript);
   }
 
   if (files["/index.html"] && scriptSources.length > 0) {

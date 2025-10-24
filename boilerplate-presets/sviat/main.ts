@@ -1,5 +1,5 @@
 
-import { createSandbox } from "./__hypertool__/frame/index.js";
+import { createSandbox } from "./__hypertool__";
 
 
 const controlDefinitions = {

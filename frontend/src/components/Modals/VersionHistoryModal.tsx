@@ -1,5 +1,5 @@
 import { Modal } from "./Modal";
-import { MODEL_OPTIONS } from "@/config/models";
+import { MODEL_OPTIONS } from "@hypertool/shared-config/models";
 import type { CodeVersion } from "@/types/studio";
 
 interface VersionHistoryModalProps {

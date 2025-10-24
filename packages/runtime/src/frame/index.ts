@@ -5,6 +5,7 @@ import type {
   HyperFrameSandboxOptions,
 } from './types';
 
+
 const defaultConfig: HyperFrameRuntimeConfig = { mirrorCss: true };
 const runtime = new HyperFrameRuntime(defaultConfig);
 
@@ -26,25 +27,5 @@ export function mirrorCss() {
   runtime.mirrorCss();
 }
 
-export function attachToWindow() {
-  if (typeof window === 'undefined') {
-    return;
-  }
-
-  const hyperWindow = window as unknown as { hyperFrame?: Record<string, any> };
-  const existing = hyperWindow.hyperFrame || {};
-
-  const api = {
-    version: 'universal',
-    runtime,
-    createSandbox,
-    ensureDependencies,
-    mirrorCss,
-  };
-
-  hyperWindow.hyperFrame = { ...existing, ...api };
-}
-
-attachToWindow();
 
 export type { HyperFrameSandboxOptions, HyperFrameSandboxHandle };

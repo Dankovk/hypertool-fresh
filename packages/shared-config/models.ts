@@ -13,14 +13,16 @@ export const MODEL_OPTIONS: ModelOption[] = [
   { value: "o1-mini", label: "O1 Mini", provider: "OpenAI", tags: ["reasoning", "fast"] },
   { value: "o3-mini", label: "O3 Mini", provider: "OpenAI", tags: ["reasoning", "latest"] },
 
-  // Anthropic Claude
+  // Anthropic Claude (full model IDs for backend, aliases work in both)
   { value: "claude-sonnet-4-5-20250929", label: "Claude Sonnet 4.5", provider: "Anthropic", tags: ["latest", "creative", "fast"] },
   { value: "claude-opus-4-20250514", label: "Claude Opus 4", provider: "Anthropic", tags: ["creative", "best"] },
   { value: "claude-3-7-sonnet-20250219", label: "Claude Sonnet 3.7", provider: "Anthropic", tags: ["fast"] },
   { value: "claude-3-5-haiku-20241022", label: "Claude Haiku 3.5", provider: "Anthropic", tags: ["fast", "cost-effective"] },
 
   // Google Gemini
-  { value: "gemini-2.0-flash-exp", label: "Gemini 2.0 Flash", provider: "Google", tags: ["latest", "fast", "creative"] },
+  { value: "gemini-2.0-flash-exp", label: "Gemini 2.0 Flash Experimental", provider: "Google", tags: ["latest", "fast", "creative"] },
+  { value: "gemini-2.0-flash", label: "Gemini 2.0 Flash", provider: "Google", tags: ["latest", "fast", "stable"] },
+  { value: "gemini-2.0-flash-thinking-exp-01-21", label: "Gemini 2.0 Flash Thinking", provider: "Google", tags: ["latest", "reasoning", "experimental"] },
   { value: "gemini-1.5-pro-latest", label: "Gemini 1.5 Pro", provider: "Google", tags: ["creative", "large-context"] },
   { value: "gemini-1.5-flash-latest", label: "Gemini 1.5 Flash", provider: "Google", tags: ["fast", "cost-effective"] },
 ];

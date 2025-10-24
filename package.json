@@ -6,7 +6,8 @@
   "workspaces": [
     "backend",
     "frontend",
-    "hyper-runtime"
+    "packages/runtime",
+    "packages/shared-config"
   ],
   "scripts": {
     "dev": "turbo run dev",

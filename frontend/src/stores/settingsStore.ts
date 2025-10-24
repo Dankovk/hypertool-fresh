@@ -1,7 +1,7 @@
 import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
-import { MODEL_OPTIONS } from "@/config/models";
-import { DEFAULT_SYSTEM_PROMPT } from "@/config/prompts";
+import { MODEL_OPTIONS } from "@hypertool/shared-config/models";
+import { DEFAULT_SYSTEM_PROMPT } from "@hypertool/shared-config/prompts";
 import { config } from "@/config";
 
 export interface SettingsState {

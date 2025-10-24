@@ -2,7 +2,7 @@ import { Hono } from 'hono';
 import { loadBoilerplateFiles, ensureSystemFiles } from '../lib/boilerplate.js';
 import { AiRequestSchema } from '../types/ai.js';
 import { getProviderForModel } from '../lib/aiProviders.js';
-import { DEFAULT_SYSTEM_PROMPT_FULL, DEFAULT_SYSTEM_PROMPT_PATCH } from '../config/prompts.js';
+import { DEFAULT_SYSTEM_PROMPT_FULL, DEFAULT_SYSTEM_PROMPT_PATCH } from '@hypertool/shared-config/prompts';
 import {
   generateFullFiles,
   generatePatches,

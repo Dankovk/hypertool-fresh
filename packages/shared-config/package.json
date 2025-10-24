@@ -1,0 +1,10 @@
+{
+  "name": "@hypertool/shared-config",
+  "version": "1.0.0",
+  "type": "module",
+  "exports": {
+    "./models": "./models.ts",
+    "./paths": "./paths.ts",
+    "./prompts": "./prompts.ts"
+  }
+}

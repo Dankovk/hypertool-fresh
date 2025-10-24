@@ -3,6 +3,7 @@ import { existsSync, watch } from 'node:fs';
 import { resolve, join } from 'node:path';
 import { stream } from 'hono/streaming';
 import { loadRuntimeBundles } from '../lib/boilerplate.js';
+import { HYPER_RUNTIME_DIST_FROM_BACKEND } from '@hypertool/shared-config/paths';
 
 const app = new Hono();
 
@@ -21,14 +22,8 @@ app.get('/', (c) => {
   }
 
   return stream(c, async (stream) => {
-    // Watch the actual build output location (backend/hyper-runtime)
-    // This matches the DIST_TARGET_LOCATION in hyper-runtime/build-dev.config.ts
-    const distRoot = resolve(process.cwd(), 'hyper-runtime');
-    const watchTargets = [
-      distRoot,
-      join(distRoot, 'controls'),
-      join(distRoot, 'frame'),
-    ];
+    const distRoot = resolve(process.cwd(), HYPER_RUNTIME_DIST_FROM_BACKEND);
+    const watchTargets = [distRoot];
 
     const watchers: ReturnType<typeof watch>[] = [];
     let debounceTimer: ReturnType<typeof setTimeout> | null = null;

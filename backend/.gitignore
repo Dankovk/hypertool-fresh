@@ -13,3 +13,5 @@ dist/
 # Generated bundled files for Vercel
 index.js
 index.js.map
+
+hyper-runtime/index.js

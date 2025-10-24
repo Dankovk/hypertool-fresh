@@ -34,8 +34,6 @@ export class HyperFrameRuntime implements HyperFrameRuntimeApi {
 
   constructor(config: HyperFrameRuntimeConfig = {}) {
     this.config = config;
-
-
   }
 
   async ensureDependencies(dependencies: ExternalDependency[] = []): Promise<void> {
