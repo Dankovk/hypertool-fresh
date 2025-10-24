@@ -1,7 +1,7 @@
 import type { FileMap } from "../types/studio.js";
 import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { join, resolve } from "node:path";
-import { HYPER_RUNTIME_DIST_FROM_BACKEND, BUNDLE_PATH, VIRTUAL_PATH } from "@hypertool/shared-config/paths";
+import { HYPER_RUNTIME_DIST_FROM_BACKEND, BUNDLE_PATH, VIRTUAL_PATH, BOILERPLATE_PRESETS_PATH_FROM_ROOT } from "@hypertool/shared-config/paths";
 
 export interface PresetData {
   id: string;
@@ -104,7 +104,9 @@ export function readDirectoryRecursive(dir: string, base: string = dir, out: Fil
  */
 export function getBoilerplateFileMap(): BoilerplateData {
   const projectRoot = resolve(process.cwd(), "..");
-  const presetsPath = join(projectRoot, "boilerplate-presets");
+  const presetsPath = join(projectRoot, BOILERPLATE_PRESETS_PATH_FROM_ROOT);
+  console.log(presetsPath)
+
 
   if (!existsSync(presetsPath)) {
     throw new Error(`Presets directory not found at: ${presetsPath}`);

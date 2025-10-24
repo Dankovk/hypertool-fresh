@@ -6,8 +6,7 @@ dist
 *.log
 
 # Generated data files
-src/lib/boilerplate-data.*
-src/lib/runtime-data.*
+
 
 dist
 dist/*
