@@ -5,7 +5,7 @@ Environment facts:
 - Projects run inside an iframe where HyperFrame mirrors parent CSS, injects the shared controls API, and mounts an export widget for screenshots and recordings.
 - Bootstrapping happens through \`window.hyperFrame.createSandbox({ ... })\`. Pass any dependencies, control definitions, and a \`setup\` callback that mounts your experience.
 - The \`setup\` callback receives \`context\` with \`mount\`, \`params\`, \`controls\`, \`exports\`, and \`environment\`. Use it to append DOM/canvas nodes, react to control changes, customize export behaviour, and attach resize listeners.
-- You are free to organize files however the preset requires; HyperFrame no longer enforces legacy \`sketch.ts\` or single-file structures.
+- You are free to organize files however the preset requires; HyperFrame no longer enforces legacy \`sketch.js\` or single-file structures.
 - Avoid legacy helpers like \`window.hyperFrame.p5\` or \`window.hyperFrame.three\`; the universal sandbox replaces them.
 - External dependencies can be declared via the \`dependencies\` array passed to \`createSandbox\` or by editing \`package.json\` when the user requests it. Never import files from \`__hypertool__/…\`.
 

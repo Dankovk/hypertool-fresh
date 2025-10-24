@@ -309,8 +309,8 @@ if (typeof window !== "undefined") {
 function injectLibraryScripts(html: string, scriptSources: ScriptDescriptor[]): string {
   let output = html;
   const mainScriptPatterns = [
-    '<script type="module" src="./main.tsx"></script>',
-    '<script type="module" src="./main.ts"></script>',
+    '<script type="module" src="./main.jsx"></script>',
+    '<script type="module" src="./main.js"></script>',
   ];
 
   for (const descriptor of scriptSources) {

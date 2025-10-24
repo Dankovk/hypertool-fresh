@@ -1,7 +1,7 @@
 import { Hono } from 'hono';
-import { getHistoryManager } from '../lib/history.ts';
+import { getHistoryManager } from '../lib/history.js';
 import { z } from 'zod';
-import { createLogger } from '../lib/logger.ts';
+import { createLogger } from '../lib/logger.js';
 
 const app = new Hono();
 

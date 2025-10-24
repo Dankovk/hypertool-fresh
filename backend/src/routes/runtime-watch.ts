@@ -2,7 +2,7 @@ import { Hono } from 'hono';
 import { existsSync, watch } from 'node:fs';
 import { resolve, join } from 'node:path';
 import { stream } from 'hono/streaming';
-import { loadRuntimeBundles } from '../lib/boilerplate.ts';
+import { loadRuntimeBundles } from '../lib/boilerplate.js';
 
 const app = new Hono();
 
@@ -66,8 +66,8 @@ app.get('/', (c) => {
         }
 
         const watcher = watch(target, (eventType, filename) => {
-          // Ignore .d.ts files
-          if (filename?.endsWith('.d.ts')) {
+          // Ignore .d.js files
+          if (filename?.endsWith('.d.js')) {
             return;
           }
 

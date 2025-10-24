@@ -1,5 +1,5 @@
 import { Hono } from 'hono';
-import { loadBoilerplateFiles, listAvailablePresets } from '../lib/boilerplate.ts';
+import { loadBoilerplateFiles, listAvailablePresets } from '../lib/boilerplate.js';
 
 const app = new Hono();
 

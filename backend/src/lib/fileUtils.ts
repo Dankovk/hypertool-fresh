@@ -1,4 +1,4 @@
-import type { FileMap } from "../types/studio.ts";
+import type { FileMap } from "../types/studio.js";
 
 /**
  * Normalize a file path by removing leading slashes

@@ -1,16 +1,16 @@
 import { Hono } from 'hono';
 import { stream } from 'hono/streaming';
-import { loadBoilerplateFiles, ensureSystemFiles } from '../lib/boilerplate.ts';
-import { AiRequestSchema, CodeEditSchema } from '../types/ai.ts';
-import { getProviderForModel } from '../lib/aiProviders.ts';
-import { DEFAULT_SYSTEM_PROMPT_FULL, DEFAULT_SYSTEM_PROMPT_PATCH } from '../config/prompts.ts';
-import { buildConversationPrompt } from '../lib/aiService.ts';
-import { normalizeFileMap } from '../lib/fileUtils.ts';
-import { createLogger } from '../lib/logger.ts';
+import { loadBoilerplateFiles, ensureSystemFiles } from '../lib/boilerplate.js';
+import { AiRequestSchema, CodeEditSchema } from '../types/ai.js';
+import { getProviderForModel } from '../lib/aiProviders.js';
+import { DEFAULT_SYSTEM_PROMPT_FULL, DEFAULT_SYSTEM_PROMPT_PATCH } from '../config/prompts.js';
+import { buildConversationPrompt } from '../lib/aiService.js';
+import { normalizeFileMap } from '../lib/fileUtils.js';
+import { createLogger } from '../lib/logger.js';
 import { streamObject, streamText } from 'ai';
 import { z } from 'zod';
-import { applyEditsToFiles, createHistoryEntry } from '../lib/patches.ts';
-import { getHistoryManager } from '../lib/history.ts';
+import { applyEditsToFiles, createHistoryEntry } from '../lib/patches.js';
+import { getHistoryManager } from '../lib/history.js';
 
 const app = new Hono();
 
