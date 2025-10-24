@@ -2,17 +2,17 @@
 
 export const MODEL_OPTIONS = [
   // OpenAI
-  { value: "gpt-5", label: "GPT-5", provider: "OpenAI", tags: ["latest", "fast"] },
-  { value: "gpt-4o", label: "GPT-4o", provider: "OpenAI", tags: ["fast", "creative"] },
-  { value: "o1", label: "O1", provider: "OpenAI", tags: ["reasoning"] },
-  { value: "o1-mini", label: "O1 Mini", provider: "OpenAI", tags: ["reasoning", "fast"] },
-  { value: "o3-mini", label: "O3 Mini", provider: "OpenAI", tags: ["reasoning", "latest"] },
+  // { value: "gpt-5", label: "GPT-5", provider: "OpenAI", tags: ["latest", "fast"] },
+  // { value: "gpt-4o", label: "GPT-4o", provider: "OpenAI", tags: ["fast", "creative"] },
+  // { value: "o1", label: "O1", provider: "OpenAI", tags: ["reasoning"] },
+  // { value: "o1-mini", label: "O1 Mini", provider: "OpenAI", tags: ["reasoning", "fast"] },
+  // { value: "o3-mini", label: "O3 Mini", provider: "OpenAI", tags: ["reasoning", "latest"] },
 
   // Anthropic Claude (full model IDs for backend, aliases work in both)
   { value: "claude-sonnet-4-5-20250929", label: "Claude Sonnet 4.5", provider: "Anthropic", tags: ["latest", "creative", "fast"] },
-  { value: "claude-opus-4-20250514", label: "Claude Opus 4", provider: "Anthropic", tags: ["creative", "best"] },
-  { value: "claude-3-7-sonnet-20250219", label: "Claude Sonnet 3.7", provider: "Anthropic", tags: ["fast"] },
-  { value: "claude-3-5-haiku-20241022", label: "Claude Haiku 3.5", provider: "Anthropic", tags: ["fast", "cost-effective"] },
+  // { value: "claude-opus-4-20250514", label: "Claude Opus 4", provider: "Anthropic", tags: ["creative", "best"] },
+  // { value: "claude-3-7-sonnet-20250219", label: "Claude Sonnet 3.7", provider: "Anthropic", tags: ["fast"] },
+  // { value: "claude-3-5-haiku-20241022", label: "Claude Haiku 3.5", provider: "Anthropic", tags: ["fast", "cost-effective"] },
 
   // Google Gemini
   { value: "gemini-2.0-flash-exp", label: "Gemini 2.0 Flash Experimental", provider: "Google", tags: ["latest", "fast", "creative"] },
