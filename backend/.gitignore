@@ -11,5 +11,5 @@ dist/
 .env
 
 # Generated bundled files for Vercel
-api/index.js
-api/index.js.map
+index.js
+index.js.map
