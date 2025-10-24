@@ -12,7 +12,7 @@ module.exports = {
         display: ["Routed Gothic", "ui-sans-serif", "system-ui", "sans-serif"],
       },
       gridTemplateColumns: {
-        studio: "480px minmax(0,1fr)",
+        studio: "400px minmax(0,1fr)",
       },
       colors: {
         background: "var(--bg)",

@@ -7,7 +7,7 @@ interface ChatMessageProps {
 export function ChatMessage({ message }: ChatMessageProps) {
   return (
     <div
-      className={`max-w-[85%] rounded-2xl bg-dark-accent px-4 py-3 text-sm animate-slide-in ${
+      className={`max-w-[85%] rounded-2xl bg-dark-accent px-4 py-3 overflow-scroll text-sm animate-slide-in ${
         message.role === "assistant"
           ? ""
           : "ml-auto"

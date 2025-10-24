@@ -33,7 +33,7 @@ export function ChatPanel({
   const settings = useStudioSettings();
   return (
     <div className="flex flex-col overflow-hidden rounded-2xl border border-border bg-dark-base shadow-brand">
-      <div className="flex items-center justify-between border-b border-border bg-accent/5 px-5 py-2">
+      <div className="flex items-center justify-between border-b border-border bg-accent/5 px-2 py-2">
         <div className="text-lg font-semibold tracking-tight text-accent">AI Studio</div>
         <div className="flex items-center gap-3">
           <button

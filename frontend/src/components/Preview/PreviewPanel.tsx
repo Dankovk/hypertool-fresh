@@ -12,8 +12,7 @@ import { config } from "@/config";
 import { Terminal } from "@xterm/xterm";
 import "@xterm/xterm/css/xterm.css";
 import { CssSyncManager } from "./CssSyncManager";
-// We'll implement capture functionality directly
-
+import { BottomBar } from "./BottomBar";
 
 const TERMINAL_CONFIG = {
   cursorBlink: true,
@@ -554,7 +553,7 @@ export const PreviewPanel = memo(({ files, onDownload }: PreviewPanelProps)=> {
   }, [containerReady, files, queueSync]);
 
   return (
-    <div className="flex flex-col overflow-hidden rounded-2xl border border-border bg-surface shadow-brand">
+    <div className="flex flex-col rounded-2xl border border-border bg-surface min-w-[700px]">
       <div ref={previewContainerRef} className="relative bg-black h-full">
         {previewUrl ? (
           <div className="hyper-frame-external-wrapper flex w-full h-full items-center justify-center">
@@ -578,9 +577,12 @@ export const PreviewPanel = memo(({ files, onDownload }: PreviewPanelProps)=> {
           </div>
         )}
 
+        {/* Download Code Button - Bottom Left (above terminal) */}
+        <BottomBar onDownload={onDownload} />
+
         {/* Floating Terminal Panel */}
         <div
-          className="absolute left-0 right-0 bottom-0 border-t border-border"
+          className="absolute left-0 right-0 bottom-0 border-t border-border z-20"
           style={{
             height: terminalExpanded ? "350px" : "auto",
             transition: "height 0.2s ease-in-out",
@@ -603,7 +605,7 @@ export const PreviewPanel = memo(({ files, onDownload }: PreviewPanelProps)=> {
             className="w-full"
             style={{
               backgroundColor: "#0a0a0a",
-              height: terminalExpanded ? "calc(100% - 49px)" : "0px",
+              height: terminalExpanded ? "100%" : "0px",
               overflow: "hidden",
             }}
           />

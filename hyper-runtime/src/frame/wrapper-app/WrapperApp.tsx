@@ -5,6 +5,7 @@ import { SandboxContainer } from './components/SandboxContainer';
 import { CanvasSizeWidget } from './components/CanvasSizeWidget';
 import { CanvasProvider } from './context/CanvasContext';
 import type { WrapperAppProps } from './types';
+import './styles/controls.css';
 import './styles/wrapper-app.css';
 
 /**
@@ -23,9 +24,6 @@ export const WrapperApp: React.FC<WrapperAppProps> = ({
   exportWidget,
 }) => {
   const [container, setContainer] = useState<HTMLElement | null>(null);
-  const [imageEnabled, setImageEnabled] = useState(false);
-  const [videoEnabled, setVideoEnabled] = useState(false);
-  const [recording, setRecording] = useState(false);
 
   const handleContainerReady = useCallback((node: HTMLElement) => {
     setContainer(node);
@@ -41,9 +39,6 @@ export const WrapperApp: React.FC<WrapperAppProps> = ({
             getContainer={() => container}
             filename={exportWidget.filename}
             useCanvasCapture={exportWidget.useCanvasCapture}
-            onImageEnabledChange={setImageEnabled}
-            onVideoEnabledChange={setVideoEnabled}
-            onRecordingChange={setRecording}
           />
         )}
 
