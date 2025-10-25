@@ -12,6 +12,7 @@ import { streamObject, streamText } from 'ai';
 import { z } from 'zod';
 import { applyEditsToFiles, createHistoryEntry } from '../lib/patches.js';
 import { getHistoryManager } from '../lib/history.js';
+import { createMessage } from '../services/chatService.js';
 
 const app = new Hono();
 
@@ -78,11 +79,13 @@ app.post('/', async (c) => {
     }
 
     const { messages, model, systemPrompt, apiKey, currentFiles, editMode } = parsed.data;
+    const sessionId = c.req.query('sessionId'); // Optional session ID from query params
 
     logger.info('Request validated', {
       model,
       editMode,
       messageCount: messages.length,
+      sessionId: sessionId || 'none',
     });
 
     const boilerplate = loadBoilerplateFiles();
@@ -212,7 +215,8 @@ app.post('/', async (c) => {
             normalizedEdits,
             workingFiles,
             patchResult.files,
-            finalObject.explanation
+            finalObject.explanation,
+            sessionId
           );
           historyManager.push(historyEntry);
 
@@ -286,6 +290,44 @@ app.post('/', async (c) => {
             });
 
             summary = detailedSummary;
+          }
+        }
+
+        // Save messages to database if sessionId provided
+        if (sessionId) {
+          try {
+            // Save user messages
+            for (const message of messages) {
+              await createMessage({
+                sessionId,
+                role: message.role,
+                content: message.content,
+                aiModel: model,
+                editMode,
+              });
+            }
+
+            // Save assistant response
+            await createMessage({
+              sessionId,
+              role: 'assistant',
+              content: summary || fullText,
+              aiModel: model,
+              editMode,
+              tokenCount,
+              metadata: usePatchMode
+                ? {
+                    editsCount: finalObject.edits?.length || 0,
+                  }
+                : {
+                    filesCount: finalObject.files ? Object.keys(finalObject.files).length : 0,
+                  },
+            });
+
+            logger.info('Messages saved to database', { sessionId });
+          } catch (dbError) {
+            logger.error('Failed to save messages to database', dbError);
+            // Continue with response even if database save fails
           }
         }
 

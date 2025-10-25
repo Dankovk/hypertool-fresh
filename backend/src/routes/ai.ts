@@ -12,6 +12,7 @@ import {
 import { createStubTransform } from '../lib/fallbacks.js';
 import { normalizeFileMap } from '../lib/fileUtils.js';
 import { createLogger } from '../lib/logger.js';
+import { createMessage } from '../services/chatService.js';
 
 const app = new Hono();
 
@@ -80,6 +81,7 @@ app.post('/', async (c) => {
     }
 
     const { messages, model, systemPrompt, apiKey, currentFiles, editMode } = parsed.data;
+    const sessionId = c.req.query('sessionId'); // Optional session ID from query params
 
     logger.info('Request validated', {
       model,
@@ -88,6 +90,7 @@ app.post('/', async (c) => {
       hasApiKey: !!apiKey,
       hasCustomSystemPrompt: !!systemPrompt,
       hasCurrentFiles: !!(currentFiles && Object.keys(currentFiles).length > 0),
+      sessionId: sessionId || 'none',
     });
 
     const endTimer = logger.time('AI request processing');
@@ -155,6 +158,35 @@ app.post('/', async (c) => {
         mergeWithSystemFiles(systemFiles, result.files)
       );
 
+      // Save messages to database if sessionId provided
+      if (sessionId) {
+        // Save user messages
+        for (const message of messages) {
+          await createMessage({
+            sessionId,
+            role: message.role,
+            content: message.content,
+            aiModel: model,
+            editMode,
+          });
+        }
+
+        // Save assistant response
+        await createMessage({
+          sessionId,
+          role: 'assistant',
+          content: result.explanation || 'Patch applied successfully',
+          aiModel: model,
+          editMode,
+          metadata: {
+            historyId: result.historyId,
+            editCount: result.edits?.length || 0,
+          },
+        });
+
+        logger.info('Messages saved to database', { sessionId });
+      }
+
       endTimer();
 
       return c.json({
@@ -179,6 +211,34 @@ app.post('/', async (c) => {
       const mergedFiles = ensureSystemFiles(
         mergeWithSystemFiles(systemFiles, result.files)
       );
+
+      // Save messages to database if sessionId provided
+      if (sessionId) {
+        // Save user messages
+        for (const message of messages) {
+          await createMessage({
+            sessionId,
+            role: message.role,
+            content: message.content,
+            aiModel: model,
+            editMode,
+          });
+        }
+
+        // Save assistant response
+        await createMessage({
+          sessionId,
+          role: 'assistant',
+          content: result.explanation || 'Files generated successfully',
+          aiModel: model,
+          editMode,
+          metadata: {
+            fileCount: Object.keys(result.files).length,
+          },
+        });
+
+        logger.info('Messages saved to database', { sessionId });
+      }
 
       endTimer();
 

@@ -5,6 +5,7 @@ import {
   parsePatch,
   structuredPatch,
 } from "diff";
+import { createHistoryEntry as saveHistoryEntryToDB } from "../services/historyService.js";
 
 /**
  * Represents a code edit operation
@@ -292,9 +293,10 @@ export function createHistoryEntry(
   edits: CodeEdit[],
   beforeState: Record<string, string>,
   afterState: Record<string, string>,
-  explanation?: string
+  explanation?: string,
+  sessionId?: string
 ): EditHistoryEntry {
-  return {
+  const entry: EditHistoryEntry = {
     id: crypto.randomUUID(),
     timestamp: Date.now(),
     edits,
@@ -302,6 +304,23 @@ export function createHistoryEntry(
     afterState,
     explanation,
   };
+
+  // Also save to MongoDB (async, don't wait for it)
+  saveHistoryEntryToDB({
+    sessionId,
+    entryId: entry.id,
+    timestamp: entry.timestamp,
+    explanation: entry.explanation,
+    edits: entry.edits,
+    beforeState: entry.beforeState,
+    afterState: entry.afterState,
+  }).catch((error) => {
+    if (process.env.NODE_ENV !== 'production') {
+      console.error('Failed to save history entry to database:', error);
+    }
+  });
+
+  return entry;
 }
 
 /**
