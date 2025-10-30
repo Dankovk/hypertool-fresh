@@ -1,6 +1,6 @@
 //@ts-nocheck
 import { Hono } from 'hono';
-import { loadBoilerplateFiles, ensureSystemFiles } from '../lib/boilerplate.js';
+import { loadBoilerplateFromConvex, ensureSystemFiles } from '../lib/boilerplate.js';
 import { AiRequestSchema } from '../types/ai.js';
 import { getProviderForModel } from '../lib/aiProviders.js';
 import { DEFAULT_SYSTEM_PROMPT_FULL, DEFAULT_SYSTEM_PROMPT_PATCH } from '@hypertool/shared-config/prompts.js';
@@ -92,7 +92,8 @@ app.post('/', async (c) => {
 
     const endTimer = logger.time('AI request processing');
 
-    const boilerplate = loadBoilerplateFiles();
+    // Load boilerplate from Convex DB (defaults to 'universal')
+    const boilerplate = await loadBoilerplateFromConvex();
     const workingFiles =
       currentFiles && Object.keys(currentFiles).length > 0
         ? currentFiles
@@ -198,7 +199,8 @@ app.post('/', async (c) => {
       const parsed = AiRequestSchema.safeParse(json);
       if (parsed.success) {
         const { messages, currentFiles } = parsed.data;
-        const boilerplate = loadBoilerplateFiles();
+        // Load boilerplate from Convex DB for fallback
+        const boilerplate = await loadBoilerplateFromConvex();
         const workingFiles =
           currentFiles && Object.keys(currentFiles).length > 0
             ? currentFiles

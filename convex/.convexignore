@@ -1,0 +1,7 @@
+# Convex build output - ignore compiled JavaScript files
+*.js
+*.js.map
+!**/_generated/**/*.js
+out/
+.convex/
+

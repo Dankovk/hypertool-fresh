@@ -10,10 +10,11 @@
     "packages/shared-config"
   ],
   "scripts": {
-    "dev": "turbo run dev",
+    "dev": "turbo run dev dev:convex",
     "dev:frontend": "bun --cwd=frontend run dev",
     "dev:backend": "bun --cwd=backend run dev",
     "dev:hyper-runtim": "bun --cwd=hyper-runtime run dev",
+    "dev:convex": "bun run scripts/pre-convex.sh && bunx convex dev",
     "build": "turbo run build",
     "build:frontend": "cd hyper-runtime && bun run build && cd .. && cd frontend && bun run build",
     "build:backend": "cd backend && bun run build",
@@ -22,10 +23,14 @@
     "lint": "next lint",
     "typecheck": "bunx --bun turbo run typecheck",
     "typecheck:frontend": "tsc -p tsconfig.json --noEmit",
-    "typecheck:backend": "cd backend && bun run typecheck"
+    "typecheck:backend": "cd backend && bun run typecheck",
+    "migrate:boilerplates": "bun run scripts/migrate-boilerplates.ts"
   },
   "devDependencies": {
     "turbo": "^2.5.8",
     "typescript": "5.6.2"
+  },
+  "dependencies": {
+    "convex": "^1.28.0"
   }
 }

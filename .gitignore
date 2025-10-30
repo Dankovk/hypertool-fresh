@@ -28,3 +28,10 @@ tsconfig.tsbuildinfo
 
 .turbo
 
+# Convex
+convex/_generated
+convex/**/*.js
+!convex/_generated/**/*.js
+convex/**/*.js.map
+convex/.env.local
+

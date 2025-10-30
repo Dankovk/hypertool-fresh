@@ -1,0 +1,11 @@
+{
+  "functions": "convex",
+  "generateCommonJSApi": false,
+  "node": {
+    "externalPackages": []
+  },
+  "bundler": {
+    "externalModules": []
+  }
+}
+

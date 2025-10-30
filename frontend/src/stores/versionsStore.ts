@@ -11,6 +11,7 @@ export interface VersionsActions {
   addVersion: (files: FileMap, prompt: string, model: string) => void;
   clearVersions: () => void;
   removeVersion: (id: string) => void;
+  setVersions: (versions: CodeVersion[]) => void;
 }
 
 export type VersionsStore = VersionsState & VersionsActions;
@@ -51,6 +52,11 @@ export const useVersionsStore = create<VersionsStore>()(
     removeVersion: (id) =>
       set((state) => {
         state.versions = state.versions.filter((v) => v.id !== id);
+      }),
+
+    setVersions: (versions) =>
+      set((state) => {
+        state.versions = versions;
       }),
   }))
 );

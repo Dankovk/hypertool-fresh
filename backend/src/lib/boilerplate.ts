@@ -1,5 +1,6 @@
 import { VIRTUAL_PATH } from "@hypertool/shared-config/paths";
 import { getRuntimeFileMap } from "./fileUtils.js";
+import { convexClient } from "./convex.js";
 
 type FileMap = Record<string, string>;
 
@@ -14,20 +15,78 @@ export interface PresetInfo {
   description: string;
 }
 
-// Import generated data files (must exist - run 'bun run transform:boilerplate' and 'bun run transform:runtime' first)
-const BOILERPLATE_DATA = await import('../data/boilerplate-data.js');
+// Import generated data files for runtime only (boilerplates now come from Convex)
 const RUNTIME_DATA = await import('../data/runtime-data.js');
 
 const isDevelopment = process.env.NODE_ENV !== 'production';
-console.log(`[boilerplate] Using pre-generated boilerplate data and ${isDevelopment ? 'dynamic' : 'pre-generated'} runtime data`);
+console.log(`[boilerplate] Loading boilerplates from Convex DB, using ${isDevelopment ? 'dynamic' : 'pre-generated'} runtime data`);
 
+/**
+ * Load boilerplate files from Convex DB
+ * @param presetId - Preset ID to load (defaults to 'universal')
+ * @returns FileMap with boilerplate files enriched with runtime
+ */
+export async function loadBoilerplateFromConvex(presetId: string = 'universal'): Promise<FileMap> {
+  const CONVEX_URL = process.env.CONVEX_URL || "";
+  
+  if (!CONVEX_URL) {
+    throw new Error("CONVEX_URL environment variable is not set. Cannot load boilerplates from Convex.");
+  }
+
+  try {
+    const boilerplate = await convexClient.query('boilerplates:getBoilerplate', {
+      presetId,
+    });
+
+    if (!boilerplate || !boilerplate.files) {
+      throw new Error(`Boilerplate not found in Convex: ${presetId}`);
+    }
+
+    // Enrich with runtime library from local codebase
+    return ensureSystemFiles(boilerplate.files);
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    throw new Error(`Failed to load boilerplate from Convex (${presetId}): ${errorMessage}`);
+  }
+}
+
+/**
+ * List available presets from Convex DB
+ * @returns Array of preset info
+ */
+export async function listAvailablePresetsFromConvex(): Promise<PresetInfo[]> {
+  const CONVEX_URL = process.env.CONVEX_URL || "";
+  
+  if (!CONVEX_URL) {
+    throw new Error("CONVEX_URL environment variable is not set. Cannot load presets from Convex.");
+  }
+
+  try {
+    const presets = await convexClient.query('boilerplates:listPresets', {});
+    
+    if (!presets || presets.length === 0) {
+      throw new Error("No presets found in Convex DB");
+    }
+
+    return presets.map(p => ({
+      id: p.id,
+      name: p.name,
+      description: p.description,
+    }));
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    throw new Error(`Failed to load presets from Convex: ${errorMessage}`);
+  }
+}
+
+// Legacy functions - deprecated, kept for backward compatibility during migration
+// These will be removed once all code is migrated to Convex
 export function loadBoilerplateFiles(presetId?: string): FileMap {
-  const files = BOILERPLATE_DATA.loadBoilerplateFiles(presetId);
-  return ensureSystemFiles(files);
+  throw new Error("loadBoilerplateFiles() is deprecated. Use loadBoilerplateFromConvex() instead.");
 }
 
 export function listAvailablePresets(): PresetInfo[] {
-  return BOILERPLATE_DATA.listAvailablePresets();
+  throw new Error("listAvailablePresets() is deprecated. Use listAvailablePresetsFromConvex() instead.");
 }
 
 function injectRuntimeLibrary(files: FileMap): ScriptDescriptor | null {

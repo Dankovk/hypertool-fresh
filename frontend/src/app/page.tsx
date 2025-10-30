@@ -24,14 +24,24 @@ export default function HomePage() {
   const setShowPresets = useUIStore((state) => state.setShowPresets);
 
   // Custom hooks
-  const { presets, loadBoilerplate } = useBoilerplate();
-  const { codeVersions, clearVersions } = useCodeVersions();
+  const { presets, loadBoilerplate, loadBoilerplateAndSave, savedPresetId } = useBoilerplate();
+  const { codeVersions, clearVersions, loadVersion } = useCodeVersions();
   const chat = useAIChat();
   const clearMessages = useChatStore((state) => state.clearMessages);
 
-  // Load initial boilerplate (only once on mount)
+  // Load initial boilerplate (check saved preset first, then default to universal)
   useEffect(() => {
     const loadInitial = async () => {
+      // If there's a saved preset for this session, load it
+      if (savedPresetId) {
+        const presetFiles = await loadBoilerplate(savedPresetId);
+        if (presetFiles) {
+          setFiles(presetFiles);
+          return;
+        }
+      }
+
+      // Otherwise, load default boilerplate
       const boilerplate = await loadBoilerplate();
       if (boilerplate) {
         setFiles(boilerplate);
@@ -39,7 +49,7 @@ export default function HomePage() {
     };
     loadInitial();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [savedPresetId]);
 
   // Normalize files for runtime (leading slashes)
   // Memoize to prevent unnecessary re-renders of PreviewPanel
@@ -56,7 +66,8 @@ export default function HomePage() {
   }, [loadBoilerplate, setFiles, clearMessages, clearVersions]);
 
   const onLoadPreset = useCallback(async (presetId: string) => {
-    const presetFiles = await loadBoilerplate(presetId);
+    // Use loadBoilerplateAndSave to save preset selection to session
+    const presetFiles = await loadBoilerplateAndSave(presetId);
     if (presetFiles) {
       setFiles(presetFiles);
       clearMessages();
@@ -64,13 +75,27 @@ export default function HomePage() {
       setShowPresets(false);
       toast.success("Preset loaded");
     }
-  }, [loadBoilerplate, setFiles, clearMessages, clearVersions, setShowPresets]);
+  }, [loadBoilerplateAndSave, setFiles, clearMessages, clearVersions, setShowPresets]);
 
-  const onRestoreVersion = useCallback((version: CodeVersion) => {
+  const onRestoreVersion = useCallback(async (version: CodeVersion) => {
+    // If version doesn't have files loaded, fetch them
+    if (!version.files || Object.keys(version.files).length === 0) {
+      const fullVersion = await loadVersion(version.id);
+      if (fullVersion && fullVersion.files) {
+        setFiles(fullVersion.files);
+        setShowVersionHistory(false);
+        toast.success("Version restored");
+        return;
+      } else {
+        toast.error("Failed to load version files");
+        return;
+      }
+    }
+
     setFiles(version.files);
     setShowVersionHistory(false);
     toast.success("Version restored");
-  }, [setFiles, setShowVersionHistory]);
+  }, [setFiles, setShowVersionHistory, loadVersion]);
 
   const onDownload = useCallback(async () => {
     const res = await fetch(getApiUrl(API_ENDPOINTS.DOWNLOAD), {

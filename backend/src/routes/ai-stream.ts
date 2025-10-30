@@ -1,7 +1,7 @@
 //@ts-nocheck
 import { Hono } from 'hono';
 import { stream } from 'hono/streaming';
-import { loadBoilerplateFiles, ensureSystemFiles } from '../lib/boilerplate.js';
+import { loadBoilerplateFromConvex, ensureSystemFiles } from '../lib/boilerplate.js';
 import { AiRequestSchema, CodeEditSchema } from '../types/ai.js';
 import { getProviderForModel } from '../lib/aiProviders.js';
 import { DEFAULT_SYSTEM_PROMPT_FULL, DEFAULT_SYSTEM_PROMPT_PATCH } from '@hypertool/shared-config/prompts.js';
@@ -85,7 +85,8 @@ app.post('/', async (c) => {
       messageCount: messages.length,
     });
 
-    const boilerplate = loadBoilerplateFiles();
+    // Load boilerplate from Convex DB (defaults to 'universal')
+    const boilerplate = await loadBoilerplateFromConvex();
     const workingFiles =
       currentFiles && Object.keys(currentFiles).length > 0
         ? currentFiles
