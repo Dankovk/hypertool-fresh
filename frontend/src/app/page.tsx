@@ -1,5 +1,5 @@
 "use client";
-import { useCallback, useEffect, useMemo } from "react";
+import { useCallback, useEffect, useMemo, useRef } from "react";
 import { toast } from "sonner";
 import { ChatPanel } from "@/components/Chat/ChatPanel";
 import { SettingsPanel } from "@/components/Settings/SettingsPanel";
@@ -31,23 +31,85 @@ export default function HomePage() {
 
   // Load initial boilerplate (check saved preset first, then default to universal)
   useEffect(() => {
+    let mounted = true;
+    let hasLoaded = false;
+    
+    // Timeout fallback: if savedPresetId takes too long, load default boilerplate
+    const timeoutId = setTimeout(() => {
+      if (!hasLoaded && mounted) {
+        console.warn("[page] ⚠️ savedPresetId query timeout (3s), loading default boilerplate");
+        hasLoaded = true;
+        loadBoilerplate().then((boilerplate) => {
+          if (boilerplate && mounted) {
+            console.log("[page] ✅ Loaded default boilerplate after timeout:", Object.keys(boilerplate).length, "files");
+            setFiles(boilerplate);
+          }
+        }).catch((err) => {
+          console.error("[page] ❌ Failed to load default boilerplate after timeout:", err);
+        });
+      }
+    }, 3000); // 3 second timeout
+    
     const loadInitial = async () => {
+      // Wait for savedPresetId query to complete (undefined = loading, null = loaded but no preset)
+      if (savedPresetId === undefined) {
+        // Still loading from Convex, wait (but timeout will kick in after 3s)
+        console.log("[page] Waiting for savedPresetId to load from Convex...");
+        return;
+      }
+
+      // Clear timeout since we got the result
+      clearTimeout(timeoutId);
+
+      if (!mounted || hasLoaded) {
+        console.log("[page] Already loaded or unmounted, skipping");
+        return;
+      }
+      hasLoaded = true;
+
+      console.log("[page] Loading initial boilerplate, savedPresetId:", savedPresetId);
+
       // If there's a saved preset for this session, load it
       if (savedPresetId) {
-        const presetFiles = await loadBoilerplate(savedPresetId);
-        if (presetFiles) {
-          setFiles(presetFiles);
-          return;
+        console.log("[page] Loading saved preset:", savedPresetId);
+        try {
+          const presetFiles = await loadBoilerplate(savedPresetId);
+          if (presetFiles && mounted) {
+            console.log("[page] ✅ Loaded preset files:", Object.keys(presetFiles).length, "files");
+            setFiles(presetFiles);
+            return;
+          } else {
+            console.warn("[page] Preset files were null/empty, falling back to default");
+          }
+        } catch (err) {
+          console.error("[page] Error loading preset:", err);
+          // Fall through to default
         }
       }
 
       // Otherwise, load default boilerplate
-      const boilerplate = await loadBoilerplate();
-      if (boilerplate) {
-        setFiles(boilerplate);
+      if (mounted) {
+        console.log("[page] Loading default boilerplate (universal)");
+        try {
+          const boilerplate = await loadBoilerplate();
+          if (boilerplate) {
+            console.log("[page] ✅ Loaded default boilerplate:", Object.keys(boilerplate).length, "files");
+            setFiles(boilerplate);
+          } else {
+            console.error("[page] ❌ Failed to load default boilerplate (returned null)");
+          }
+        } catch (err) {
+          console.error("[page] ❌ Failed to load default boilerplate:", err);
+        }
       }
     };
+    
     loadInitial();
+    
+    return () => {
+      mounted = false;
+      clearTimeout(timeoutId);
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [savedPresetId]);
 
@@ -116,17 +178,31 @@ export default function HomePage() {
     URL.revokeObjectURL(url);
   }, [files]);
 
+  // SSE connection for runtime bundle updates (development only)
+  // Use ref to prevent double initialization in React Strict Mode
+  const sseInitializedRef = useRef(false);
+  
   useEffect(() => {
+    // Prevent double initialization even in React Strict Mode
+    if (sseInitializedRef.current) {
+      console.log("[runtime-watch] SSE already initialized, skipping duplicate");
+      return;
+    }
+    
     console.log("[runtime-watch] useEffect running, setting up SSE connection");
+    sseInitializedRef.current = true;
 
     if (process.env.NODE_ENV !== "development") {
       console.log("[runtime-watch] Not in development mode, skipping");
+      sseInitializedRef.current = false; // Reset so it can run in production if needed
       return;
     }
 
     let active = true;
     let eventSource: EventSource | null = null;
     let reconnectTimer: number | null = null;
+    let reconnectAttempts = 0;
+    const MAX_RECONNECT_ATTEMPTS = 5;
 
     const applyBundles = (runtimeFiles: Record<string, string>) => {
       if (!runtimeFiles || !active) {
@@ -207,17 +283,49 @@ export default function HomePage() {
       });
 
       source.onerror = (error) => {
-        console.error("[runtime-watch] SSE connection error:", error);
-        console.log("[runtime-watch] EventSource readyState:", source.readyState);
-        source.close();
+        // EventSource fires errors for various reasons, not all are fatal
+        // readyState 0 = CONNECTING (can happen during normal operation)
+        // readyState 1 = OPEN (connection is fine)
+        // readyState 2 = CLOSED (connection is dead, need to reconnect)
+        
         if (!active) {
           return;
         }
-        console.log("[runtime-watch] Scheduling reconnect in 2 seconds...");
-        if (reconnectTimer) {
-          clearTimeout(reconnectTimer);
+
+        // Only treat CLOSED state as an error that needs reconnection
+        if (source.readyState === EventSource.CLOSED) {
+          console.error("[runtime-watch] SSE connection closed:", error);
+          
+          // Close the connection reference
+          if (eventSource) {
+            eventSource.close();
+            eventSource = null;
+          }
+
+          reconnectAttempts++;
+          console.log(`[runtime-watch] Connection closed. Scheduling reconnect in 2 seconds... (attempt ${reconnectAttempts}/${MAX_RECONNECT_ATTEMPTS})`);
+          
+          if (reconnectAttempts >= MAX_RECONNECT_ATTEMPTS) {
+            console.error(`[runtime-watch] Max reconnect attempts (${MAX_RECONNECT_ATTEMPTS}) reached. Stopping reconnection.`);
+            return;
+          }
+          
+          if (reconnectTimer) {
+            clearTimeout(reconnectTimer);
+          }
+          reconnectTimer = window.setTimeout(() => {
+            reconnectTimer = null;
+            connect();
+          }, 2000);
+        } else {
+          // Connection is connecting (0) or open (1), just log for debugging
+          console.log(`[runtime-watch] SSE event (readyState: ${source.readyState})`, error.type || 'unknown');
         }
-        reconnectTimer = window.setTimeout(connect, 2000);
+      };
+
+      source.onopen = () => {
+        console.log("[runtime-watch] SSE connection opened");
+        reconnectAttempts = 0; // Reset on open
       };
     };
 
@@ -226,14 +334,20 @@ export default function HomePage() {
     return () => {
       console.log("[runtime-watch] useEffect cleanup, closing connection");
       active = false;
+      sseInitializedRef.current = false; // Reset so it can reinitialize if needed
+      
       if (reconnectTimer) {
         clearTimeout(reconnectTimer);
+        reconnectTimer = null;
       }
+      
       if (eventSource) {
+        console.log("[runtime-watch] Closing EventSource connection");
         eventSource.close();
+        eventSource = null;
       }
     };
-  }, [setFiles]);
+  }, []); // Empty dependency array - only run once on mount
 
   return (
     <div className="grid h-screen grid-cols-studio gap-2 p-2">

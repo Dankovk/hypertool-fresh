@@ -126,7 +126,7 @@ export function useBoilerplate() {
     loadBoilerplate,
     loadBoilerplateAndSave,
     getSavedPresetId,
-    savedPresetId: savedPreset?.selectedPresetId || null,
+    savedPresetId: savedPreset === undefined ? undefined : (savedPreset?.selectedPresetId || null),
     loadPresets,
   };
 }

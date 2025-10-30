@@ -543,12 +543,23 @@ export const PreviewPanel = memo(({ files, onDownload }: PreviewPanelProps)=> {
     // Don't sync if files are empty (waiting for initial load)
     const hasFiles = Object.keys(files).length > 0;
     const hasPackageJson = files["/package.json"] || files["package.json"];
+    
+    console.log("[PreviewPanel] Files check:", {
+      hasFiles,
+      hasPackageJson,
+      fileCount: Object.keys(files).length,
+      fileKeys: Object.keys(files).slice(0, 5),
+      hasContainer: !!containerRef.current
+    });
+    
     if (!hasFiles || !hasPackageJson) {
+      console.log("[PreviewPanel] ⏳ Waiting for project files...");
       setStatus("Waiting for project files...");
       return;
     }
 
-    console.log("[PreviewPanel] Files prop changed, syncing to WebContainer");
+    console.log("[PreviewPanel] ✅ Files ready, syncing to WebContainer");
+    setStatus("Synchronizing project…");
     queueSync(files, { forceInstall: lastPackageJsonRef.current === null });
   }, [containerReady, files, queueSync]);
 

@@ -84,10 +84,22 @@ app.get('/', (c) => {
       }
 
       // Keep connection alive indefinitely
-      // Send keep-alive comments every 15 seconds
-      while (true) {
-        await stream.sleep(15000);
-        await stream.write(encoder.encode(': keep-alive\n\n'));
+      // Send keep-alive comments every 5 seconds to prevent Bun's 10s timeout
+      try {
+        while (true) {
+          await stream.sleep(5000); // Reduced from 15s to 5s to stay under Bun's 10s idleTimeout
+          try {
+            await stream.write(encoder.encode(': keep-alive\n\n'));
+          } catch (writeError) {
+            // Stream might be closed, break the loop
+            console.log('[runtime-watch] Failed to write keep-alive, stream may be closed');
+            break;
+          }
+        }
+      } catch (error) {
+        // Connection closed by client or error occurred
+        console.log('[runtime-watch] Stream ended:', error);
+        throw error; // Re-throw to trigger cleanup
       }
     } finally {
       // Cleanup
