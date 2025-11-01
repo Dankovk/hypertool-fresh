@@ -1,5 +1,10 @@
 import { MODEL_OPTIONS } from "@hypertool/shared-config/models";
-import { DEFAULT_SYSTEM_PROMPT_FULL, DEFAULT_SYSTEM_PROMPT_PATCH } from "../../../../packages/shared-config/prompts";
+import { 
+  DEFAULT_SYSTEM_PROMPT_FULL, 
+  DEFAULT_SYSTEM_PROMPT_PATCH,
+  GEMINI_SYSTEM_PROMPT_FULL,
+  GEMINI_SYSTEM_PROMPT_PATCH,
+} from "../../../../packages/shared-config/prompts";
 
 interface SettingsPanelProps {
   model: string;
@@ -10,6 +15,19 @@ interface SettingsPanelProps {
   onApiKeyChange: (apiKey: string) => void;
   systemPrompt: string;
   onSystemPromptChange: (prompt: string) => void;
+}
+
+/**
+ * Get the appropriate system prompt based on model and edit mode
+ */
+function getPromptForModelAndMode(model: string, editMode: "full" | "patch"): string {
+  const isGemini = model.toLowerCase().includes('gemini');
+  
+  if (isGemini) {
+    return editMode === "patch" ? GEMINI_SYSTEM_PROMPT_PATCH : GEMINI_SYSTEM_PROMPT_FULL;
+  } else {
+    return editMode === "patch" ? DEFAULT_SYSTEM_PROMPT_PATCH : DEFAULT_SYSTEM_PROMPT_FULL;
+  }
 }
 
 export function SettingsPanel({
@@ -30,7 +48,13 @@ export function SettingsPanel({
           <select
             className="rounded-lg bg-dark-accent px-3 py-2 text-sm text-text shadow-sm focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/30"
             value={model}
-            onChange={(e) => onModelChange(e.target.value)}
+            onChange={(e) => {
+              const newModel = e.target.value;
+              onModelChange(newModel);
+              // Update system prompt when model changes
+              const newPrompt = getPromptForModelAndMode(newModel, editMode);
+              onSystemPromptChange(newPrompt);
+            }}
           >
             <optgroup label="OpenAI">
               {MODEL_OPTIONS.filter(m => m.provider === "OpenAI").map((option) => (
@@ -63,10 +87,11 @@ export function SettingsPanel({
             className="rounded-lg bg-dark-accent px-3 py-2 text-sm text-text shadow-sm focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/30"
             value={editMode}
             onChange={(e) => {
-              const mode = e.target.value as "full" | "patch";
-              onEditModeChange(mode);
-              // Update system prompt when mode changes
-              onSystemPromptChange(mode === "patch" ? DEFAULT_SYSTEM_PROMPT_PATCH : DEFAULT_SYSTEM_PROMPT_FULL);
+              const newMode = e.target.value as "full" | "patch";
+              onEditModeChange(newMode);
+              // Update system prompt when mode changes (considering current model)
+              const newPrompt = getPromptForModelAndMode(model, newMode);
+              onSystemPromptChange(newPrompt);
             }}
           >
             <option value="full">Full (Regenerate files)</option>

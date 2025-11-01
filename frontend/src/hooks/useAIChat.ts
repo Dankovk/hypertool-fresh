@@ -1,4 +1,4 @@
-import { useCallback, useState } from "react";
+import React, { useCallback, useState } from "react";
 import { toast } from "sonner";
 import { useChatStore, useFilesStore, useVersionsStore, useSettingsStore } from "@/stores";
 import { FileMapSchema } from "@/types/studio";
@@ -37,6 +37,19 @@ export function useAIChat() {
 
   // Local streaming state
   const [streamingText, setStreamingText] = useState<string>("");
+  
+  // Abort controller for cancelling requests
+  const abortControllerRef = React.useRef<AbortController | null>(null);
+
+  const cancelRequest = useCallback(() => {
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+      abortControllerRef.current = null;
+      setLoading(false);
+      updateLastMessage?.('❌ Cancelled by user');
+      toast.info('Request cancelled');
+    }
+  }, [setLoading, updateLastMessage]);
 
   const sendMessage = useCallback(async () => {
     if (!input.trim() || loading) return;
@@ -64,31 +77,31 @@ export function useAIChat() {
     addMessage(assistantMsg);
 
     try {
+      const abortController = new AbortController();
+      abortControllerRef.current = abortController;
+
       const sandpackFiles = toRuntimeFileMap(files);
       const url = getApiUrl(API_ENDPOINTS.AI_STREAM);
-
-      console.log(`[Streaming] Initiating request to: ${url}`);
-      console.log(`[Streaming] Model: ${model}, Edit mode: ${editMode}`);
+      
+      const requestBody = {
+        messages: [...messages, userMsg].map((m) => ({ role: m.role, content: m.content })),
+        model,
+        apiKey: apiKey.trim() || undefined,
+        systemPrompt: systemPrompt.trim() || undefined,
+        currentFiles: sandpackFiles,
+        editMode,
+      };
 
       const response = await fetch(url, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          messages: [...messages, userMsg].map((m) => ({ role: m.role, content: m.content })),
-          model,
-          apiKey: apiKey.trim() || undefined,
-          systemPrompt: systemPrompt.trim() || undefined,
-          currentFiles: sandpackFiles,
-          editMode,
-        }),
+        body: JSON.stringify(requestBody),
+        signal: abortController.signal,
       });
 
       if (!response.ok) {
-        console.error(`[Streaming] Request failed with status: ${response.status}`);
-        throw new Error("AI streaming failed");
+        throw new Error(`AI streaming failed (${response.status})`);
       }
-
-      console.log("[Streaming] Connected, reading stream...");
 
       const reader = response.body?.getReader();
       const decoder = new TextDecoder();
@@ -109,91 +122,98 @@ export function useAIChat() {
         for (const line of lines) {
           if (line.startsWith("data: ")) {
             const data = line.slice(6);
+              
             try {
               const event = JSON.parse(data);
-
+              
               if (event.type === "start") {
-                console.log("[Streaming] Started");
+                // Stream started
               } else if (event.type === "token") {
                 fullText += event.text;
                 setStreamingText(fullText);
-                // Don't update the actual message, only the dev panel
               } else if (event.type === "progress") {
-                // Progress updates (e.g., "Generating edit 1...")
                 fullText += event.text;
                 setStreamingText(fullText);
-                // Don't update the actual message, only the dev panel
               } else if (event.type === "complete") {
-                console.log(`[Streaming] Complete! Processing files...`);
+                try {
+                  if (event.explanation) {
+                    fullText = event.explanation;
+                    updateLastMessage?.(event.explanation);
+                  } else if (fullText) {
+                    updateLastMessage?.(fullText);
+                  } else {
+                    const fallbackText = "Code updated successfully.";
+                    fullText = fallbackText;
+                    updateLastMessage?.(fallbackText);
+                  }
 
-                // Update the message with explanation/summary text
-                // The backend now includes detailed edit information in the summary
-                if (event.explanation) {
-                  fullText = event.explanation;
-                  updateLastMessage?.(event.explanation);
-                } else if (fullText) {
-                  // Use accumulated streaming text if no explanation
-                  updateLastMessage?.(fullText);
-                } else {
-                  // Fallback
-                  const fallbackText = "Code updated successfully.";
-                  fullText = fallbackText;
-                  updateLastMessage?.(fallbackText);
-                }
-
-                // Parse and apply files
-                if (event.files) {
-                  console.log(`[Streaming] Received ${Object.keys(event.files).length} files`);
-
-                  try {
+                  if (event.files) {
                     const parsed = FileMapSchema.safeParse(event.files);
 
                     if (parsed.success) {
                       const normalized = toClientFiles(parsed.data);
-                      console.log(`[Streaming] Applying ${Object.keys(normalized).length} files to project`);
-
-                      // Add to version history
                       addVersion(normalized, currentInput, model);
-
-                      // Apply files to the project
                       setFiles(normalized);
-
-                      toast.success("Files applied successfully!");
+                      toast.success(`Files applied successfully! (${Object.keys(event.files).length} files)`);
                     } else {
-                      console.error("[Streaming] File validation failed:", parsed.error);
+                      updateLastMessage?.('❌ Failed to validate files.');
                       toast.error("Failed to validate files");
+                      setLoading(false);
                     }
-                  } catch (err) {
-                    console.error("[Streaming] Error parsing files:", err);
-                    toast.error("Failed to parse files");
+                  } else {
+                    updateLastMessage?.('⚠️ No files were generated.');
+                    toast.warning("No files generated");
+                    setLoading(false);
                   }
-                } else {
-                  console.warn("[Streaming] No files in complete event");
+                } catch (completeErr) {
+                  updateLastMessage?.('❌ Error processing response.');
+                  toast.error("Error processing AI response");
+                  setLoading(false);
+                }
+              } else if (event.type === "warning") {
+                if (event.details?.failed > 0) {
+                  toast.warning(event.message, { duration: 8000 });
                 }
               } else if (event.type === "error") {
-                console.error("[Streaming] Error:", event.error);
+                updateLastMessage?.(`❌ Backend Error: ${event.error}\n\nTry simplifying your request or switching to Full File mode.`);
+                toast.error(`AI Error: ${event.error}`, { duration: 10000 });
                 throw new Error(event.error);
               }
             } catch (e) {
-              console.warn("Failed to parse SSE event:", e);
+              // Failed to parse event, skip it
             }
           }
         }
       }
 
-      // After streaming is complete, processing is done in the "complete" event handler above
-      console.log("[Streaming] Stream ended");
-
     } catch (err: any) {
-      toast.error(err?.message || "AI error");
+      if (err?.name === 'AbortError') {
+        return;
+      }
+      
+      const errorMessage = err?.message || "AI error occurred";
+      const isNetworkError = errorMessage.includes('fetch') || errorMessage.includes('network');
+      const isPatchError = errorMessage.includes('patch') || errorMessage.includes('search string');
+      
+      if (isNetworkError) {
+        updateLastMessage?.('❌ Network error. Please check your connection.');
+        toast.error("Network error");
+      } else if (isPatchError) {
+        updateLastMessage?.('❌ Failed to apply changes. Try:\n• Switching to Full File mode\n• Using a different model\n• Simplifying your request');
+        toast.error("Failed to apply changes. Try Full File mode.", { duration: 10000 });
+      } else {
+        updateLastMessage?.(`❌ Error: ${errorMessage}`);
+        toast.error(errorMessage, { duration: 8000 });
+      }
     } finally {
+      abortControllerRef.current = null;
       setLoading(false);
-      // Keep streaming text in development mode for debugging
+      
       if (process.env.NODE_ENV !== "development") {
         setStreamingText("");
       }
     }
-  }, [
+}, [
     input,
     loading,
     messages,
@@ -217,6 +237,8 @@ export function useAIChat() {
     loading,
     streamingText,
     sendMessage,
+    cancelRequest,
     clearMessages,
   };
 }
+

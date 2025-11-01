@@ -12,6 +12,7 @@ interface ChatPanelProps {
   streamingText?: string;
   onInputChange: (value: string) => void;
   onSubmit: () => void;
+  onCancel: () => void;
   onReset: () => void;
   onShowHistory: () => void;
   onShowPresets: () => void;
@@ -25,6 +26,7 @@ export function ChatPanel({
   streamingText,
   onInputChange,
   onSubmit,
+  onCancel,
   onReset,
   onShowHistory,
   onShowPresets,
@@ -74,6 +76,7 @@ export function ChatPanel({
         value={input}
         onChange={onInputChange}
         onSubmit={onSubmit}
+        onCancel={onCancel}
         loading={loading}
       />
     </div>
