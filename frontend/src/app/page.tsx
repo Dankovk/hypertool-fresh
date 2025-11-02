@@ -219,6 +219,7 @@ export default function HomePage() {
         streamingText={chat.streamingText}
         onInputChange={chat.setInput}
         onSubmit={chat.sendMessage}
+        onCancel={chat.cancelRequest}
         onReset={onReset}
         onShowHistory={() => setShowVersionHistory(true)}
         onShowPresets={() => setShowPresets(true)}
