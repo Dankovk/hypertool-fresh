@@ -41,11 +41,13 @@ export default defineSchema({
 
   /**
    * Session preferences (temporary, per browser session)
-   * Stores the selected preset for each session
+   * Stores the selected preset and saved files for each session
    */
   sessions: defineTable({
     sessionId: v.string(), // Browser session ID
-    selectedPresetId: v.string(), // Currently selected preset ID
+    selectedPresetId: v.optional(v.string()), // Currently selected preset ID (optional)
+    files: v.optional(v.any()), // FileMap stored as JSON directly (optional)
+    currentFiles: v.optional(v.any()), // Legacy field - will be migrated to `files` (temporary)
     updatedAt: v.number(),
   })
     .index("by_session_id", ["sessionId"]),

@@ -1,26 +1,52 @@
-import "./globals.css";
-import { Toaster } from "sonner";
-import { ErrorBoundary } from "@/components/ErrorBoundary";
-import { ConvexClientProvider } from "@/lib/convex";
-import type { ReactNode } from "react";
+import type { Metadata } from 'next';
+import { ClerkProvider } from '@clerk/nextjs';
+import { Geist, Geist_Mono } from 'next/font/google';
+import './globals.css';
+import { ConvexClientProviderWrapper } from '@/components/ConvexClientProviderWrapper';
+import { Toaster } from 'sonner';
+import { ErrorBoundary } from '@/components/ErrorBoundary';
+import { AccountPortalLinks } from '@/components/AccountPortalLinks';
 
-export const metadata = {
-  title: "Studio | Fresh Breeze",
-  description: "AI chat + live preview",
+const geistSans = Geist({
+  variable: '--font-geist-sans',
+  subsets: ['latin'],
+});
+
+const geistMono = Geist_Mono({
+  variable: '--font-geist-mono',
+  subsets: ['latin'],
+});
+
+export const metadata: Metadata = {
+  title: 'Fresh Breeze',
+  description: 'AI-powered code editor with live preview',
 };
 
-export default function RootLayout({ children }: { children: ReactNode }) {
+export default function RootLayout({
+  children,
+}: Readonly<{
+  children: React.ReactNode;
+}>) {
   return (
-    <html lang="en">
-      <body className="bg-background text-text">
-        <ConvexClientProvider>
-          <ErrorBoundary>
-            {children}
-          </ErrorBoundary>
-        </ConvexClientProvider>
-        <Toaster richColors position="top-right" />
-      </body>
-    </html>
+    <ClerkProvider>
+      <html lang="en">
+        <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
+          <div className="flex min-h-screen flex-col bg-background text-text">
+            <header className="flex items-center justify-between border-b border-border px-4 py-3">
+              <span className="text-lg font-semibold">Fresh Breeze</span>
+              <AccountPortalLinks />
+            </header>
+            <main className="flex-1">
+              <ConvexClientProviderWrapper>
+                <ErrorBoundary>
+                  {children}
+                </ErrorBoundary>
+              </ConvexClientProviderWrapper>
+            </main>
+          </div>
+          <Toaster richColors position="top-right" />
+        </body>
+      </html>
+    </ClerkProvider>
   );
 }
-

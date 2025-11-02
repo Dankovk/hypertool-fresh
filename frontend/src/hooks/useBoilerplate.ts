@@ -27,8 +27,16 @@ export function useBoilerplate() {
   // Load saved preset for this session
   const savedPreset = useQuery("sessions:getSelectedPreset", { sessionId });
 
+  // Load saved files for this session
+  // @ts-expect-error - Convex type generation may be temporarily out of sync
+  // Note: This will return undefined if Convex hasn't synced the new function yet
+  // Make sure to run `npx convex dev` to sync the new functions
+  const savedFilesData = useQuery("sessions:getCurrentFiles", { sessionId });
+
   // Mutations
   const setPresetMutation = useMutation("sessions:setSelectedPreset");
+  // @ts-expect-error - Convex type generation may be temporarily out of sync
+  const clearFilesMutation = useMutation("sessions:clearCurrentFiles");
 
   // Update Zustand store when Convex data changes
   useEffect(() => {
@@ -121,12 +129,25 @@ export function useBoilerplate() {
     loadPresets();
   }, [loadPresets]);
 
+  /**
+   * Clear saved files for this session
+   */
+  const clearSavedFiles = useCallback(async () => {
+    try {
+      await clearFilesMutation({ sessionId });
+    } catch (error) {
+      console.error("Failed to clear saved files:", error);
+    }
+  }, [clearFilesMutation, sessionId]);
+
   return {
     presets,
     loadBoilerplate,
     loadBoilerplateAndSave,
     getSavedPresetId,
     savedPresetId: savedPreset === undefined ? undefined : (savedPreset?.selectedPresetId || null),
+    savedFiles: savedFilesData === undefined ? undefined : (savedFilesData?.files || null),
+    clearSavedFiles,
     loadPresets,
   };
 }
