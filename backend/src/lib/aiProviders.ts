@@ -22,7 +22,7 @@ const PROVIDER_CONFIGS: ProviderConfig[] = [
     name: "google",
     envKeys: ["GOOGLE_GENERATIVE_AI_API_KEY"],
     modelPrefixes: ["gemini-", "models/gemini"],
-    create: (apiKey) => createGoogleGenerativeAI({ apiKey: apiKey }),
+    create: (apiKey) => createGoogleGenerativeAI({ apiKey }),
   },
   {
     name: "openai",

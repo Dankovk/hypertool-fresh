@@ -150,18 +150,17 @@ app.post('/', async (c) => {
 
           await stream.write(`data: ${JSON.stringify({ type: 'start', provider: 'gemini' })}\n\n`);
 
-          try {
-            const result = await streamObject({
-              model: aiModel,
-              schema,
-              schemaName,
-              schemaDescription: usePatchMode 
-                ? 'Search-replace edits to apply to existing files'
-                : 'Complete file map with all project files',
-              prompt: conversation,
-              mode: 'json',
-              temperature: 0.7,
-            });
+          const result = await streamObject({
+            model: aiModel,
+            schema,
+            schemaName,
+            schemaDescription: usePatchMode 
+              ? 'Search-replace edits to apply to existing files'
+              : 'Complete file map with all project files',
+            prompt: conversation,
+            mode: 'json',
+            temperature: 0.7,
+          });
 
           // Stream progress updates to frontend
           let updateCount = 0;
@@ -176,24 +175,6 @@ app.post('/', async (c) => {
 
           // Get final validated object
           finalObject = await result.object;
-
-          } catch (geminiError: any) {
-            logger.error('Gemini API call failed', { 
-              error: geminiError.message, 
-              stack: geminiError.stack,
-              model,
-              hasApiKey: !!apiKey,
-              errorType: geminiError.constructor.name
-            });
-            
-            const errorDetails = geminiError.message || 'Unknown Gemini API error';
-            await stream.write(`data: ${JSON.stringify({ 
-              type: 'error', 
-              error: `Gemini API Error: ${errorDetails}. Please verify your API key in Settings.`,
-              details: geminiError.stack
-            })}\n\n`);
-            return;
-          }
 
         } 
         // ===== CLAUDE/OTHER: Use streamText and parse JSON from response =====
