@@ -9,17 +9,11 @@ export default function SignInRedirectPage() {
     // Uses CLERK_FRONTEND_API_URL from environment variables
     const editorRedirect = typeof window !== 'undefined'
       ? `${window.location.origin}/editor`
-      : 'http://localhost:3030/editor';
+      : `${process.env.NEXT_PUBLIC_SITE_URL}/editor`;
     
     const accountPortalUrl = getClerkSignInUrl(editorRedirect);
     window.location.href = accountPortalUrl;
-  }, []);
+  }, [process.env.NEXT_PUBLIC_SITE_URL]);
 
-  return (
-    <div className="flex min-h-screen items-center justify-center bg-background">
-      <div className="text-center text-text">
-        <div>Redirecting to sign in...</div>
-      </div>
-    </div>
-  );
+  return null;
 }
