@@ -510,6 +510,7 @@ export default function EditorClient() {
           input={chat.input}
           loading={chat.loading}
           streamingText={chat.streamingText}
+          onCancel={chat.cancelRequest}
           onInputChange={chat.setInput}
           onSubmit={chat.sendMessage}
           onReset={onReset}

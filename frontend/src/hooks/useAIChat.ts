@@ -82,26 +82,29 @@ export function useAIChat() {
 
       const sandpackFiles = toRuntimeFileMap(files);
       const url = getApiUrl(API_ENDPOINTS.AI_STREAM);
-      
-      const requestBody = {
-        messages: [...messages, userMsg].map((m) => ({ role: m.role, content: m.content })),
-        model,
-        apiKey: apiKey.trim() || undefined,
-        systemPrompt: systemPrompt.trim() || undefined,
-        currentFiles: sandpackFiles,
-        editMode,
-      };
+
+      console.log(`[Streaming] Initiating request to: ${url}`);
+      console.log(`[Streaming] Model: ${model}, Edit mode: ${editMode}`);
 
       const response = await fetch(url, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(requestBody),
-        signal: abortController.signal,
+        body: JSON.stringify({
+          messages: [...messages, userMsg].map((m) => ({ role: m.role, content: m.content })),
+          model,
+          apiKey: apiKey.trim() || undefined,
+          systemPrompt: systemPrompt.trim() || undefined,
+          currentFiles: sandpackFiles,
+          editMode,
+        }),
       });
 
       if (!response.ok) {
-        throw new Error(`AI streaming failed (${response.status})`);
+        console.error(`[Streaming] Request failed with status: ${response.status}`);
+        throw new Error("AI streaming failed");
       }
+
+      console.log("[Streaming] Connected, reading stream...");
 
       const reader = response.body?.getReader();
       const decoder = new TextDecoder();
@@ -125,15 +128,18 @@ export function useAIChat() {
               
             try {
               const event = JSON.parse(data);
-              
+
               if (event.type === "start") {
-                // Stream started
+                console.log("[Streaming] Started");
               } else if (event.type === "token") {
                 fullText += event.text;
                 setStreamingText(fullText);
+                // Don't update the actual message, only the dev panel
               } else if (event.type === "progress") {
+                // Progress updates (e.g., "Generating edit 1...")
                 fullText += event.text;
                 setStreamingText(fullText);
+                // Don't update the actual message, only the dev panel
               } else if (event.type === "complete") {
                 try {
                   if (event.explanation) {
@@ -185,6 +191,9 @@ export function useAIChat() {
           }
         }
       }
+
+      // After streaming is complete, processing is done in the "complete" event handler above
+      console.log("[Streaming] Stream ended");
 
     } catch (err: any) {
       if (err?.name === 'AbortError') {
