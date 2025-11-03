@@ -19,7 +19,18 @@
         "GOOGLE_API_KEY",
         "GOOGLE_GENERATIVE_AI_API_KEY",
         "CONVEX_URL",
-        "NEXT_PUBLIC_CONVEX_URL"
+        "NEXT_PUBLIC_CONVEX_URL",
+        "NEXT_PUBLIC_SITE_URL",
+          "EDGE_CONFIG",
+          "BLOB_READ_WRITE_TOKEN",
+        "MONGODB_URI",
+        "WORKOS_CLIENT_ID",
+        "WORKOS_API_KEY",
+        "WORKOS_COOKIE_PASSWORD",
+        "CLERK_SECRET_KEY",
+        "CLERK_FRONTEND_API_URL",
+        "CLERK_BACKEND_API_URL",
+        "CLERK_JWKS_URL"
       ]
     },
     "start": {
