@@ -17,6 +17,14 @@ const nextConfig = {
       allowedOrigins: ["localhost:3030", "127.0.0.1:3030"],
     },
   },
+  async rewrites() {
+    return [
+      {
+        source: "/api/:path*",
+        destination: "http://localhost:3001/api/:path*",
+      },
+    ];
+  },
   async headers() {
     return [
       {

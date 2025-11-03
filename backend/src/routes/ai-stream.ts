@@ -4,7 +4,12 @@ import { stream } from 'hono/streaming';
 import { loadBoilerplateFromConvex, ensureSystemFiles } from '../lib/boilerplate.js';
 import { AiRequestSchema, CodeEditSchema } from '../types/ai.js';
 import { getProviderForModel } from '../lib/aiProviders.js';
-import { DEFAULT_SYSTEM_PROMPT_FULL, DEFAULT_SYSTEM_PROMPT_PATCH } from '@hypertool/shared-config/prompts.js';
+import {
+  DEFAULT_SYSTEM_PROMPT_FULL,
+  DEFAULT_SYSTEM_PROMPT_PATCH,
+  GEMINI_SYSTEM_PROMPT_FULL,
+  GEMINI_SYSTEM_PROMPT_PATCH,
+} from '@hypertool/shared-config/prompts.js';
 import { buildConversationPrompt } from '../lib/aiService.js';
 import { normalizeFileMap } from '../lib/fileUtils.js';
 import { createLogger } from '../lib/logger.js';
@@ -14,6 +19,39 @@ import { applyEditsToFiles, createHistoryEntry } from '../lib/patches.js';
 import { getHistoryManager } from '../lib/history.js';
 
 const app = new Hono();
+
+// ===== GEMINI DETECTION & SCHEMAS =====
+
+/**
+ * Check if the model is a Gemini model
+ */
+function isGeminiModel(model: string): boolean {
+  const isGemini = model.toLowerCase().includes('gemini');
+  return isGemini;
+}
+
+/**
+ * Zod schema for patch mode edits
+ */
+const PatchModeSchema = z.object({
+  edits: z.array(
+    z.object({
+      type: z.literal('search-replace').describe('The type of edit operation - must be "search-replace"'),
+      filePath: z.string().min(1).describe('The file path to edit, starting with / (e.g., "/main.ts", "/index.html"). REQUIRED.'),
+      search: z.string().min(10).describe('EXACT code to find - ABSOLUTELY REQUIRED, MUST NOT BE EMPTY. Must be at least 10 characters. Must match character-for-character including ALL whitespace, tabs, spaces, and newlines. Copy the exact text from the file without any modifications. Include 2-3 lines of context to make the match unique.'),
+      replace: z.string().describe('The new code to replace the search string with. REQUIRED but can be empty string for deletions. Can have different whitespace than search.'),
+    })
+  ).min(1).describe('Array of search-replace edits to apply to files. Must have at least one edit. Each edit MUST have a non-empty search string of at least 10 characters.'),
+  explanation: z.string().optional().describe('Optional human-readable explanation of what changes were made and why'),
+});
+
+/**
+ * Zod schema for full file mode
+ */
+const FullFileModeSchema = z.object({
+  files: z.record(z.string(), z.string()).describe('Complete file map with file paths as keys and content as values'),
+  explanation: z.string().optional().describe('Optional explanation of the changes made'),
+});
 
 function filterUserFacingFiles(files: Record<string, string>): Record<string, string> {
   const result: Record<string, string> = {};
@@ -29,7 +67,7 @@ function filterUserFacingFiles(files: Record<string, string>): Record<string, st
   return result;
 }
 
-function splitSystemAndUserFiles(files: Record<string, string>, logger?: ReturnType<typeof createLogger>) {
+function splitSystemAndUserFiles(files: Record<string, string>) {
   const user: Record<string, string> = {};
   const system: Record<string, string> = {};
 
@@ -40,11 +78,6 @@ function splitSystemAndUserFiles(files: Record<string, string>, logger?: ReturnT
     } else {
       user[normalized] = contents;
     }
-  });
-
-  logger?.debug('Split files into user and system categories', {
-    userFileCount: Object.keys(user).length,
-    systemFileCount: Object.keys(system).length,
   });
 
   return { user, system };
@@ -64,53 +97,44 @@ app.post('/', async (c) => {
   const requestId = `ai-stream-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
   const logger = createLogger('api/ai-stream', requestId);
 
-  logger.info('AI streaming request received');
-
   try {
+    // Parse and validate request
     const json = await c.req.json();
     const parsed = AiRequestSchema.safeParse(json);
 
     if (!parsed.success) {
-      logger.warn('Invalid request body', {
-        validationErrors: parsed.error.errors,
-      });
+      logger.warn('Invalid request body', { validationErrors: parsed.error.errors });
       return c.json({ error: 'Invalid body' }, 400);
     }
 
     const { messages, model, systemPrompt, apiKey, currentFiles, editMode } = parsed.data;
 
-    logger.info('Request validated', {
-      model,
-      editMode,
-      messageCount: messages.length,
-    });
-
+    // Load files and split into user-visible and system files
     // Load boilerplate from Convex DB (defaults to 'universal')
     const boilerplate = await loadBoilerplateFromConvex();
-    const workingFiles =
-      currentFiles && Object.keys(currentFiles).length > 0
-        ? currentFiles
-        : boilerplate;
+    const workingFiles = currentFiles && Object.keys(currentFiles).length > 0
+      ? currentFiles
+      : boilerplate;
 
-    const { user: userFiles, system: systemFiles } = splitSystemAndUserFiles(workingFiles, logger);
+    const { user: userFiles, system: systemFiles } = splitSystemAndUserFiles(workingFiles);
     const aiVisibleFiles = filterUserFacingFiles(userFiles);
 
+    // Determine mode and model configuration
     const usePatchMode = editMode === 'patch';
+    const useGemini = isGeminiModel(model);
     const provider = getProviderForModel(model, apiKey);
     const aiModel = provider.chat(model);
 
-    const defaultPrompt = usePatchMode
-      ? DEFAULT_SYSTEM_PROMPT_PATCH
-      : DEFAULT_SYSTEM_PROMPT_FULL;
+    // Select appropriate system prompt based on model and edit mode
+    const defaultPrompt = useGemini
+      ? (usePatchMode ? GEMINI_SYSTEM_PROMPT_PATCH : GEMINI_SYSTEM_PROMPT_FULL)
+      : (usePatchMode ? DEFAULT_SYSTEM_PROMPT_PATCH : DEFAULT_SYSTEM_PROMPT_FULL);
 
-    // Build conversation prompt
     const conversation = buildConversationPrompt({
       systemPrompt: systemPrompt?.trim() || defaultPrompt,
       files: aiVisibleFiles,
       messages,
     });
-
-    logger.info(`Starting ${usePatchMode ? 'patch' : 'full'} generation with streaming`);
 
     return stream(c, async (stream) => {
       try {
@@ -118,99 +142,164 @@ app.post('/', async (c) => {
         c.header('Cache-Control', 'no-cache');
         c.header('Connection', 'keep-alive');
 
-        // Add instruction to output explanation first, then JSON
-        const streamingPrompt = usePatchMode
-          ? `${conversation}\n\nIMPORTANT: First explain your changes in plain text, then output a JSON object with this exact structure:\n{"edits": [{"type": "search-replace", "filePath": "/path", "search": "old code", "replace": "new code"}], "explanation": "optional"}`
-          : `${conversation}\n\nIMPORTANT: First explain your changes in plain text, then output a JSON object with this exact structure:\n{"files": {"/path": "content"}, "explanation": "optional"}`;
-
-        const result = await streamText({
-          model: aiModel,
-          prompt: streamingPrompt,
-          temperature: 0.7,
-        });
-
-        let tokenCount = 0;
-        let fullText = '';
-
-        // Send start event
-        logger.debug('Sending start event');
-        await stream.write(`data: ${JSON.stringify({ type: 'start' })}\n\n`);
-
-        // Stream text token by token
-        logger.debug('Starting text stream');
-        for await (const chunk of result.textStream) {
-          tokenCount++;
-          fullText += chunk;
-
-          // Stream every token to frontend
-          await stream.write(`data: ${JSON.stringify({ type: 'token', text: chunk })}\n\n`);
-
-          // Log every 50th token
-          if (tokenCount % 50 === 0) {
-            logger.debug(`Streamed ${tokenCount} tokens, ${fullText.length} chars`);
-          }
-        }
-
-        logger.info('Streaming completed', {
-          totalTokens: tokenCount,
-          totalChars: fullText.length,
-        });
-
-        // Parse JSON from the response
         let finalObject: any = {};
-        const jsonMatch = fullText.match(/\{[\s\S]*\}/);
 
-        if (jsonMatch) {
+        // ===== GEMINI: Use streamObject for structured output with Zod validation =====
+        if (useGemini) {
+          const schema = usePatchMode ? PatchModeSchema : FullFileModeSchema;
+          const schemaName = usePatchMode ? 'CodeEdits' : 'FileMap';
+
+          await stream.write(`data: ${JSON.stringify({ type: 'start', provider: 'gemini' })}\n\n`);
+
+          const result = await streamObject({
+            model: aiModel,
+            schema,
+            schemaName,
+            schemaDescription: usePatchMode
+              ? 'Search-replace edits to apply to existing files'
+              : 'Complete file map with all project files',
+            prompt: conversation,
+            mode: 'json',
+            temperature: 0.7,
+          });
+
+          // Stream progress updates to frontend
+          let updateCount = 0;
+          for await (const partialObject of result.partialObjectStream) {
+            updateCount++;
+            await stream.write(`data: ${JSON.stringify({ 
+              type: 'progress', 
+              text: `Generating structured output... (update ${updateCount})`,
+              provider: 'gemini',
+            })}\n\n`);
+          }
+
+          // Get final validated object
+          finalObject = await result.object;
+
+        }
+        // ===== CLAUDE/OTHER: Use streamText and parse JSON from response =====
+        else {
+          // Add JSON structure instruction to prompt
+          const streamingPrompt = usePatchMode
+            ? `${conversation}\n\nIMPORTANT: First explain your changes in plain text, then output a JSON object with this exact structure:\n{"edits": [{"type": "search-replace", "filePath": "/path", "search": "old code", "replace": "new code"}], "explanation": "optional"}`
+            : `${conversation}\n\nIMPORTANT: First explain your changes in plain text, then output a JSON object with this exact structure:\n{"files": {"/path": "content"}, "explanation": "optional"}`;
+
+          const result = await streamText({
+            model: aiModel,
+            prompt: streamingPrompt,
+            temperature: 0.7,
+          });
+
+          await stream.write(`data: ${JSON.stringify({ type: 'start', provider: 'claude' })}\n\n`);
+
+          // Stream tokens to frontend
+          let fullText = '';
+          for await (const chunk of result.textStream) {
+            fullText += chunk;
+            await stream.write(`data: ${JSON.stringify({ type: 'token', text: chunk, provider: 'claude' })}\n\n`);
+          }
+
+          // Extract and parse JSON from response
+          const jsonMatch = fullText.match(/\{[\s\S]*\}/);
+          if (!jsonMatch) {
+            throw new Error('No structured data in AI response');
+          }
+
           try {
             finalObject = JSON.parse(jsonMatch[0]);
-            logger.debug('Parsed JSON from response', {
-              hasEdits: !!finalObject.edits,
-              hasFiles: !!finalObject.files,
-              editCount: finalObject.edits?.length,
-              fileCount: finalObject.files ? Object.keys(finalObject.files).length : 0,
-            });
           } catch (err) {
-            logger.error('Failed to parse JSON from response', err);
+            logger.error('Failed to parse JSON from AI response', err);
             throw new Error('Failed to parse AI response');
           }
-        } else {
-          logger.error('No JSON found in response');
-          throw new Error('No structured data in AI response');
         }
 
+        // ===== PROCESS RESULTS =====
         let mergedFiles: Record<string, string>;
-        let summary = finalObject.explanation || fullText;
+        let summary = finalObject.explanation || '';
 
         if (usePatchMode) {
-          // Apply patches to working files
+          // ===== PATCH MODE: Apply search-replace edits =====
           const edits = (finalObject as any).edits;
 
           if (!edits || edits.length === 0) {
             throw new Error("No valid edits generated");
           }
 
-          // Normalize file paths in edits
-          const normalizedEdits = edits.map((edit: any) => {
-            const normalizedPath = edit.filePath.startsWith('/')
-              ? edit.filePath
-              : `/${edit.filePath}`;
-            return { ...edit, filePath: normalizedPath };
-          }).filter((edit: any) => !edit.filePath.startsWith('/__hypertool__/'));
+          // Normalize file paths (add leading slash) and filter system files
+          const normalizedEdits = edits
+            .map((edit: any) => ({
+              ...edit,
+              filePath: edit.filePath.startsWith('/') ? edit.filePath : `/${edit.filePath}`
+            }))
+            .filter((edit: any) => !edit.filePath.startsWith('/__hypertool__/'));
 
-          logger.info('Applying patches', {
-            editCount: normalizedEdits.length,
+          // Validate edits: filter out those with empty search strings or undefined replace
+          const invalidEdits: any[] = [];
+          const validEdits = normalizedEdits.filter((edit: any, index: number) => {
+            // Search string must be non-empty
+            if (!edit.search || typeof edit.search !== 'string' || edit.search.trim() === '') {
+              invalidEdits.push({
+                index: index + 1,
+                reason: 'Empty or missing search string',
+                filePath: edit.filePath
+              });
+              return false;
+            }
+
+            // Replace must be defined (can be empty string for deletions)
+            if (edit.replace === undefined || edit.replace === null) {
+              invalidEdits.push({
+                index: index + 1,
+                reason: 'Undefined replace string',
+                filePath: edit.filePath
+              });
+              return false;
+            }
+
+            return true;
           });
 
-          const patchResult = applyEditsToFiles(workingFiles, normalizedEdits);
-
-          if (!patchResult.success) {
-            throw new Error(`Failed to apply patches: ${patchResult.errors?.join(", ")}`);
+          // Log validation results if there were invalid edits
+          if (invalidEdits.length > 0) {
+            logger.warn('Filtered invalid edits', {
+              valid: validEdits.length,
+              invalid: invalidEdits.length,
+              invalidEdits
+            });
           }
 
-          // Store in history
+          // Fail if all edits are invalid
+          if (validEdits.length === 0) {
+            throw new Error(`All ${edits.length} edits are invalid (missing search strings). Try simplifying your request or using Full File mode.`);
+          }
+
+          const patchResult = applyEditsToFiles(workingFiles, validEdits);
+
+          const successfulEdits = patchResult.results.filter(r => r.success).length;
+          const failedEdits = patchResult.results.filter(r => !r.success).length;
+
+          if (patchResult.success === false && successfulEdits === 0) {
+            logger.error('All patches failed to apply', { errors: patchResult.errors });
+            throw new Error(`Failed to apply all patches: ${patchResult.errors?.join(", ")}`);
+          }
+
+          if (successfulEdits > 0 && failedEdits > 0) {
+            await stream.write(`data: ${JSON.stringify({
+              type: 'warning',
+              message: `Partial success: ${successfulEdits} of ${validEdits.length} edits applied. ${failedEdits} failed.${invalidEdits.length > 0 ? ` (${invalidEdits.length} invalid filtered)` : ''}`,
+              details: {
+                successful: successfulEdits,
+                failed: failedEdits,
+                invalid: invalidEdits.length,
+                total: validEdits.length,
+              }
+            })}\n\n`);
+          }
+
           const historyManager = getHistoryManager();
           const historyEntry = createHistoryEntry(
-            normalizedEdits,
+            validEdits,
             workingFiles,
             patchResult.files,
             finalObject.explanation
@@ -221,56 +310,54 @@ app.post('/', async (c) => {
             mergeWithSystemFiles(systemFiles, patchResult.files)
           );
 
-          // Generate summary if no explanation provided
-          if (!summary) {
-            const affectedFiles = new Set(normalizedEdits.map((e: any) => e.filePath));
+        // Generate summary if no explanation provided
+        if (!summary) {
+          const affectedFiles = new Set(normalizedEdits.map((e: any) => e.filePath));
 
-            // Create detailed summary with edit information
-            let detailedSummary = `Applied ${normalizedEdits.length} ${normalizedEdits.length === 1 ? 'edit' : 'edits'} to ${affectedFiles.size} ${affectedFiles.size === 1 ? 'file' : 'files'}:\n\n`;
+          // Create detailed summary with edit information
+          let detailedSummary = `Applied ${normalizedEdits.length} ${normalizedEdits.length === 1 ? 'edit' : 'edits'} to ${affectedFiles.size} ${affectedFiles.size === 1 ? 'file' : 'files'}:\n\n`;
 
-            normalizedEdits.forEach((edit: any, index: number) => {
-              detailedSummary += `📝 Edit ${index + 1}: ${edit.filePath}\n`;
-              detailedSummary += `   Type: ${edit.type}\n`;
+          normalizedEdits.forEach((edit: any, index: number) => {
+            detailedSummary += `📝 Edit ${index + 1}: ${edit.filePath}\n`;
+            detailedSummary += `   Type: ${edit.type}\n`;
 
-              if (edit.search) {
-                const searchPreview = edit.search.length > 100
-                  ? edit.search.substring(0, 100) + '...'
-                  : edit.search;
-                detailedSummary += `   Search: "${searchPreview}"\n`;
-              }
+            if (edit.search) {
+              const searchPreview = edit.search.length > 100
+                ? edit.search.substring(0, 100) + '...'
+                : edit.search;
+              detailedSummary += `   Search: "${searchPreview}"\n`;
+            }
 
-              if (edit.replace) {
-                const replacePreview = edit.replace.length > 100
-                  ? edit.replace.substring(0, 100) + '...'
-                  : edit.replace;
-                detailedSummary += `   Replace: "${replacePreview}"\n`;
-              }
+            if (edit.replace) {
+              const replacePreview = edit.replace.length > 100
+                ? edit.replace.substring(0, 100) + '...'
+                : edit.replace;
+              detailedSummary += `   Replace: "${replacePreview}"\n`;
+            }
 
-              detailedSummary += '\n';
-            });
-
-            summary = detailedSummary;
-          }
-
-          logger.info('Patches applied successfully', {
-            historyId: historyEntry.id,
+            detailedSummary += '\n';
           });
+
+          summary = detailedSummary;
+        }
+
+        logger.info('Patches applied successfully', {
+          historyId: historyEntry.id,
+        });
+
         } else {
-          // Full file mode
           const files = (finalObject as any).files;
 
-          logger.info('Full file generation', {
-            fileCount: Object.keys(files || {}).length,
-          });
+          if (!files || Object.keys(files).length === 0) {
+            throw new Error("No files generated");
+          }
 
           mergedFiles = ensureSystemFiles(
             mergeWithSystemFiles(systemFiles, files)
           );
 
-          // Generate summary if no explanation provided
           if (!summary) {
             const fileNames = Object.keys(files);
-
             let detailedSummary = `Generated ${fileNames.length} ${fileNames.length === 1 ? 'file' : 'files'}:\n\n`;
 
             fileNames.forEach((fileName, index) => {
@@ -290,16 +377,13 @@ app.post('/', async (c) => {
           }
         }
 
-        // Send complete event with files
-        logger.debug('Sending complete event with files');
         await stream.write(`data: ${JSON.stringify({
           type: 'complete',
           files: normalizeFileMap(mergedFiles, { ensureLeadingSlash: true }),
           explanation: summary,
-          mode: usePatchMode ? 'patch' : 'full'
+          mode: usePatchMode ? 'patch' : 'full',
+          provider: useGemini ? 'gemini' : 'claude',
         })}\n\n`);
-
-        logger.info('Stream successfully closed');
 
       } catch (error) {
         logger.error('Streaming error', error, {
@@ -316,7 +400,12 @@ app.post('/', async (c) => {
 
   } catch (error) {
     logger.error('AI streaming request failed', error);
-    return c.json({ error: 'AI streaming request failed' }, 500);
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    return c.json({
+      error: 'AI streaming request failed',
+      details: errorMessage,
+      timestamp: new Date().toISOString()
+    }, 500);
   }
 });
 

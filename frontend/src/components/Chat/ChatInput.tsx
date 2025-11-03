@@ -1,13 +1,14 @@
-import { IconRocket } from "@tabler/icons-react";
+import { IconRocket, IconX } from "@tabler/icons-react";
 
 interface ChatInputProps {
   value: string;
   onChange: (value: string) => void;
   onSubmit: () => void;
+  onCancel?: () => void;
   loading: boolean;
 }
 
-export function ChatInput({ value, onChange, onSubmit, loading }: ChatInputProps) {
+export function ChatInput({ value, onChange, onSubmit, onCancel, loading }: ChatInputProps) {
   return (
     <div className="flex items-center gap-3 border-t border-border px-5 py-4">
       <input
@@ -20,16 +21,27 @@ export function ChatInput({ value, onChange, onSubmit, loading }: ChatInputProps
         value={value}
         onChange={(e) => onChange(e.target.value)}
         onKeyDown={(e) => {
-          if (e.key === "Enter" && !e.shiftKey) onSubmit();
+          if (e.key === "Enter" && !e.shiftKey && !loading) onSubmit();
         }}
-      />
-      <button
-        className="inline-flex h-10 w-10 items-center btn-bg-accent justify-center rounded-lg from-accent to-accent-2 text-background shadow-lg transition hover:shadow-xl disabled:opacity-50"
-        onClick={onSubmit}
         disabled={loading}
-      >
-        <IconRocket size={18} />
-      </button>
+      />
+      {loading ? (
+        <button
+          className="inline-flex h-10 w-10 items-center justify-center rounded-lg bg-red-500 text-white shadow-lg transition hover:bg-red-600 hover:shadow-xl"
+          onClick={onCancel}
+          title="Cancel generation"
+        >
+          <IconX size={18} />
+        </button>
+      ) : (
+        <button
+          className="inline-flex h-10 w-10 items-center btn-bg-accent justify-center rounded-lg from-accent to-accent-2 text-background shadow-lg transition hover:shadow-xl disabled:opacity-50"
+          onClick={onSubmit}
+          disabled={loading}
+        >
+          <IconRocket size={18} />
+        </button>
+      )}
     </div>
   );
 }

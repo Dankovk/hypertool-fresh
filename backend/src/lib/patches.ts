@@ -110,20 +110,24 @@ export function applyEdit(
 ): PatchResult {
   try {
     if (edit.type === "search-replace") {
-      if (!edit.search || !edit.replace) {
+      // Note: replace can be empty string (for deletions), but search cannot
+      if (!edit.search || edit.search.trim() === "") {
         return {
           success: false,
           filePath,
-          error: "Search or replace string missing",
+          error: "Search string is empty or missing",
         };
       }
+      
+      // Replace can be undefined or empty - set to empty string if undefined
+      const replaceString = edit.replace ?? "";
 
       // Try exact match first
       const searchIndex = content.indexOf(edit.search);
       if (searchIndex !== -1) {
         const newContent =
           content.substring(0, searchIndex) +
-          edit.replace +
+          replaceString +
           content.substring(searchIndex + edit.search.length);
 
         return {
@@ -146,7 +150,7 @@ export function applyEdit(
           filePath,
           content,
           edit.search,
-          edit.replace
+          replaceString
         );
 
         const patches = parsePatch(diff);

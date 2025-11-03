@@ -14,6 +14,7 @@ export const BottomBar = ({ onDownload }: BottomBarProps) => {
         onClick={onDownload}
       >
         <IconDownload size={18} />
+        
         <span>Code</span>
       </button>
     </div>
