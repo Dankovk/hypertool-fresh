@@ -5,6 +5,10 @@
  * Uses NEXT_PUBLIC_CLERK_FRONTEND_API_URL or CLERK_FRONTEND_API_URL
  * Note: For client-side access, use NEXT_PUBLIC_ prefix in your .env.local
  */
+
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL;
+console.log('siteUrl', siteUrl);
+
 function getAccountPortalBaseUrl(): string {
   // Use explicit Account Portal URL if provided
   if (process.env.NEXT_PUBLIC_CLERK_ACCOUNT_PORTAL_URL) {
@@ -36,7 +40,7 @@ export function getClerkSignInUrl(redirectUrl?: string): string {
                   `${getAccountPortalBaseUrl()}/sign-in`;
   
   if (redirectUrl) {
-    return `${baseUrl}?redirect_url=http://localhost:3030/billing`;
+    return `${baseUrl}?redirect_url=${siteUrl}/billing`;
   }
   
   return baseUrl;
@@ -51,7 +55,7 @@ export function getClerkSignUpUrl(redirectUrl?: string): string {
                   `${getAccountPortalBaseUrl()}/sign-up`;
   
   if (redirectUrl) {
-    return `${baseUrl}?redirect_url=http://localhost:3030/billing`;
+    return `${baseUrl}?redirect_url=${siteUrl}/billing`;
   }
   
   return baseUrl;
