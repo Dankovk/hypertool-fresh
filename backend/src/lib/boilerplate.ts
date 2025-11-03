@@ -1,6 +1,6 @@
 import { VIRTUAL_PATH } from "@hypertool/shared-config/paths";
 import { getRuntimeFileMap } from "./fileUtils.js";
-import { convexClient } from "./convex.js";
+import { convexClient, api } from "./convex.js";
 
 type FileMap = Record<string, string>;
 
@@ -34,7 +34,7 @@ export async function loadBoilerplateFromConvex(presetId: string = 'universal'):
   }
 
   try {
-    const boilerplate = await convexClient.query('boilerplates:getBoilerplate', {
+    const boilerplate = await convexClient.query(api.boilerplates.getBoilerplate, {
       presetId,
     });
 
@@ -62,7 +62,7 @@ export async function listAvailablePresetsFromConvex(): Promise<PresetInfo[]> {
   }
 
   try {
-    const presets = await convexClient.query('boilerplates:listPresets', {});
+    const presets = await convexClient.query(api.boilerplates.listPresets, {});
     
     if (!presets || presets.length === 0) {
       throw new Error("No presets found in Convex DB");
