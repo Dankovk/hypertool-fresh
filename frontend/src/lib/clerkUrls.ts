@@ -40,7 +40,7 @@ export function getClerkSignInUrl(redirectUrl?: string): string {
                   `${getAccountPortalBaseUrl()}/sign-in`;
   
   if (redirectUrl) {
-    return `${baseUrl}?redirect_url=${siteUrl}/billing`;
+    return `${baseUrl}?redirect_url=${siteUrl}/editor`;
   }
   
   return baseUrl;
@@ -55,7 +55,7 @@ export function getClerkSignUpUrl(redirectUrl?: string): string {
                   `${getAccountPortalBaseUrl()}/sign-up`;
   
   if (redirectUrl) {
-    return `${baseUrl}?redirect_url=${siteUrl}/billing`;
+    return `${baseUrl}?redirect_url=${siteUrl}/editor`;
   }
   
   return baseUrl;

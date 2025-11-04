@@ -13,7 +13,7 @@ export default async function EditorPage() {
 
   const plansConfigured = getRequiredPlanSlugs();
   if (plansConfigured.length > 0 && !hasRequiredPlan(has)) {
-    redirect('/billing');
+    redirect('/editor');
   }
 
   return <EditorClient />;

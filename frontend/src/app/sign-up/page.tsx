@@ -9,7 +9,7 @@ export default function SignUpRedirectPage() {
     // Uses CLERK_FRONTEND_API_URL from environment variables
     
     
-    const accountPortalUrl = getClerkSignUpUrl('/billing');
+    const accountPortalUrl = getClerkSignUpUrl('/editor');
     window.location.href = accountPortalUrl;
   }, []);
 
