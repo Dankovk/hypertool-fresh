@@ -149,7 +149,9 @@ app.post('/', async (c) => {
           const schema = usePatchMode ? PatchModeSchema : FullFileModeSchema;
           const schemaName = usePatchMode ? 'CodeEdits' : 'FileMap';
 
-          await stream.write(`data: ${JSON.stringify({ type: 'start', provider: 'gemini' })}\n\n`);
+          const startEvent = { type: 'start', provider: 'gemini' };
+          await stream.write(`data: ${JSON.stringify(startEvent)}\n\n`);
+          console.log('[Stream] →', startEvent);
 
           const result = await streamObject({
             model: aiModel,
@@ -167,15 +169,23 @@ app.post('/', async (c) => {
           let updateCount = 0;
           for await (const partialObject of result.partialObjectStream) {
             updateCount++;
-            await stream.write(`data: ${JSON.stringify({ 
+            const progressEvent = { 
               type: 'progress', 
               text: `Generating structured output... (update ${updateCount})`,
               provider: 'gemini',
-            })}\n\n`);
+            };
+            await stream.write(`data: ${JSON.stringify(progressEvent)}\n\n`);
+            console.log('[Stream] →', progressEvent);
           }
 
+          console.log('[Stream] Gemini streaming completed, updates:', updateCount);
+          
           // Get final validated object
           finalObject = await result.object;
+          console.log('[Stream] Gemini object received:', {
+            hasEdits: !!(finalObject as any).edits,
+            hasFiles: !!(finalObject as any).files,
+          });
 
         }
         // ===== CLAUDE/OTHER: Use streamText and parse JSON from response =====
@@ -191,13 +201,17 @@ app.post('/', async (c) => {
             temperature: 0.7,
           });
 
-          await stream.write(`data: ${JSON.stringify({ type: 'start', provider: 'claude' })}\n\n`);
+          const claudeStartEvent = { type: 'start', provider: 'claude' };
+          await stream.write(`data: ${JSON.stringify(claudeStartEvent)}\n\n`);
+          console.log('[Stream] →', claudeStartEvent);
 
           // Stream tokens to frontend
           let fullText = '';
           for await (const chunk of result.textStream) {
             fullText += chunk;
-            await stream.write(`data: ${JSON.stringify({ type: 'token', text: chunk, provider: 'claude' })}\n\n`);
+            const tokenEvent = { type: 'token', text: chunk, provider: 'claude' };
+            await stream.write(`data: ${JSON.stringify(tokenEvent)}\n\n`);
+            process.stdout.write(chunk); // Output tokens as they arrive
           }
 
           // Extract and parse JSON from response
@@ -285,7 +299,7 @@ app.post('/', async (c) => {
           }
 
           if (successfulEdits > 0 && failedEdits > 0) {
-            await stream.write(`data: ${JSON.stringify({
+            const warningEvent = {
               type: 'warning',
               message: `Partial success: ${successfulEdits} of ${validEdits.length} edits applied. ${failedEdits} failed.${invalidEdits.length > 0 ? ` (${invalidEdits.length} invalid filtered)` : ''}`,
               details: {
@@ -294,7 +308,9 @@ app.post('/', async (c) => {
                 invalid: invalidEdits.length,
                 total: validEdits.length,
               }
-            })}\n\n`);
+            };
+            await stream.write(`data: ${JSON.stringify(warningEvent)}\n\n`);
+            console.log('[Stream] →', warningEvent);
           }
 
           const historyManager = getHistoryManager();
@@ -377,13 +393,15 @@ app.post('/', async (c) => {
           }
         }
 
-        await stream.write(`data: ${JSON.stringify({
+        const completeEvent = {
           type: 'complete',
           files: normalizeFileMap(mergedFiles, { ensureLeadingSlash: true }),
           explanation: summary,
           mode: usePatchMode ? 'patch' : 'full',
           provider: useGemini ? 'gemini' : 'claude',
-        })}\n\n`);
+        };
+        await stream.write(`data: ${JSON.stringify(completeEvent)}\n\n`);
+        console.log('[Stream] → complete event with', Object.keys(completeEvent.files).length, 'files');
 
       } catch (error) {
         logger.error('Streaming error', error, {
@@ -391,10 +409,12 @@ app.post('/', async (c) => {
           errorMessage: error instanceof Error ? error.message : String(error),
           stack: error instanceof Error ? error.stack : undefined,
         });
-        await stream.write(`data: ${JSON.stringify({
+        const errorEvent = {
           type: 'error',
           error: error instanceof Error ? error.message : 'Streaming failed'
-        })}\n\n`);
+        };
+        await stream.write(`data: ${JSON.stringify(errorEvent)}\n\n`);
+        console.log('[Stream] → ERROR:', errorEvent);
       }
     });
 

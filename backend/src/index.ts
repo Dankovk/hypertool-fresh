@@ -40,12 +40,11 @@ app.onError((err, c) => {
   return c.json({ error: 'Internal server error' }, 500);
 });
 
-// Export the Hono app
-export default app;
 
-// Start server when run directly
 const port = parseInt(process.env.PORT || '3001', 10);
 
-if (import.meta.main) {
-  console.log(`🚀 Server running at http://localhost:${port}`);
-}
+export default {
+  fetch: app.fetch,
+  port,
+  idleTimeout: 120, // 2 minutes for streaming requests (in seconds)
+};
