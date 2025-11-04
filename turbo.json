@@ -33,7 +33,10 @@
         "CLERK_JWKS_URL",
         "PORT",
         "CONVEX_DEPLOYMENT",
-        "CONVEX_DEPLOY_KEY"
+        "CONVEX_DEPLOY_KEY",
+        "NEXT_PUBLIC_CLERK_ACCOUNT_PORTAL_URL",
+        "CLERK_SECRET_KEY",
+        
       ]
     },
     "start": {

@@ -28,7 +28,7 @@ function getAccountPortalBaseUrl(): string {
   }
 
   // Fallback (shouldn't happen if env vars are set)
-  return "https://secure-wasp-61.accounts.dev";
+  return "https://accounts.hupertool.mom";
 }
 
 /**
