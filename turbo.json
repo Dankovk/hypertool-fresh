@@ -30,7 +30,10 @@
         "CLERK_SECRET_KEY",
         "CLERK_FRONTEND_API_URL",
         "CLERK_BACKEND_API_URL",
-        "CLERK_JWKS_URL"
+        "CLERK_JWKS_URL",
+        "PORT",
+        "CONVEX_DEPLOYMENT",
+        "CONVEX_DEPLOY_KEY"
       ]
     },
     "start": {
