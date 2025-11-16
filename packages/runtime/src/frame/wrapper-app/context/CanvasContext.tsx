@@ -1,13 +1,27 @@
 import React, { createContext, useContext, useState, useEffect, useCallback, ReactNode, useMemo } from 'react';
 
 interface CanvasContextValue {
-  width: number;
-  height: number;
-  maxWidth: number;
-  maxHeight: number;
+  // Canvas dimensions (actual render size the user wants)
+  canvasWidth: number;
+  canvasHeight: number;
+  
+  // Maximum constraints based on viewport
+  maxCanvasWidth: number;
+  maxCanvasHeight: number;
+  
+  // Scale factor (how much the canvas is scaled to fit viewport if too large)
+  scale: number;
+  
   isFittedToScreen: boolean;
-  setWidth: (width: number) => void;
-  setHeight: (height: number) => void;
+  
+  // Canvas size setters
+  setCanvasWidth: (width: number) => void;
+  setCanvasHeight: (height: number) => void;
+  setCanvasSize: (width: number, height: number) => void;
+  
+  // Sync with actual canvas element dimensions
+  syncWithCanvas: (canvasElement: HTMLCanvasElement) => void;
+  
   fitToScreen: () => void;
 }
 
@@ -19,8 +33,6 @@ interface CanvasProviderProps {
 
 // Calculate available viewport space
 const calculateAvailableSpace = () => {
-  // Use full window size since widgets are absolutely positioned
-  // and don't take up layout space
   const availableWidth = window.innerWidth;
   const availableHeight = window.innerHeight;
   
@@ -31,35 +43,69 @@ const calculateAvailableSpace = () => {
 };
 
 /**
- * CanvasProvider - Manages canvas/container sizing state
+ * CanvasProvider - Manages canvas/container sizing state with scaling support
  * 
- * Provides context for:
- * - Canvas dimensions (width, height) - initially fills entire container
- * - Maximum constraints (maxWidth, maxHeight) - based on window size
- * - Fit to screen state - tracks if canvas is fitted to full container
- * - Methods to update dimensions
+ * Features:
+ * - Canvas size: The actual render dimensions (can be larger than viewport)
+ * - Auto-scaling: Canvas is scaled down to fit viewport if too large
+ * - Display container matches the scaled canvas size
  */
 export const CanvasProvider: React.FC<CanvasProviderProps> = ({ children }) => {
-  // Initialize with full available space (fills entire container)
-  const initialSpace = useMemo(() => calculateAvailableSpace(), []);
+  // Initialize with 90% of available space (10% padding)
+  // Account for devicePixelRatio to match actual canvas size
+  const initialSpace = useMemo(() => {
+    const space = calculateAvailableSpace();
+    const dpr = window.devicePixelRatio || 1;
+    return {
+      width: Math.round(space.width * 0.9 * dpr),
+      height: Math.round(space.height * 0.9 * dpr)
+    };
+  }, []);
   
-  const [width, setWidthState] = useState(initialSpace.width);
-  const [height, setHeightState] = useState(initialSpace.height);
-  const [maxWidth, setMaxWidth] = useState(initialSpace.width);
-  const [maxHeight, setMaxHeight] = useState(initialSpace.height);
-  const [isFittedToScreen, setIsFittedToScreen] = useState(true); // Initially fitted
+  // Canvas dimensions (actual render size)
+  const [canvasWidth, setCanvasWidthState] = useState(initialSpace.width);
+  const [canvasHeight, setCanvasHeightState] = useState(initialSpace.height);
+  
+  // Maximum constraints based on viewport
+  const [maxCanvasWidth, setMaxCanvasWidth] = useState(initialSpace.width);
+  const [maxCanvasHeight, setMaxCanvasHeight] = useState(initialSpace.height);
+  
+  const [isFittedToScreen, setIsFittedToScreen] = useState(false);
+  
+  // Remember previous state before fitting to screen
+  const [previousState, setPreviousState] = useState<{ width: number; height: number } | null>(null);
 
-  // Handle window resize
+  // Calculate scale factor - scale down if canvas is larger than viewport
+  const scale = useMemo(() => {
+    const space = calculateAvailableSpace();
+    const dpr = window.devicePixelRatio || 1;
+    const maxWidth = Math.round(space.width);
+    const maxHeight = Math.round(space.height);
+    
+    // Canvas dimensions are stored at DPI resolution, so divide by DPR for display comparison
+    const displayCanvasWidth = canvasWidth / dpr;
+    const displayCanvasHeight = canvasHeight / dpr;
+    
+    const scaleX = maxWidth / displayCanvasWidth;
+    const scaleY = maxHeight / displayCanvasHeight;
+    return Math.min(scaleX, scaleY, 1); // Never scale up, only down
+  }, [canvasWidth, canvasHeight]);
+
+  // Handle window resize - update max constraints
   useEffect(() => {
     const handleResize = () => {
       const space = calculateAvailableSpace();
-      setMaxWidth(space.width);
-      setMaxHeight(space.height);
-
-      // If fitted to screen, update dimensions
+      const dpr = window.devicePixelRatio || 1;
+      const newMaxWidth = Math.round(space.width * dpr);
+      const newMaxHeight = Math.round(space.height * dpr);
+      
+      setMaxCanvasWidth(newMaxWidth);
+      setMaxCanvasHeight(newMaxHeight);
+      
+      // If fitted to screen, update canvas dimensions
       if (isFittedToScreen) {
-        setWidthState(space.width);
-        setHeightState(space.height);
+        setCanvasWidthState(newMaxWidth);
+        setCanvasHeightState(newMaxHeight);
       }
     };
 
@@ -67,33 +113,74 @@ export const CanvasProvider: React.FC<CanvasProviderProps> = ({ children }) => {
     return () => window.removeEventListener('resize', handleResize);
   }, [isFittedToScreen]);
 
-  const setWidth = useCallback((w: number) => {
-    const clampedWidth = Math.max(100, Math.min(w, maxWidth));
-    setWidthState(clampedWidth);
+  const setCanvasWidth = useCallback((w: number) => {
+    const clampedWidth = Math.max(100, Math.round(w)); // Round to integer
+    setCanvasWidthState(clampedWidth);
     setIsFittedToScreen(false);
-  }, [maxWidth]);
-
-  const setHeight = useCallback((h: number) => {
-    const clampedHeight = Math.max(100, Math.min(h, maxHeight));
-    setHeightState(clampedHeight);
-    setIsFittedToScreen(false);
-  }, [maxHeight]);
-
-  const fitToScreen = useCallback(() => {
-    const space = calculateAvailableSpace();
-    setWidthState(space.width);
-    setHeightState(space.height);
-    setIsFittedToScreen(true);
   }, []);
 
+  const setCanvasHeight = useCallback((h: number) => {
+    const clampedHeight = Math.max(100, Math.round(h)); // Round to integer
+    setCanvasHeightState(clampedHeight);
+    setIsFittedToScreen(false);
+  }, []);
+
+  const setCanvasSize = useCallback((w: number, h: number) => {
+    const clampedWidth = Math.max(100, Math.round(w)); // Round to integer
+    const clampedHeight = Math.max(100, Math.round(h)); // Round to integer
+    setCanvasWidthState(clampedWidth);
+    setCanvasHeightState(clampedHeight);
+    setIsFittedToScreen(false);
+  }, []);
+
+  const syncWithCanvas = useCallback((canvasElement: HTMLCanvasElement) => {
+    // Read actual canvas dimensions (including devicePixelRatio)
+    const actualWidth = canvasElement.width;
+    const actualHeight = canvasElement.height;
+    
+    if (actualWidth > 0 && actualHeight > 0) {
+      console.log('[CanvasContext] Syncing with actual canvas:', { 
+        actual: { width: actualWidth, height: actualHeight },
+        current: { width: canvasWidth, height: canvasHeight }
+      });
+      
+      setCanvasWidthState(actualWidth);
+      setCanvasHeightState(actualHeight);
+      setIsFittedToScreen(false);
+    }
+  }, [canvasWidth, canvasHeight]);
+
+  const fitToScreen = useCallback(() => {
+    if (isFittedToScreen && previousState) {
+      // Toggle back to previous state
+      setCanvasWidthState(previousState.width);
+      setCanvasHeightState(previousState.height);
+      setIsFittedToScreen(false);
+      setPreviousState(null);
+    } else {
+      // Save current state and fit to screen
+      setPreviousState({ width: canvasWidth, height: canvasHeight });
+      const space = calculateAvailableSpace();
+      const dpr = window.devicePixelRatio || 1;
+      const newWidth = Math.round(space.width * dpr);
+      const newHeight = Math.round(space.height * dpr);
+      setCanvasWidthState(newWidth);
+      setCanvasHeightState(newHeight);
+      setIsFittedToScreen(true);
+    }
+  }, [isFittedToScreen, previousState, canvasWidth, canvasHeight]);
+
   const value: CanvasContextValue = {
-    width,
-    height,
-    maxWidth,
-    maxHeight,
+    canvasWidth,
+    canvasHeight,
+    maxCanvasWidth,
+    maxCanvasHeight,
+    scale,
     isFittedToScreen,
-    setWidth,
-    setHeight,
+    setCanvasWidth,
+    setCanvasHeight,
+    setCanvasSize,
+    syncWithCanvas,
     fitToScreen,
   };
 

@@ -7,43 +7,53 @@ import { useCanvas } from '../context/CanvasContext';
  * Displays and manages:
  * - Width input (updates on Enter or blur)
  * - Height input (updates on Enter or blur)
+ * - Scale indicator (shows current zoom level)
  * - Fit to screen button
  * 
  * All state and logic come from CanvasContext.
  */
 export const CanvasSizeWidget: React.FC = () => {
-  const { width, height, maxWidth, maxHeight, setWidth, setHeight, fitToScreen } = useCanvas();
+  const { 
+    canvasWidth, 
+    canvasHeight, 
+    scale,
+    setCanvasWidth, 
+    setCanvasHeight, 
+    fitToScreen 
+  } = useCanvas();
   
   // Local state for inputs
-  const [widthInput, setWidthInput] = useState(width.toString());
-  const [heightInput, setHeightInput] = useState(height.toString());
+  const [widthInput, setWidthInput] = useState(canvasWidth.toString());
+  const [heightInput, setHeightInput] = useState(canvasHeight.toString());
 
   // Sync local state when canvas context changes externally
   useEffect(() => {
-    setWidthInput(width.toString());
-  }, [width]);
+    setWidthInput(canvasWidth.toString());
+  }, [canvasWidth]);
 
   useEffect(() => {
-    setHeightInput(height.toString());
-  }, [height]);
+    setHeightInput(canvasHeight.toString());
+  }, [canvasHeight]);
 
   const applyWidth = () => {
-    const value = parseInt(widthInput);
-    if (!isNaN(value) && value >= 100 && value <= maxWidth) {
-      setWidth(value);
+    const value = Math.round(parseFloat(widthInput)); // Round to integer
+    if (!isNaN(value) && value >= 100) {
+      setCanvasWidth(value);
+      setWidthInput(value.toString()); // Update input to show rounded value
     } else {
       // Reset to current value if invalid
-      setWidthInput(width.toString());
+      setWidthInput(canvasWidth.toString());
     }
   };
 
   const applyHeight = () => {
-    const value = parseInt(heightInput);
-    if (!isNaN(value) && value >= 100 && value <= maxHeight) {
-      setHeight(value);
+    const value = Math.round(parseFloat(heightInput)); // Round to integer
+    if (!isNaN(value) && value >= 100) {
+      setCanvasHeight(value);
+      setHeightInput(value.toString()); // Update input to show rounded value
     } else {
       // Reset to current value if invalid
-      setHeightInput(height.toString());
+      setHeightInput(canvasHeight.toString());
     }
   };
 
@@ -61,6 +71,22 @@ export const CanvasSizeWidget: React.FC = () => {
     }
   };
 
+  // Calculate display dimensions (what's actually shown on screen)
+  const dpr = window.devicePixelRatio || 1;
+  const displayWidth = Math.round((canvasWidth / dpr) * scale);
+  const displayHeight = Math.round((canvasHeight / dpr) * scale);
+  
+  // Calculate actual scale ratio: display container size vs canvas pixel size
+  // This updates in real-time as canvasWidth/canvasHeight/scale change
+  // On 2x display with 1600px canvas showing at 800px container = 50%
+  const actualScale = scale / dpr;
+  const scalePercent = Math.round(actualScale * 100);
+  
+  // Show comparison: canvas size vs display size
+  const canvasSize = `${canvasWidth}×${canvasHeight}`;
+  const displaySize = `${displayWidth}×${displayHeight}`;
+  const isScaled = actualScale < 1;
+
   return (
     <div className="canvas-size-widget-container absolute top-0 center px-2 py-2 z-[9999] flex items-center gap-2">
       {/* Width Input */}
@@ -75,7 +101,7 @@ export const CanvasSizeWidget: React.FC = () => {
           className="rounded border border-border bg-background px-2 py-1 text-sm text-text focus:border-accent focus:outline-none"
           style={{ width: `${Math.max(widthInput.length * 8 + 16, 80)}px` }}
           min="100"
-          max={maxWidth}
+          step="1"
         />
       </div>
 
@@ -91,8 +117,64 @@ export const CanvasSizeWidget: React.FC = () => {
           className="rounded border border-border bg-background px-2 py-1 text-sm text-text focus:border-accent focus:outline-none"
           style={{ width: `${Math.max(heightInput.length * 8 + 16, 80)}px` }}
           min="100"
-          max={maxHeight}
+          step="1"
         />
+      </div>
+
+      {/* Scale Indicator - Shows canvas vs display comparison */}
+      <div 
+        className="flex items-center gap-1.5 px-2 py-1 rounded border border-border bg-background/50"
+        title={isScaled 
+          ? `Canvas: ${canvasSize} → Display: ${displaySize} (scaled to ${scalePercent}%)`
+          : `Canvas: ${canvasSize} = Display: ${displaySize} (no scaling)`
+        }
+      >
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          width="14"
+          height="14"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          className={isScaled ? "text-accent" : "text-muted"}
+        >
+          <circle cx="11" cy="11" r="8"></circle>
+          <path d="m21 21-4.3-4.3"></path>
+          <line x1="11" y1="8" x2="11" y2="14"></line>
+          <line x1="8" y1="11" x2="14" y2="11"></line>
+        </svg>
+        <div className="flex items-center gap-1">
+          {/* <span className={`text-xs font-medium ${isScaled ? "text-accent" : "text-muted"}`}>
+            {canvasSize}
+          </span> */}
+          {/* {isScaled && (
+            <>
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="10"
+                height="10"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                className="text-accent"
+              >
+                <polyline points="9 18 15 12 9 6"></polyline>
+              </svg>
+              <span className="text-xs font-medium text-accent">
+                {displaySize}
+              </span>
+            </>
+          )} */}
+          <span className={`text-xs font-medium ${isScaled ? "text-accent" : "text-muted"}`}>
+            {scalePercent}%
+          </span>
+        </div>
       </div>
 
       {/* Fit to Screen Button */}
