@@ -45,6 +45,11 @@ const controlDefinitions: ControlDefinitions = {
     max: 1,
     step: 0.1,
   },
+  message: {
+    type: "text",
+    label: "Game Message",
+    value: "Tic-Tac-Toe",
+  }
 };
 
 createSandbox({
@@ -455,10 +460,21 @@ function initialiseTicTacToe(context: SandboxContext) {
     }
 
     // Draw status text
-    ctx.font = "bold 32px sans-serif";
+    ctx.font = "bold 36px sans-serif";
     ctx.textAlign = "center";
     ctx.textBaseline = "top";
 
+    // Draw game message (title)
+    const gameMessage = params.message ?? "Tic-Tac-Toe";
+    ctx.fillStyle = "#cbd5e1";
+    ctx.save();
+    ctx.shadowBlur = 20;
+    ctx.shadowColor = ctx.fillStyle;
+    ctx.fillText(gameMessage, width / 2, offsetY - 100);
+    ctx.restore();
+
+    // Draw game status messages
+    ctx.font = "bold 32px sans-serif";
     if (winner) {
       const text = winner === "draw" ? "It's a Draw!" : `${winner} Wins!`;
       ctx.fillStyle = winner === "draw" ? "#94a3b8" : (winner === "X" ? (params.playerXColor ?? "#06b6d4") : (params.playerOColor ?? "#ec4899"));

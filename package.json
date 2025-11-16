@@ -13,7 +13,7 @@
     "dev": "turbo run dev dev:convex",
     "dev:frontend": "bun --cwd=frontend run dev",
     "dev:backend": "bun --cwd=backend run dev",
-    "dev:hyper-runtim": "bun --cwd=hyper-runtime run dev",
+    "dev:hyper-runtime": "bun --cwd=hyper-runtime run dev",
     "dev:convex": "bun run scripts/pre-convex.sh && bunx convex dev",
     "build": "turbo run build",
     "build:frontend": "cd hyper-runtime && bun run build && cd .. && cd frontend && bun run build",

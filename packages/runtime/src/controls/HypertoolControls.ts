@@ -5,6 +5,9 @@ import type {
   ControlPosition,
   ParameterValues,
   ControlChangeContext,
+  FolderDefinition,
+  ButtonDefinition,
+  TabDefinition,
 } from './types';
 import { injectThemeVariables } from './theme';
 
@@ -37,12 +40,45 @@ export class HypertoolControls<T extends ControlDefinitions = ControlDefinitions
   }
 
   /**
+   * Check if a definition is a folder
+   */
+  private isFolder(definition: any): definition is FolderDefinition {
+    return definition && typeof definition === 'object' && (definition.type === 'folder' || definition.type === 'group');
+  }
+
+  /**
+   * Check if a definition is a button
+   */
+  private isButton(definition: any): definition is ButtonDefinition {
+    return definition && typeof definition === 'object' && definition.type === 'button';
+  }
+
+  /**
+   * Check if a definition is a tab
+   */
+  private isTab(definition: any): definition is TabDefinition {
+    return definition && typeof definition === 'object' && definition.type === 'tab';
+  }
+
+  /**
    * Extract initial parameter values from control definitions
    */
-  private extractInitialValues(definitions: T): ParameterValues<T> {
-    const params = {} as ParameterValues<T>;
+  private extractInitialValues(definitions: any): any {
+    const params: any = {};
     for (const [key, definition] of Object.entries(definitions)) {
-      params[key as keyof T] = definition.value;
+      const def = definition as any;
+      if (this.isFolder(def)) {
+        // Recursively extract values from folder controls
+        params[key] = this.extractInitialValues(def.controls);
+      } else if (this.isTab(def)) {
+        // Extract values from each tab page
+        params[key] = def.pages.map((page: any) => this.extractInitialValues(page.controls));
+      } else if (this.isButton(def)) {
+        // Buttons don't have values, skip
+        continue;
+      } else {
+        params[key] = def.value;
+      }
     }
     return params;
   }
@@ -118,64 +154,103 @@ export class HypertoolControls<T extends ControlDefinitions = ControlDefinitions
 
     return element as HTMLElement;
   }
-
-  /**
-   * Position the pane in the viewport
-   */
-  private positionPane() {
-    if (!this.pane || this.options.container) return;
-
-    const container = this.pane.element;
-    container.style.position = 'fixed';
-    container.style.zIndex = '10000';
-
-    const positions: Record<ControlPosition, () => void> = {
-      'top-right': () => {
-        container.style.top = '20px';
-        container.style.right = '20px';
-      },
-      'top-left': () => {
-        container.style.top = '20px';
-        container.style.left = '20px';
-      },
-      'bottom-right': () => {
-        container.style.bottom = '20px';
-        container.style.right = '20px';
-      },
-      'bottom-left': () => {
-        container.style.bottom = '20px';
-        container.style.left = '20px';
-      },
-    };
-
-    positions[this.options.position]();
-  }
-
+  
   /**
    * Add controls to the pane based on definitions
    */
   private addControls() {
     if (!this.pane) return;
+    this.addControlsToTarget(this.pane, this.definitions, this.params);
+  }
 
-    for (const [key, definition] of Object.entries(this.definitions)) {
+  /**
+   * Add controls to a specific target (pane or folder)
+   */
+  private addControlsToTarget(target: any, definitions: ControlDefinitions, params: any) {
+    for (const [key, definition] of Object.entries(definitions)) {
       try {
-        this.addControl(key, definition);
+        if (this.isFolder(definition)) {
+          // Create folder
+          const folderConfig: any = {
+            title: definition.label || key,
+          };
+          if (definition.expanded !== undefined) {
+            folderConfig.expanded = definition.expanded;
+          }
+          const folder = target.addFolder(folderConfig);
+          
+          // Recursively add controls to folder
+          this.addControlsToTarget(folder, definition.controls, params[key]);
+        } else if (this.isButton(definition)) {
+          // Create button
+          const buttonConfig: any = {
+            title: definition.title,
+          };
+          if (definition.label) {
+            buttonConfig.label = definition.label;
+          }
+          const button = target.addButton(buttonConfig);
+          
+          // Attach click handler
+          if (definition.onClick) {
+            button.on('click', definition.onClick);
+          }
+        } else if (this.isTab(definition)) {
+          // Create tab
+          const tabConfig: any = {
+            pages: definition.pages.map((page: any) => ({ title: page.title })),
+          };
+          const tab = target.addTab(tabConfig);
+          
+          // Add controls to each page
+          definition.pages.forEach((page: any, index: number) => {
+            this.addControlsToTarget(tab.pages[index], page.controls, params[key][index]);
+          });
+        } else {
+          // Add regular control
+          this.addControlToTarget(target, key, definition, params);
+        }
       } catch (error) {
-        console.error(`[HypertoolControls] Error adding control "${key}":`, error);
+        console.error(`[HypertoolControls] Error adding control/folder/button/tab "${key}":`, error);
       }
     }
   }
 
   /**
-   * Add a single control to the pane
+   * Add a single control to a target (pane or folder)
    */
-  private addControl(key: string, definition: ControlDefinitions[string]) {
-    if (!this.pane) return;
+  private addControlToTarget(target: any, key: string, definition: any, params: any) {
+    // Skip if it's a folder (should not be called with folders)
+    if (this.isFolder(definition)) return;
 
     const config: any = {
       label: definition.label || key,
     };
     console.log(definition)
+
+    // Monitor-specific configuration (readonly: true makes it a monitor)
+    if (definition.readonly !== undefined) {
+      config.readonly = definition.readonly;
+    }
+    if (definition.interval !== undefined) {
+      config.interval = definition.interval;
+    }
+    if (definition.bufferSize !== undefined) {
+      config.bufferSize = definition.bufferSize;
+    }
+    
+    // String monitor options
+    if (definition.multiline !== undefined) {
+      config.multiline = definition.multiline;
+    }
+    if (definition.rows !== undefined) {
+      config.rows = definition.rows;
+    }
+    
+    // Number monitor options (graph view)
+    if (definition.view !== undefined) {
+      config.view = definition.view;
+    }
 
     // Type-specific configuration
     switch (definition.type) {
@@ -185,11 +260,30 @@ export class HypertoolControls<T extends ControlDefinitions = ControlDefinitions
         if (definition.step !== undefined) config.step = definition.step;
         break;
 
+      case 'point':
+      case 'point2d':
+      case 'point3d':
+      case 'point4d':
+        // Explicit point type - handle constraints
+        if (definition.min !== undefined) config.min = definition.min;
+        if (definition.max !== undefined) config.max = definition.max;
+        if (definition.step !== undefined) config.step = definition.step;
+
+        // Per-axis constraints
+        const axes = ['x', 'y', 'z', 'w'];
+        for (const axis of axes) {
+          if ((definition as any)[axis] && typeof (definition as any)[axis] === 'object') {
+            config[axis] = (definition as any)[axis];
+          }
+        }
+        break;
+
       case 'select':
+      case 'selector':
         console.log(`[HypertoolControls] Adding select control "${key}":`, definition);
         // Always convert to Tweakpane array format: [{text: 'Label', value: 'value'}, ...]
         if (Array.isArray(definition.options)) {
-          config.options = definition.options.map((opt) => {
+          config.options = definition.options.map((opt: any) => {
             // Handle array of objects: [{label: 'X', value: 'x'}] or [{text: 'X', value: 'x'}]
             if (typeof opt === 'object' && opt !== null) {
               return {
@@ -216,28 +310,45 @@ export class HypertoolControls<T extends ControlDefinitions = ControlDefinitions
       case 'color':
       case 'boolean':
       case 'string':
-        // No additional config needed
+      case 'text':
+        // No additional config needed - Tweakpane handles these automatically
         break;
+
+      case 'folder':
+      case 'group':
+        // Folders are handled by addControlsToTarget, this should not be reached
+        console.warn(`[HypertoolControls] Folder/Group encountered in addControlToTarget (should be handled earlier)`);
+        return;
+
+      case 'button':
+        // Buttons are handled by addControlsToTarget, this should not be reached
+        console.warn(`[HypertoolControls] Button encountered in addControlToTarget (should be handled earlier)`);
+        return;
+
+      case 'tab':
+        // Tabs are handled by addControlsToTarget, this should not be reached
+        console.warn(`[HypertoolControls] Tab encountered in addControlToTarget (should be handled earlier)`);
+        return;
 
       default:
         console.warn(`[HypertoolControls] Unknown control type: ${(definition as any).type}`);
         return;
     }
 
-    // Add binding
-    const binding = (this.pane as any).addBinding(this.params, key, config);
+    // Add binding to the target (pane or folder)
+    const binding = target.addBinding(params, key, config);
 
     // Listen for changes
     binding.on('change', (event: any) => {
-      const typedKey = key as keyof T;
-      this.params[typedKey] = event.value;
+      // Update the nested params object
+      params[key] = event.value;
+      
+      // Notify onChange callback with full params
       const context: ControlChangeContext<T> = {
-        key: typedKey,
+        key: key as keyof T,
         value: event.value,
         event,
       };
-
-      // Notify onChange callback
       this.options.onChange(this.values, context);
     });
   }
