@@ -1,12 +1,34 @@
 import React, { useState, useEffect } from 'react';
 import { useCanvas } from '../context/CanvasContext';
 
+// Standard screen presets
+const PRESETS = [
+  { label: '16:9 Landscape', width: 1920, height: 1080 },
+  { label: '9:16 Portrait', width: 1080, height: 1920 },
+  { label: '4:3 Standard', width: 1024, height: 768 },
+  { label: '1:1 Square', width: 1080, height: 1080 },
+  { label: '21:9 Ultrawide', width: 2560, height: 1080 },
+  { label: '3:2 Classic', width: 1440, height: 960 },
+  { label: '---', width: 0, height: 0 }, // Divider
+  { label: 'iPhone 15 Pro', width: 1179, height: 2556 },
+  { label: 'iPhone 15 Pro Max', width: 1290, height: 2796 },
+  { label: 'iPhone SE', width: 750, height: 1334 },
+  { label: 'iPhone 15', width: 1170, height: 2532 },
+  { label: '---', width: 0, height: 0 }, // Divider
+  { label: 'MacBook Air 13"', width: 2560, height: 1664 },
+  { label: 'MacBook Pro 14"', width: 3024, height: 1964 },
+  { label: 'MacBook Pro 16"', width: 3456, height: 2234 },
+  { label: 'iMac 24"', width: 4480, height: 2520 },
+  { label: 'Studio Display', width: 5120, height: 2880 },
+];
+
 /**
  * CanvasSizeWidget - Canvas size control UI
  * 
  * Displays and manages:
  * - Width input (updates on Enter or blur)
  * - Height input (updates on Enter or blur)
+ * - Preset sizes dropdown
  * - Scale indicator (shows current zoom level)
  * - Fit to screen button
  * 
@@ -71,6 +93,15 @@ export const CanvasSizeWidget: React.FC = () => {
     }
   };
 
+  const handlePresetChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const preset = PRESETS.find(p => p.label === e.target.value);
+    if (preset && preset.width > 0 && preset.height > 0) {
+      const dpr = window.devicePixelRatio || 1;
+      setCanvasWidth(preset.width * 0.95 * dpr);
+      setCanvasHeight(preset.height * 0.95 * dpr);
+    }
+  };
+
   // Calculate display dimensions (what's actually shown on screen)
   const dpr = window.devicePixelRatio || 1;
   const displayWidth = Math.round((canvasWidth / dpr) * scale);
@@ -89,18 +120,36 @@ export const CanvasSizeWidget: React.FC = () => {
 
   return (
     <div className="canvas-size-widget-container absolute top-0 center px-2 py-2 z-[9999] flex items-center gap-2">
+      {/* Presets Dropdown */}
+      <select
+        onChange={handlePresetChange}
+        className="rounded border border-border w-[90px] bg-background px-2 py-1 text-sm text-text focus:border-accent focus:outline-none cursor-pointer"
+        defaultValue=""
+      >
+        <option value="" disabled>Presets</option>
+        {PRESETS.map((preset, idx) => 
+          preset.label === '---' ? (
+            <option key={idx} disabled>────────</option>
+          ) : (
+            <option key={idx} value={preset.label}>
+              {preset.label}
+            </option>
+          )
+        )}
+      </select>
+
       {/* Width Input */}
       <div className="flex items-center gap-2">
         <label className="text-sm text-accent">W:</label>
         <input
-          type="number"
+          // type="number"
           value={widthInput}
           onChange={(e) => setWidthInput(e.target.value)}
           onBlur={applyWidth}
           onKeyDown={handleWidthKeyDown}
           className="rounded border border-border bg-background px-2 py-1 text-sm text-text focus:border-accent focus:outline-none"
-          style={{ width: `${Math.max(widthInput.length * 8 + 16, 80)}px` }}
-          min="100"
+          style={{ width: `${Math.max(widthInput.length * 8 + 16, 50)}px` }}
+          min="60"
           step="1"
         />
       </div>
@@ -109,14 +158,14 @@ export const CanvasSizeWidget: React.FC = () => {
       <div className="flex items-center gap-2">
         <label className="text-sm text-accent">H:</label>
         <input
-          type="number"
+          // type="number"
           value={heightInput}
           onChange={(e) => setHeightInput(e.target.value)}
           onBlur={applyHeight}
           onKeyDown={handleHeightKeyDown}
           className="rounded border border-border bg-background px-2 py-1 text-sm text-text focus:border-accent focus:outline-none"
-          style={{ width: `${Math.max(heightInput.length * 8 + 16, 80)}px` }}
-          min="100"
+          style={{ width: `${Math.max(heightInput.length * 8 + 16, 50)}px` }}
+          min="60"
           step="1"
         />
       </div>
@@ -171,7 +220,7 @@ export const CanvasSizeWidget: React.FC = () => {
               </span>
             </>
           )} */}
-          <span className={`text-xs font-medium ${isScaled ? "text-accent" : "text-muted"}`}>
+          <span className={`text-xs ${isScaled ? "text-accent" : "text-muted"}`}>
             {scalePercent}%
           </span>
         </div>
