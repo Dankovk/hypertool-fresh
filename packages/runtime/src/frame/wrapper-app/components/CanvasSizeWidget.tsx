@@ -145,7 +145,7 @@ export const CanvasSizeWidget: React.FC = () => {
           onBlur={applyWidth}
           onKeyDown={handleWidthKeyDown}
           className="rounded border border-border bg-background px-2 py-1 text-sm text-text focus:border-accent focus:outline-none"
-          style={{ width: `${Math.max(widthInput.length * 8 + 16, 50)}px` }}
+          style={{ width: `${Math.max(widthInput.length * 8 + 16, 55)}px` }}
           min="60"
           step="1"
         />
@@ -161,7 +161,7 @@ export const CanvasSizeWidget: React.FC = () => {
           onBlur={applyHeight}
           onKeyDown={handleHeightKeyDown}
           className="rounded border border-border bg-background px-2 py-1 text-sm text-text focus:border-accent focus:outline-none"
-          style={{ width: `${Math.max(heightInput.length * 8 + 16, 50)}px` }}
+          style={{ width: `${Math.max(heightInput.length * 8 + 16, 55)}px` }}
           min="60"
           step="1"
         />
