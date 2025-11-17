@@ -97,8 +97,8 @@ export const CanvasSizeWidget: React.FC = () => {
     const preset = PRESETS.find(p => p.label === e.target.value);
     if (preset && preset.width > 0 && preset.height > 0) {
       const dpr = window.devicePixelRatio || 1;
-      setCanvasWidth(preset.width * 0.95 * dpr);
-      setCanvasHeight(preset.height * 0.95 * dpr);
+      setCanvasWidth(preset.width * 0.9 * dpr);
+      setCanvasHeight(preset.height * 0.9 * dpr);
     }
   };
 
