@@ -47,7 +47,7 @@ export const ResizeHandles: React.FC<ResizeHandlesProps> = ({
     const handleMouseMove = (e: MouseEvent) => {
       const deltaX = e.clientX - startPos.x;
       const deltaY = e.clientY - startPos.y;
-      const safeScale = scale || 1;
+      const safeScale = 1;
 
       let newWidth = startSize.width;
       let newHeight = startSize.height;
