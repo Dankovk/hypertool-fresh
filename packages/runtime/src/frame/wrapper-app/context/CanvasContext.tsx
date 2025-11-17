@@ -83,19 +83,21 @@ export const CanvasProvider: React.FC<CanvasProviderProps> = ({ children }) => {
 
   // Calculate scale factor - scale down if canvas is larger than viewport
   const scale = useMemo(() => {
-    const space = calculateAvailableSpace();
     const dpr = window.devicePixelRatio || 1;
-    const maxWidth = Math.round(space.width);
-    const maxHeight = Math.round(space.height);
-    
-    // Canvas dimensions are stored at DPI resolution, so divide by DPR for display comparison
     const displayCanvasWidth = canvasWidth / dpr;
     const displayCanvasHeight = canvasHeight / dpr;
-    
-    const scaleX = maxWidth / displayCanvasWidth;
-    const scaleY = maxHeight / displayCanvasHeight;
+
+    if (displayCanvasWidth === 0 || displayCanvasHeight === 0) {
+      return 1;
+    }
+
+    const availableWidth = maxCanvasWidth / dpr;
+    const availableHeight = maxCanvasHeight / dpr;
+
+    const scaleX = availableWidth / displayCanvasWidth;
+    const scaleY = availableHeight / displayCanvasHeight;
     return Math.min(scaleX, scaleY, 1); // Never scale up, only down
-  }, [canvasWidth, canvasHeight]);
+  }, [canvasWidth, canvasHeight, maxCanvasWidth, maxCanvasHeight]);
 
   // Handle window resize - update max constraints
   useEffect(() => {

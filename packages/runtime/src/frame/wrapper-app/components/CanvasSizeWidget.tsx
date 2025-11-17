@@ -109,16 +109,11 @@ export const CanvasSizeWidget: React.FC = () => {
   const displayWidth = Math.round((canvasWidth / dpr) * scale);
   const displayHeight = Math.round((canvasHeight / dpr) * scale);
   
-  // Calculate actual scale ratio: display container size vs canvas pixel size
-  // This updates in real-time as canvasWidth/canvasHeight/scale change
-  // On 2x display with 1600px canvas showing at 800px container = 50%
-  const actualScale = scale / dpr;
-  const scalePercent = Math.round(actualScale * 100);
-  
   // Show comparison: canvas size vs display size
   const canvasSize = `${canvasWidth}×${canvasHeight}`;
   const displaySize = `${displayWidth}×${displayHeight}`;
-  const isScaled = actualScale < 1;
+  const isScaled = scale < 1;
+  const scalePercent = Math.round(scale * 100);
 
   return (
     <div className="canvas-size-widget-container absolute top-0 center px-2 py-2 z-[9999] flex items-center gap-2">
@@ -223,7 +218,7 @@ export const CanvasSizeWidget: React.FC = () => {
             </>
           )} */}
           <span className={`text-xs ${isScaled ? "text-accent" : "text-muted"}`}>
-            {scalePercent * dpr}%
+            {scalePercent}%
           </span>
         </div>
       </div>

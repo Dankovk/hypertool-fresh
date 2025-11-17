@@ -45,8 +45,9 @@ export const ResizeHandles: React.FC<ResizeHandlesProps> = ({
     if (!isResizing || !resizeHandle) return;
 
     const handleMouseMove = (e: MouseEvent) => {
-      const deltaX = (e.clientX - startPos.x) * dpr;
-      const deltaY = (e.clientY - startPos.y) * dpr;
+      const deltaX = e.clientX - startPos.x;
+      const deltaY = e.clientY - startPos.y;
+      const safeScale = scale || 1;
 
       let newWidth = startSize.width;
       let newHeight = startSize.height;
@@ -54,16 +55,16 @@ export const ResizeHandles: React.FC<ResizeHandlesProps> = ({
       // Calculate new canvas dimensions based on handle
       // Account for scale and devicePixelRatio
       if (resizeHandle.includes('e')) {
-        newWidth = startSize.width + (deltaX * dpr) / scale;
+        newWidth = startSize.width + (deltaX * dpr) / safeScale;
       }
       if (resizeHandle.includes('w')) {
-        newWidth = startSize.width - (deltaX * dpr) / scale;
+        newWidth = startSize.width - (deltaX * dpr) / safeScale;
       }
       if (resizeHandle.includes('s')) {
-        newHeight = startSize.height + (deltaY * dpr) / scale;
+        newHeight = startSize.height + (deltaY * dpr) / safeScale;
       }
       if (resizeHandle.includes('n')) {
-        newHeight = startSize.height - (deltaY * dpr) / scale;
+        newHeight = startSize.height - (deltaY * dpr) / safeScale;
       }
 
       onResize(newWidth, newHeight);
