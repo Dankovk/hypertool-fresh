@@ -19,6 +19,9 @@ interface CanvasContextValue {
   setCanvasHeight: (height: number) => void;
   setCanvasSize: (width: number, height: number) => void;
   
+  // Set aspect ratio and maximize to container
+  setAspectRatio: (aspectWidth: number, aspectHeight: number) => void;
+  
   // Sync with actual canvas element dimensions
   syncWithCanvas: (canvasElement: HTMLCanvasElement) => void;
   
@@ -72,6 +75,9 @@ export const CanvasProvider: React.FC<CanvasProviderProps> = ({ children }) => {
   
   const [isFittedToScreen, setIsFittedToScreen] = useState(false);
   
+  // Track aspect ratio to maintain it on resize (null = free form)
+  const [aspectRatio, setAspectRatioState] = useState<number | null>(null);
+  
   // Remember previous state before fitting to screen
   const [previousState, setPreviousState] = useState<{ width: number; height: number } | null>(null);
 
@@ -107,22 +113,42 @@ export const CanvasProvider: React.FC<CanvasProviderProps> = ({ children }) => {
         setCanvasWidthState(newMaxWidth);
         setCanvasHeightState(newMaxHeight);
       }
+      // If aspect ratio is set, recalculate dimensions to maintain ratio
+      else if (aspectRatio !== null) {
+        let newWidth: number;
+        let newHeight: number;
+        
+        if (newMaxWidth / newMaxHeight > aspectRatio) {
+          // Container is wider than aspect ratio - constrain by height
+          newHeight = newMaxHeight;
+          newWidth = Math.round(newHeight * aspectRatio);
+        } else {
+          // Container is taller than aspect ratio - constrain by width
+          newWidth = newMaxWidth;
+          newHeight = Math.round(newWidth / aspectRatio);
+        }
+        
+        setCanvasWidthState(newWidth);
+        setCanvasHeightState(newHeight);
+      }
     };
 
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
-  }, [isFittedToScreen]);
+  }, [isFittedToScreen, aspectRatio]);
 
   const setCanvasWidth = useCallback((w: number) => {
     const clampedWidth = Math.max(100, Math.round(w)); // Round to integer
     setCanvasWidthState(clampedWidth);
     setIsFittedToScreen(false);
+    setAspectRatioState(null); // Clear aspect ratio when manually setting dimensions
   }, []);
 
   const setCanvasHeight = useCallback((h: number) => {
     const clampedHeight = Math.max(100, Math.round(h)); // Round to integer
     setCanvasHeightState(clampedHeight);
     setIsFittedToScreen(false);
+    setAspectRatioState(null); // Clear aspect ratio when manually setting dimensions
   }, []);
 
   const setCanvasSize = useCallback((w: number, h: number) => {
@@ -130,6 +156,36 @@ export const CanvasProvider: React.FC<CanvasProviderProps> = ({ children }) => {
     const clampedHeight = Math.max(100, Math.round(h)); // Round to integer
     setCanvasWidthState(clampedWidth);
     setCanvasHeightState(clampedHeight);
+    setIsFittedToScreen(false);
+    setAspectRatioState(null); // Clear aspect ratio when manually setting dimensions
+  }, []);
+
+  const setAspectRatio = useCallback((aspectWidth: number, aspectHeight: number) => {
+    const space = calculateAvailableSpace();
+    const dpr = window.devicePixelRatio || 1;
+    
+    // Calculate maximum size that fits in viewport with given aspect ratio
+    const ratio = aspectWidth / aspectHeight;
+    const maxWidth = Math.round(space.width * dpr);
+    const maxHeight = Math.round(space.height * dpr);
+    
+    let newWidth: number;
+    let newHeight: number;
+    
+    // Fit to container while maintaining aspect ratio
+    if (maxWidth / maxHeight > ratio) {
+      // Container is wider than aspect ratio - constrain by height
+      newHeight = maxHeight;
+      newWidth = Math.round(newHeight * ratio);
+    } else {
+      // Container is taller than aspect ratio - constrain by width
+      newWidth = maxWidth;
+      newHeight = Math.round(newWidth / ratio);
+    }
+    
+    setCanvasWidthState(newWidth);
+    setCanvasHeightState(newHeight);
+    setAspectRatioState(ratio); // Store ratio for window resize
     setIsFittedToScreen(false);
   }, []);
 
@@ -147,6 +203,7 @@ export const CanvasProvider: React.FC<CanvasProviderProps> = ({ children }) => {
       setCanvasWidthState(actualWidth);
       setCanvasHeightState(actualHeight);
       setIsFittedToScreen(false);
+      setAspectRatioState(null); // Clear aspect ratio when syncing
     }
   }, [canvasWidth, canvasHeight]);
 
@@ -166,6 +223,7 @@ export const CanvasProvider: React.FC<CanvasProviderProps> = ({ children }) => {
       const newHeight = Math.round(space.height * dpr);
       setCanvasWidthState(newWidth);
       setCanvasHeightState(newHeight);
+      setAspectRatioState(null); // Clear aspect ratio when fitting to screen
       setIsFittedToScreen(true);
     }
   }, [isFittedToScreen, previousState, canvasWidth, canvasHeight]);
@@ -180,6 +238,7 @@ export const CanvasProvider: React.FC<CanvasProviderProps> = ({ children }) => {
     setCanvasWidth,
     setCanvasHeight,
     setCanvasSize,
+    setAspectRatio,
     syncWithCanvas,
     fitToScreen,
   };

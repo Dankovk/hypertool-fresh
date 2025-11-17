@@ -28,10 +28,12 @@ const PRESETS = [
  * Displays and manages:
  * - Width input (updates on Enter or blur)
  * - Height input (updates on Enter or blur)
- * - Preset sizes dropdown
+ * - Preset aspect ratios dropdown (maximizes to container with chosen ratio)
  * - Scale indicator (shows current zoom level)
  * - Fit to screen button
  * 
+ * Presets set aspect ratio only - canvas size always maximizes to fill container.
+ * Manual width/height inputs allow free-form sizing.
  * All state and logic come from CanvasContext.
  */
 export const CanvasSizeWidget: React.FC = () => {
@@ -40,7 +42,8 @@ export const CanvasSizeWidget: React.FC = () => {
     canvasHeight, 
     scale,
     setCanvasWidth, 
-    setCanvasHeight, 
+    setCanvasHeight,
+    setAspectRatio,
     fitToScreen 
   } = useCanvas();
   
@@ -96,9 +99,8 @@ export const CanvasSizeWidget: React.FC = () => {
   const handlePresetChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const preset = PRESETS.find(p => p.label === e.target.value);
     if (preset && preset.width > 0 && preset.height > 0) {
-      const dpr = window.devicePixelRatio || 1;
-      setCanvasWidth(preset.width * 0.9 * dpr);
-      setCanvasHeight(preset.height * 0.9 * dpr);
+      // Set aspect ratio - canvas will maximize to container with this ratio
+      setAspectRatio(preset.width, preset.height);
     }
   };
 
@@ -221,7 +223,7 @@ export const CanvasSizeWidget: React.FC = () => {
             </>
           )} */}
           <span className={`text-xs ${isScaled ? "text-accent" : "text-muted"}`}>
-            {scalePercent}%
+            {scalePercent * dpr}%
           </span>
         </div>
       </div>

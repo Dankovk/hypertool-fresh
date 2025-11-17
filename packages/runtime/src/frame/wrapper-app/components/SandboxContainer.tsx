@@ -8,7 +8,9 @@ import type { SandboxContainerProps } from '../types';
  *
  * Features:
  * - Renders user code (p5.js, Three.js, etc.) at canvas size
- * - Scales down to fit display size when canvas > display
+ * - Canvas dimensions are PRECISELY set via CanvasContext (DPI-aware)
+ * - Display container size = canvasWidth/Height × scale (logical pixels)
+ * - Presets set aspect ratio and maximize to fill container
  * - Drag handles on all edges and corners for resizing
  * - Dispatches window resize events when dimensions change
  */
