@@ -18,6 +18,7 @@ export const MODEL_OPTIONS = [
   // { value: "gemini-2.5-flash-exp", label: "Gemini 2.5 Flash Experimental", provider: "Google", tags: ["latest", "fast", "creative"] },
   { value: "gemini-2.5-flash", label: "Gemini 2.5 Flash", provider: "Google", tags: ["latest", "fast", "stable"] },
   { value: "gemini-2.5-pro", label: "Gemini 2.5 Pro", provider: "Google", tags: ["latest", "fast", "stable"] },
+  { value: "gemini-3-pro-preview", label: "Gemini 3 Pro", provider: "Google", tags: ["latest", "fast", "stable"] },
   // { value: "gemini-2.5-flash-thinking-exp-01-21", label: "Gemini 2.5 Flash Thinking", provider: "Google", tags: ["latest", "reasoning", "experimental"] },
   // { value: "gemini-1.5-pro-latest", label: "Gemini 1.5 Pro", provider: "Google", tags: ["creative", "large-context"] },
   // { value: "gemini-1.5-flash-latest", label: "Gemini 1.5 Flash", provider: "Google", tags: ["fast", "cost-effective"] },

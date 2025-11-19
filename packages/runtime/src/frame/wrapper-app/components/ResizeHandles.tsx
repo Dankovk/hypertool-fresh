@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 
 type ResizeHandle = 'n' | 's' | 'e' | 'w' | 'ne' | 'nw' | 'se' | 'sw';
 
@@ -30,6 +30,12 @@ export const ResizeHandles: React.FC<ResizeHandlesProps> = ({
   const [startSize, setStartSize] = useState({ width: 0, height: 0 });
 
   const dpr = window.devicePixelRatio || 1;
+  const scaleRef = useRef(scale);
+  const MIN_SIZE = 1;
+
+  useEffect(() => {
+    scaleRef.current = scale;
+  }, [scale]);
 
   const handleMouseDown = useCallback((handle: ResizeHandle, e: React.MouseEvent) => {
     e.preventDefault();
@@ -47,25 +53,63 @@ export const ResizeHandles: React.FC<ResizeHandlesProps> = ({
     const handleMouseMove = (e: MouseEvent) => {
       const deltaX = e.clientX - startPos.x;
       const deltaY = e.clientY - startPos.y;
-      const safeScale = scale || 1;
+      const currentScale = scaleRef.current || 1;
+      const isCorner = resizeHandle.length === 2;
+      const isHorizontalEdge = resizeHandle === 'e' || resizeHandle === 'w';
+      const isVerticalEdge = resizeHandle === 'n' || resizeHandle === 's';
 
       let newWidth = startSize.width;
       let newHeight = startSize.height;
 
-      // Calculate new canvas dimensions based on handle
-      // Account for scale and devicePixelRatio
-      if (resizeHandle.includes('e')) {
-        newWidth = startSize.width + (deltaX * dpr) / safeScale;
+      const widthDelta =
+        resizeHandle.includes('e')
+          ? (deltaX * dpr) / currentScale
+          : resizeHandle.includes('w')
+            ? (-deltaX * dpr) / currentScale
+            : 0;
+
+      const heightDelta =
+        resizeHandle.includes('s')
+          ? (deltaY * dpr) / currentScale
+          : resizeHandle.includes('n')
+            ? (-deltaY * dpr) / currentScale
+            : 0;
+
+      newWidth = startSize.width + widthDelta;
+      newHeight = startSize.height + heightDelta;
+
+      if (e.shiftKey) {
+        const baseWidth = Math.max(MIN_SIZE, startSize.width);
+        const baseHeight = Math.max(MIN_SIZE, startSize.height);
+        const normalizedWidthDelta = widthDelta / baseWidth;
+        const normalizedHeightDelta = heightDelta / baseHeight;
+        const clampScaleFactor = (scaleFactor: number, base: number) => {
+          if (!Number.isFinite(scaleFactor) || scaleFactor <= 0) {
+            return MIN_SIZE / base;
+          }
+          return scaleFactor;
+        };
+
+        if (isHorizontalEdge && !isVerticalEdge) {
+          const scaleFactor = clampScaleFactor(1 + normalizedWidthDelta, baseWidth);
+          newWidth = baseWidth * scaleFactor;
+          newHeight = baseHeight * scaleFactor;
+        } else if (isVerticalEdge && !isHorizontalEdge) {
+          const scaleFactor = clampScaleFactor(1 + normalizedHeightDelta, baseHeight);
+          newWidth = baseWidth * scaleFactor;
+          newHeight = baseHeight * scaleFactor;
+        } else if (isCorner) {
+          const widthDominant = Math.abs(normalizedWidthDelta) >= Math.abs(normalizedHeightDelta);
+          const dominantDelta = widthDominant ? normalizedWidthDelta : normalizedHeightDelta;
+          const baseForMin = widthDominant ? baseWidth : baseHeight;
+          const scaleFactor = clampScaleFactor(1 + dominantDelta, baseForMin);
+          newWidth = baseWidth * scaleFactor;
+          newHeight = baseHeight * scaleFactor;
+        }
       }
-      if (resizeHandle.includes('w')) {
-        newWidth = startSize.width - (deltaX * dpr) / safeScale;
-      }
-      if (resizeHandle.includes('s')) {
-        newHeight = startSize.height + (deltaY * dpr) / safeScale;
-      }
-      if (resizeHandle.includes('n')) {
-        newHeight = startSize.height - (deltaY * dpr) / safeScale;
-      }
+
+      newWidth = Math.max(MIN_SIZE, newWidth);
+      newHeight = Math.max(MIN_SIZE, newHeight);
 
       onResize(newWidth, newHeight);
     };
@@ -76,7 +120,6 @@ export const ResizeHandles: React.FC<ResizeHandlesProps> = ({
     };
 
     const handleMouseLeave = () => {
-      // Stop resizing when mouse leaves the window
       setIsResizing(false);
       setResizeHandle(null);
     };
@@ -90,7 +133,7 @@ export const ResizeHandles: React.FC<ResizeHandlesProps> = ({
       document.removeEventListener('mouseup', handleMouseUp);
       document.removeEventListener('mouseleave', handleMouseLeave);
     };
-  }, [isResizing, resizeHandle, startPos, startSize, scale, dpr, onResize]);
+  }, [isResizing, resizeHandle, startPos, startSize, dpr, onResize]);
 
   // Individual resize handle component
   const ResizeHandleComponent = ({ 
