@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
+import { useCanvas } from '../context/CanvasContext';
 
 interface ExportWidgetProps {
   getContainer: () => HTMLElement | null;
@@ -19,6 +20,7 @@ export const ExportWidget: React.FC<ExportWidgetProps> = ({
   filename = 'hyperframe-export',
   useCanvasCapture = true,
 }) => {
+  const { setIsRecording } = useCanvas();
 
   const [imageEnabled, setImageEnabled] = useState(false);
   const [videoEnabled, setVideoEnabled] = useState(false);
@@ -190,6 +192,7 @@ export const ExportWidget: React.FC<ExportWidgetProps> = ({
         downloadBlob(blob, `${filename}.${format.extension}`);
         stream.getTracks().forEach((track) => track.stop());
         setRecording(false);
+        setIsRecording(false);
         recorderRef.current = null;
         recordedChunksRef.current = [];
       });
@@ -197,13 +200,15 @@ export const ExportWidget: React.FC<ExportWidgetProps> = ({
       recorder.start();
       recorderRef.current = recorder;
       setRecording(true);
+      setIsRecording(true);
       console.log('Recording started');
     } catch (error) {
       console.error('[ExportWidget] Failed to start recording:', error);
       setRecording(false);
+      setIsRecording(false);
       recorderRef.current = null;
     }
-  }, [getContainer, filename, downloadBlob]);
+  }, [getContainer, filename, downloadBlob, setIsRecording]);
 
   const handleToggleRecording = useCallback(async () => {
     if (recording) {

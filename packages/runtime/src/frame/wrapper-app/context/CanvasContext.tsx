@@ -14,6 +14,10 @@ interface CanvasContextValue {
   
   isFittedToScreen: boolean;
   
+  // Recording state
+  isRecording: boolean;
+  setIsRecording: (recording: boolean) => void;
+  
   // Canvas size setters
   setCanvasWidth: (width: number) => void;
   setCanvasHeight: (height: number) => void;
@@ -54,26 +58,31 @@ const calculateAvailableSpace = () => {
  * - Display container matches the scaled canvas size
  */
 export const CanvasProvider: React.FC<CanvasProviderProps> = ({ children }) => {
-  // Initialize with 90% of available space (10% padding)
-  // Account for devicePixelRatio to match actual canvas size
-  const initialSpace = useMemo(() => {
+  const initialDimensions = useMemo(() => {
     const space = calculateAvailableSpace();
     const dpr = window.devicePixelRatio || 1;
+    const maxWidth = Math.round(space.width * dpr);
+    const maxHeight = Math.round(space.height * dpr);
     return {
-      width: Math.round(space.width * 0.9 * dpr),
-      height: Math.round(space.height * 0.9 * dpr)
+      canvasWidth: Math.max(100, Math.round(maxWidth * 0.9)),
+      canvasHeight: Math.max(100, Math.round(maxHeight * 0.9)),
+      maxWidth,
+      maxHeight,
     };
   }, []);
   
   // Canvas dimensions (actual render size)
-  const [canvasWidth, setCanvasWidthState] = useState(initialSpace.width);
-  const [canvasHeight, setCanvasHeightState] = useState(initialSpace.height);
+  const [canvasWidth, setCanvasWidthState] = useState(initialDimensions.canvasWidth);
+  const [canvasHeight, setCanvasHeightState] = useState(initialDimensions.canvasHeight);
   
   // Maximum constraints based on viewport
-  const [maxCanvasWidth, setMaxCanvasWidth] = useState(initialSpace.width);
-  const [maxCanvasHeight, setMaxCanvasHeight] = useState(initialSpace.height);
+  const [maxCanvasWidth, setMaxCanvasWidth] = useState(initialDimensions.maxWidth);
+  const [maxCanvasHeight, setMaxCanvasHeight] = useState(initialDimensions.maxHeight);
   
   const [isFittedToScreen, setIsFittedToScreen] = useState(false);
+  
+  // Recording state - blocks canvas resizing when true
+  const [isRecording, setIsRecording] = useState(false);
   
   // Track aspect ratio to maintain it on resize (null = free form)
   const [aspectRatio, setAspectRatioState] = useState<number | null>(null);
@@ -237,6 +246,8 @@ export const CanvasProvider: React.FC<CanvasProviderProps> = ({ children }) => {
     maxCanvasHeight,
     scale,
     isFittedToScreen,
+    isRecording,
+    setIsRecording,
     setCanvasWidth,
     setCanvasHeight,
     setCanvasSize,

@@ -504,7 +504,11 @@ export default function EditorClient() {
           Connecting to backend...
         </div>
       )}
-      <div className="grid h-screen grid-cols-studio gap-2 p-2">
+      <div className="relative h-screen p-2">
+        <div className="h-full">
+          <PreviewPanel files={previewFiles} onDownload={onDownload} />
+        </div>
+
         <ChatPanel
           messages={chat.messages}
           input={chat.input}
@@ -518,8 +522,6 @@ export default function EditorClient() {
           onShowPresets={() => setShowPresets(true)}
           hasVersionHistory={codeVersions.length > 0}
         />
-
-        <PreviewPanel files={previewFiles} onDownload={onDownload} />
 
         <PresetsModal
           isOpen={showPresets}

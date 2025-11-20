@@ -564,7 +564,7 @@ export const PreviewPanel = memo(({ files, onDownload }: PreviewPanelProps)=> {
   }, [containerReady, files, queueSync]);
 
   return (
-    <div className="flex flex-col rounded-2xl border border-border bg-surface min-w-[700px] overflow-hidden">
+    <div className="flex h-full w-full flex-col rounded-2xl border border-border bg-surface min-w-[700px] overflow-hidden">
       <div ref={previewContainerRef} className="relative bg-black h-full">
         {previewUrl ? (
           <div className="hyper-frame-external-wrapper flex w-full h-full items-center justify-center">
@@ -600,7 +600,7 @@ export const PreviewPanel = memo(({ files, onDownload }: PreviewPanelProps)=> {
           }}
         >
           <button
-            className="flex w-full items-center justify-between px-5 py-3 text-sm text-text bg-background hover:bg-muted/95 transition cursor-pointer"
+            className="flex w-full items-center justify-between px-5 py-3 text-sm text-text backdrop-blur-xl hover:bg-muted/95 transition cursor-pointer"
             onClick={() => setTerminalExpanded(!terminalExpanded)}
           >
             <div className="flex items-center gap-2">
