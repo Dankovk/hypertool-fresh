@@ -50,6 +50,70 @@ type StoredPanelState = {
   bottomGap: number;
 };
 
+const calculateBottomGap = (
+  viewportHeight: number | null | undefined,
+  top: number,
+  height: number,
+) => {
+  if (!viewportHeight) {
+    return DEFAULT_BOTTOM_GAP;
+  }
+  return Math.max(PANEL_MARGIN, viewportHeight - (top + height));
+};
+
+const readPanelStateFromStorage = (): StoredPanelState | null => {
+  if (typeof window === "undefined") {
+    return null;
+  }
+  try {
+    const raw = window.localStorage.getItem(PANEL_STORAGE_KEY);
+    if (!raw) {
+      return null;
+    }
+    const parsed = JSON.parse(raw) as Partial<StoredPanelState>;
+    if (
+      !parsed.position ||
+      typeof parsed.position.left !== "number" ||
+      typeof parsed.position.top !== "number"
+    ) {
+      return null;
+    }
+    return {
+      position: parsed.position,
+      isExpanded: typeof parsed.isExpanded === "boolean" ? parsed.isExpanded : false,
+      bottomGap: typeof parsed.bottomGap === "number" ? parsed.bottomGap : DEFAULT_BOTTOM_GAP,
+    };
+  } catch {
+    return null;
+  }
+};
+
+const writePanelStateToStorage = (state: StoredPanelState) => {
+  if (typeof window === "undefined") {
+    return;
+  }
+  window.localStorage.setItem(PANEL_STORAGE_KEY, JSON.stringify(state));
+};
+
+const readSettingsCollapsedFromStorage = () => {
+  if (typeof window === "undefined") {
+    return false;
+  }
+  try {
+    const raw = window.localStorage.getItem(SETTINGS_COLLAPSE_STORAGE_KEY);
+    return raw === "true";
+  } catch {
+    return false;
+  }
+};
+
+const writeSettingsCollapsedToStorage = (value: boolean) => {
+  if (typeof window === "undefined") {
+    return;
+  }
+  window.localStorage.setItem(SETTINGS_COLLAPSE_STORAGE_KEY, String(value));
+};
+
 export function ChatPanel({
   messages,
   input,
@@ -90,6 +154,7 @@ export function ChatPanel({
   const panelHeight = isExpanded ? expandedHeight : collapsedHeight;
   const panelTop = position.top;
   const prevPanelHeightRef = useRef(panelHeight);
+  const bottomGapRef = useRef(DEFAULT_BOTTOM_GAP);
   const accordionHeight = Math.max(0, panelHeight - collapsedHeight);
   const handleControlsRef = useCallback((node: HTMLDivElement | null) => {
     setControlsNode(node);
@@ -136,46 +201,17 @@ export function ChatPanel({
   }, [settingsContentNode]);
 
   useEffect(() => {
-    if (typeof window === "undefined") {
+    const saved = readPanelStateFromStorage();
+    if (!saved) {
       return;
     }
-    try {
-      const raw = window.localStorage.getItem(PANEL_STORAGE_KEY);
-      if (!raw) {
-        return;
-      }
-      const parsed = JSON.parse(raw) as Partial<StoredPanelState>;
-      if (typeof parsed.isExpanded === "boolean") {
-        setIsExpanded(parsed.isExpanded);
-      }
-      if (
-        parsed.position &&
-        typeof parsed.position.left === "number" &&
-        typeof parsed.position.top === "number"
-      ) {
-        savedStateRef.current = {
-          position: parsed.position,
-          isExpanded: parsed.isExpanded ?? false,
-          bottomGap: typeof parsed.bottomGap === "number" ? parsed.bottomGap : DEFAULT_BOTTOM_GAP,
-        };
-      }
-    } catch {
-      savedStateRef.current = null;
-    }
+    savedStateRef.current = saved;
+    bottomGapRef.current = saved.bottomGap;
+    setIsExpanded(saved.isExpanded);
   }, []);
 
   useEffect(() => {
-    if (typeof window === "undefined") {
-      return;
-    }
-    try {
-      const raw = window.localStorage.getItem(SETTINGS_COLLAPSE_STORAGE_KEY);
-      if (raw) {
-        setIsSettingsCollapsed(raw === "true");
-      }
-    } catch {
-      // ignore bad storage entries
-    }
+    setIsSettingsCollapsed(readSettingsCollapsedFromStorage());
   }, []);
 
   useEffect(() => {
@@ -274,11 +310,8 @@ export function ChatPanel({
 
   const getGapFromBottom = useCallback(
     (heightOverride?: number) => {
-      if (!viewport.height) {
-        return PANEL_MARGIN;
-      }
       const height = heightOverride ?? panelHeight;
-      return Math.max(PANEL_MARGIN, viewport.height - (panelTop + height));
+      return calculateBottomGap(viewport.height, panelTop, height);
     },
     [panelHeight, panelTop, viewport.height],
   );
@@ -309,9 +342,7 @@ export function ChatPanel({
         if (saved?.position) {
           const inferredGap =
             saved.bottomGap ??
-            (viewport.height
-              ? Math.max(PANEL_MARGIN, viewport.height - (saved.position.top + panelHeight))
-              : DEFAULT_BOTTOM_GAP);
+            calculateBottomGap(viewport.height, saved.position.top, panelHeight);
           const desiredTop =
             viewport.height != null
               ? viewport.height - panelHeight - inferredGap
@@ -323,10 +354,12 @@ export function ChatPanel({
             },
             panelHeight,
           );
+          bottomGapRef.current = inferredGap;
           setIsPanelReady(true);
           return nextPosition;
         }
         const nextPosition = getDefaultPosition(panelHeight);
+        bottomGapRef.current = DEFAULT_BOTTOM_GAP;
         setIsPanelReady(true);
         return nextPosition;
       }
@@ -347,11 +380,11 @@ export function ChatPanel({
     if (isDragging) {
       return;
     }
-    const gap = Math.max(PANEL_MARGIN, viewport.height - (panelTop + previousHeight));
+    const gap = bottomGapRef.current;
     const desiredTop = viewport.height - panelHeight - gap;
     setPosition((prev) => clampPosition({ left: prev.left, top: desiredTop }, panelHeight));
     prevPanelHeightRef.current = panelHeight;
-  }, [clampPosition, isDragging, panelHeight, panelTop, viewport.height]);
+  }, [clampPosition, isDragging, panelHeight, viewport.height]);
 
   useEffect(() => {
     if (!isPanelReady || isPanelVisible) {
@@ -367,10 +400,8 @@ export function ChatPanel({
     if (typeof window === "undefined" || isDragging || !initializedRef.current) {
       return;
     }
-    const currentGap =
-      viewport.height != null
-        ? Math.max(PANEL_MARGIN, viewport.height - (panelTop + panelHeight))
-        : DEFAULT_BOTTOM_GAP;
+    const currentGap = calculateBottomGap(viewport.height, panelTop, panelHeight);
+    bottomGapRef.current = currentGap;
     const payloadPosition: Position = {
       left: position.left,
       top: panelTop,
@@ -380,15 +411,12 @@ export function ChatPanel({
       isExpanded,
       bottomGap: currentGap,
     };
-    window.localStorage.setItem(PANEL_STORAGE_KEY, JSON.stringify(payload));
+    writePanelStateToStorage(payload);
     savedStateRef.current = payload;
   }, [isDragging, isExpanded, panelHeight, panelTop, viewport.height, position.left]);
 
   useEffect(() => {
-    if (typeof window === "undefined") {
-      return;
-    }
-    window.localStorage.setItem(SETTINGS_COLLAPSE_STORAGE_KEY, String(isSettingsCollapsed));
+    writeSettingsCollapsedToStorage(isSettingsCollapsed);
   }, [isSettingsCollapsed]);
 
   useEffect(() => {
@@ -455,6 +483,7 @@ export function ChatPanel({
   const handleToggleExpand = useCallback(() => {
     const currentHeight = isExpanded ? expandedHeight : collapsedHeight;
     const gap = getGapFromBottom(currentHeight);
+    bottomGapRef.current = gap;
 
     if (!viewport.height) {
       setIsExpanded((prev) => !prev);
@@ -490,110 +519,104 @@ export function ChatPanel({
     const nextPosition = getDefaultPosition(collapsedHeight);
     setIsExpanded(false);
     setPosition(nextPosition);
-    const gap =
-      viewport.height != null
-        ? Math.max(PANEL_MARGIN, viewport.height - (nextPosition.top + collapsedHeight))
-        : DEFAULT_BOTTOM_GAP;
+    const gap = calculateBottomGap(viewport.height, nextPosition.top, collapsedHeight);
+    bottomGapRef.current = gap;
     savedStateRef.current = {
       position: nextPosition,
       isExpanded: false,
       bottomGap: gap,
     };
     onReset();
-    if (typeof window !== "undefined") {
-      window.localStorage.setItem(
-        PANEL_STORAGE_KEY,
-        JSON.stringify({
-          position: nextPosition,
-          isExpanded: false,
-          bottomGap: gap,
-        }),
-      );
-    }
+    writePanelStateToStorage({
+      position: nextPosition,
+      isExpanded: false,
+      bottomGap: gap,
+    });
   }, [collapsedHeight, getDefaultPosition, onReset, viewport.height]);
 
   const FoldIcon = isExpanded ? IconChevronDown : IconChevronUp;
+  const panelStyle = {
+    width: "min(400px, calc(100vw - 48px))",
+    maxWidth: PANEL_MAX_WIDTH,
+    height: panelHeight,
+    left: position.left,
+    top: position.top,
+    opacity: isPanelVisible ? 1 : 0,
+    pointerEvents: isPanelVisible ? ("auto" as const) : ("none" as const),
+    visibility: isPanelVisible ? ("visible" as const) : ("hidden" as const),
+    transition: isPanelVisible
+      ? isDragging
+        ? "none"
+        : "height 0.35s ease, top 0.35s ease, left 0.35s ease, opacity 0.25s ease"
+      : "opacity 0.25s ease",
+  };
+  const accordionStyle = {
+    flexGrow: isExpanded ? 1 : 0,
+    flexShrink: isExpanded ? 1 : 0,
+    flexBasis: isExpanded ? "auto" : 0,
+    height: isExpanded ? accordionHeight : 0,
+    maxHeight: accordionHeight,
+    transition: isDragging
+      ? "none"
+      : "height 0.35s ease, max-height 0.35s ease, opacity 0.35s ease, transform 0.35s ease",
+    opacity: isExpanded ? 1 : 0,
+    transform: isExpanded ? "translateY(0)" : "translateY(12px)",
+    pointerEvents: isExpanded ? ("auto" as const) : ("none" as const),
+  };
+  const settingsWrapperStyle = {
+    maxHeight: isSettingsCollapsed ? 0 : settingsContentHeight,
+    opacity: isSettingsCollapsed ? 0 : 1,
+    pointerEvents: isSettingsCollapsed ? ("none" as const) : ("auto" as const),
+  };
+  const controlsSlot = (
+    <>
+      <button
+        className={`inline-flex items-center justify-center rounded-full bg-background/80 p-1 text-text-secondary transition ${
+          isDragging ? "cursor-grabbing" : "cursor-grab"
+        }`}
+        onPointerDown={handleDragStart}
+        style={{ touchAction: "none" }}
+        aria-label="Drag chat panel"
+      >
+        <IconGripVertical size={14} />
+      </button>
+      <button
+        className="inline-flex items-center justify-center rounded-full bg-background/80 p-1 text-text-secondary transition hover:text-accent"
+        onClick={handleToggleExpand}
+        aria-label={isExpanded ? "Fold chat panel" : "Unfold chat panel"}
+      >
+        <FoldIcon size={14} />
+      </button>
+      <button
+        className="inline-flex items-center justify-center rounded-full bg-background/80 p-1 text-text-secondary transition hover:text-accent"
+        onClick={handleToggleSettingsCollapse}
+        aria-label={isSettingsCollapsed ? "Show settings panel" : "Hide settings panel"}
+      >
+        <IconAdjustmentsHorizontal size={14} />
+      </button>
+    </>
+  );
 
   return (
     <div
       ref={panelRef}
       className="pointer-events-auto fixed z-40 flex flex-col overflow-hidden rounded-2xl border border-border bg-dark-base/95 shadow-[0_20px_60px_rgba(0,0,0,0.45)] backdrop-blur-xl"
-      style={{
-        width: "min(400px, calc(100vw - 48px))",
-        maxWidth: PANEL_MAX_WIDTH,
-        height: panelHeight,
-        left: position.left,
-        top: position.top,
-        opacity: isPanelVisible ? 1 : 0,
-        pointerEvents: isPanelVisible ? "auto" : "none",
-        visibility: isPanelVisible ? "visible" : "hidden",
-        transition: isPanelVisible
-          ? isDragging
-            ? "none"
-            : "height 0.35s ease, top 0.35s ease, left 0.35s ease, opacity 0.25s ease"
-          : "opacity 0.25s ease",
-      }}
+      style={panelStyle}
     >
       <div className="flex h-full flex-col">
         <PresetControlsPanel
           ref={handleControlsRef}
-          leftSlot={
-            <>
-              <button
-                className={`inline-flex items-center justify-center rounded-full bg-background/80 p-1 text-text-secondary transition ${
-                  isDragging ? "cursor-grabbing" : "cursor-grab"
-                }`}
-                onPointerDown={handleDragStart}
-                style={{ touchAction: "none" }}
-                aria-label="Drag chat panel"
-              >
-                <IconGripVertical size={14} />
-              </button>
-              <button
-                className="inline-flex items-center justify-center rounded-full bg-background/80 p-1 text-text-secondary transition hover:text-accent"
-                onClick={handleToggleExpand}
-                aria-label={isExpanded ? "Fold chat panel" : "Unfold chat panel"}
-              >
-                <FoldIcon size={14} />
-              </button>
-              <button
-                className="inline-flex items-center justify-center rounded-full bg-background/80 p-1 text-text-secondary transition hover:text-accent"
-                onClick={handleToggleSettingsCollapse}
-                aria-label={isSettingsCollapsed ? "Show settings panel" : "Hide settings panel"}
-              >
-                <IconAdjustmentsHorizontal size={14} />
-              </button>
-            </>
-          }
+          leftSlot={controlsSlot}
           hasVersionHistory={hasVersionHistory}
           onShowHistory={onShowHistory}
           onShowPresets={onShowPresets}
           onReset={handleResetPanel}
         />
 
-        <div
-          className="flex flex-col overflow-hidden bg-dark-base/70"
-          style={{
-            flexGrow: isExpanded ? 1 : 0,
-            flexShrink: isExpanded ? 1 : 0,
-            flexBasis: isExpanded ? "auto" : 0,
-            height: isExpanded ? accordionHeight : 0,
-            maxHeight: accordionHeight,
-            transition: isDragging
-              ? "none"
-              : "height 0.35s ease, max-height 0.35s ease, opacity 0.35s ease, transform 0.35s ease",
-            opacity: isExpanded ? 1 : 0,
-            transform: isExpanded ? "translateY(0)" : "translateY(12px)",
-            pointerEvents: isExpanded ? "auto" : "none",
-          }}
-        >
+        <div className="flex flex-col overflow-hidden bg-dark-base/70" style={accordionStyle}>
           <div
             className="shrink-0 overflow-hidden transition-[max-height,opacity] duration-300 ease-in-out"
-            style={{
-              maxHeight: isSettingsCollapsed ? 0 : settingsContentHeight,
-              opacity: isSettingsCollapsed ? 0 : 1,
-              pointerEvents: isSettingsCollapsed ? "none" : "auto",
-            }}
+            style={settingsWrapperStyle}
           >
             <div ref={handleSettingsContentRef}>
               <SettingsPanel

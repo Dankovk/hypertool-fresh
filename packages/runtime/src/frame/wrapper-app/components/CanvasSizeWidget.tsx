@@ -144,7 +144,7 @@ export const CanvasSizeWidget: React.FC = () => {
       </select>
 
       {/* Width Input */}
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-1">
         <label className="text-sm text-accent">W:</label>
         <input
           // type="number"
@@ -164,7 +164,7 @@ export const CanvasSizeWidget: React.FC = () => {
       </div>
 
       {/* Height Input */}
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-1">
         <label className="text-sm text-accent">H:</label>
         <input
           // type="number"
