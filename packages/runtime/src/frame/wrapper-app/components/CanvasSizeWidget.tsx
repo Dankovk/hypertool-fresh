@@ -41,6 +41,7 @@ export const CanvasSizeWidget: React.FC = () => {
     canvasWidth, 
     canvasHeight, 
     scale,
+    isRecording,
     setCanvasWidth, 
     setCanvasHeight,
     setAspectRatio,
@@ -61,6 +62,7 @@ export const CanvasSizeWidget: React.FC = () => {
   }, [canvasHeight]);
 
   const applyWidth = () => {
+    if (isRecording) return; // Block resizing during recording
     const value = Math.round(parseFloat(widthInput)); // Round to integer
     if (!isNaN(value) && value >= 100) {
       setCanvasWidth(value);
@@ -72,6 +74,7 @@ export const CanvasSizeWidget: React.FC = () => {
   };
 
   const applyHeight = () => {
+    if (isRecording) return; // Block resizing during recording
     const value = Math.round(parseFloat(heightInput)); // Round to integer
     if (!isNaN(value) && value >= 100) {
       setCanvasHeight(value);
@@ -97,6 +100,7 @@ export const CanvasSizeWidget: React.FC = () => {
   };
 
   const handlePresetChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    if (isRecording) return; // Block resizing during recording
     const preset = PRESETS.find(p => p.label === e.target.value);
     if (preset && preset.width > 0 && preset.height > 0) {
       // Set aspect ratio - canvas will maximize to container with this ratio
@@ -120,8 +124,12 @@ export const CanvasSizeWidget: React.FC = () => {
       {/* Presets Dropdown */}
       <select
         onChange={handlePresetChange}
-        className="rounded border border-border w-[90px] bg-background px-2 py-1 text-sm text-text focus:border-accent focus:outline-none cursor-pointer"
+        className={`rounded border border-border w-[90px] bg-background px-2 py-1 text-sm text-text focus:border-accent focus:outline-none ${
+          isRecording ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'
+        }`}
         defaultValue=""
+        disabled={isRecording}
+        title={isRecording ? 'Canvas resizing is locked during recording' : 'Choose a preset size'}
       >
         <option value="" disabled>Presets</option>
         {PRESETS.map((preset, idx) => 
@@ -144,10 +152,14 @@ export const CanvasSizeWidget: React.FC = () => {
           onChange={(e) => setWidthInput(e.target.value)}
           onBlur={applyWidth}
           onKeyDown={handleWidthKeyDown}
-          className="rounded border border-border bg-background px-2 py-1 text-sm text-text focus:border-accent focus:outline-none"
+          className={`rounded border border-border bg-background px-2 py-1 text-sm text-text focus:border-accent focus:outline-none ${
+            isRecording ? 'opacity-50 cursor-not-allowed' : ''
+          }`}
           style={{ width: `${Math.max(widthInput.length * 8 + 16, 55)}px` }}
           min="60"
           step="1"
+          disabled={isRecording}
+          title={isRecording ? 'Canvas resizing is locked during recording' : 'Canvas width'}
         />
       </div>
 
@@ -160,10 +172,14 @@ export const CanvasSizeWidget: React.FC = () => {
           onChange={(e) => setHeightInput(e.target.value)}
           onBlur={applyHeight}
           onKeyDown={handleHeightKeyDown}
-          className="rounded border border-border bg-background px-2 py-1 text-sm text-text focus:border-accent focus:outline-none"
+          className={`rounded border border-border bg-background px-2 py-1 text-sm text-text focus:border-accent focus:outline-none ${
+            isRecording ? 'opacity-50 cursor-not-allowed' : ''
+          }`}
           style={{ width: `${Math.max(heightInput.length * 8 + 16, 55)}px` }}
           min="60"
           step="1"
+          disabled={isRecording}
+          title={isRecording ? 'Canvas resizing is locked during recording' : 'Canvas height'}
         />
       </div>
 
@@ -226,9 +242,12 @@ export const CanvasSizeWidget: React.FC = () => {
       {/* Fit to Screen Button */}
       <button
         type="button"
-        className="inline-flex items-center gap-1 h-[30px] rounded-lg border border-border bg-background px-3 py-2 text-sm text-text transition hover:bg-muted/80 whitespace-nowrap"
+        className={`inline-flex items-center gap-1 h-[30px] rounded-lg border border-border bg-background px-3 py-2 text-sm text-text transition whitespace-nowrap ${
+          isRecording ? 'opacity-50 cursor-not-allowed' : 'hover:bg-muted/80'
+        }`}
         onClick={fitToScreen}
-        title="Fit to screen"
+        disabled={isRecording}
+        title={isRecording ? 'Canvas resizing is locked during recording' : 'Fit to screen'}
       >
         <svg
           xmlns="http://www.w3.org/2000/svg"

@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
+import { useCanvas } from '../context/CanvasContext';
 
 type ResizeHandle = 'n' | 's' | 'e' | 'w' | 'ne' | 'nw' | 'se' | 'sw';
 
@@ -24,6 +25,7 @@ export const ResizeHandles: React.FC<ResizeHandlesProps> = ({
   scale, 
   onResize 
 }) => {
+  const { isRecording } = useCanvas();
   const [isResizing, setIsResizing] = useState(false);
   const [resizeHandle, setResizeHandle] = useState<ResizeHandle | null>(null);
   const [startPos, setStartPos] = useState({ x: 0, y: 0 });
@@ -38,6 +40,8 @@ export const ResizeHandles: React.FC<ResizeHandlesProps> = ({
   }, [scale]);
 
   const handleMouseDown = useCallback((handle: ResizeHandle, e: React.MouseEvent) => {
+    if (isRecording) return; // Block resizing during recording
+    
     e.preventDefault();
     e.stopPropagation();
     
@@ -45,7 +49,7 @@ export const ResizeHandles: React.FC<ResizeHandlesProps> = ({
     setResizeHandle(handle);
     setStartPos({ x: e.clientX, y: e.clientY });
     setStartSize({ width: canvasWidth, height: canvasHeight });
-  }, [canvasWidth, canvasHeight]);
+  }, [canvasWidth, canvasHeight, isRecording]);
 
   useEffect(() => {
     if (!isResizing || !resizeHandle) return;
@@ -144,11 +148,12 @@ export const ResizeHandles: React.FC<ResizeHandlesProps> = ({
     className: string;
   }) => (
     <div
-      className={`absolute ${className} group`}
+      className={`absolute ${className} group ${isRecording ? 'cursor-not-allowed opacity-0' : ''}`}
       onMouseDown={(e) => handleMouseDown(handle, e)}
       style={{ zIndex: 10 }}
+      title={isRecording ? 'Canvas resizing is locked during recording' : undefined}
     >
-      <div className="w-full h-full opacity-0 group-hover:opacity-100 transition-opacity bg-accent/20" />
+      <div className={`w-full h-full transition-opacity bg-accent/20 ${isRecording ? 'opacity-0' : 'opacity-0 group-hover:opacity-100'}`} />
     </div>
   );
 

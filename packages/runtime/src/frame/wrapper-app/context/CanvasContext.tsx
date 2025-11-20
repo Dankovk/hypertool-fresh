@@ -14,6 +14,10 @@ interface CanvasContextValue {
   
   isFittedToScreen: boolean;
   
+  // Recording state
+  isRecording: boolean;
+  setIsRecording: (recording: boolean) => void;
+  
   // Canvas size setters
   setCanvasWidth: (width: number) => void;
   setCanvasHeight: (height: number) => void;
@@ -74,6 +78,9 @@ export const CanvasProvider: React.FC<CanvasProviderProps> = ({ children }) => {
   const [maxCanvasHeight, setMaxCanvasHeight] = useState(initialSpace.height);
   
   const [isFittedToScreen, setIsFittedToScreen] = useState(false);
+  
+  // Recording state - blocks canvas resizing when true
+  const [isRecording, setIsRecording] = useState(false);
   
   // Track aspect ratio to maintain it on resize (null = free form)
   const [aspectRatio, setAspectRatioState] = useState<number | null>(null);
@@ -237,6 +244,8 @@ export const CanvasProvider: React.FC<CanvasProviderProps> = ({ children }) => {
     maxCanvasHeight,
     scale,
     isFittedToScreen,
+    isRecording,
+    setIsRecording,
     setCanvasWidth,
     setCanvasHeight,
     setCanvasSize,
