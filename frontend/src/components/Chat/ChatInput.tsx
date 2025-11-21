@@ -16,7 +16,7 @@ export function ChatInput({ value, onChange, onSubmit, onCancel, loading }: Chat
     const el = textareaRef.current;
     if (!el) return;
     el.style.height = "auto";
-    el.style.height = `${Math.min(el.scrollHeight, 160)}px`;
+    el.style.height = `${Math.min(el.scrollHeight + 4, 160)}px`;
   }, [value]);
 
   return (

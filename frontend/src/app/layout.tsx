@@ -32,10 +32,6 @@ export default function RootLayout({
       <html lang="en">
         <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
           <div className="flex min-h-screen flex-col bg-background text-text">
-            <header className="flex items-center justify-between border-b border-border px-4 py-3">
-              <span className="text-lg font-semibold">Fresh Breeze</span>
-              <AccountPortalLinks />
-            </header>
             <main className="flex-1">
               <ConvexClientProviderWrapper>
                 <ErrorBoundary>
@@ -43,6 +39,9 @@ export default function RootLayout({
                 </ErrorBoundary>
               </ConvexClientProviderWrapper>
             </main>
+          </div>
+          <div className="fixed bottom-4 right-4 z-50">
+            <AccountPortalLinks />
           </div>
           <Toaster richColors position="top-right" />
         </body>

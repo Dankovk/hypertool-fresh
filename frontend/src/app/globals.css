@@ -386,3 +386,11 @@
     opacity: 1;
   }
 }
+
+
+@media (max-width: 800px) {
+  .canvas-size-widget-container {
+    left: 0;
+    top: 37px;
+  }
+}

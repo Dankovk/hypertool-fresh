@@ -144,7 +144,7 @@ export const CanvasSizeWidget: React.FC = () => {
       </select>
 
       {/* Width Input */}
-      <div className="flex items-center gap-1">
+      <div className="flex items-center gap-">
         <label className="text-sm text-accent">W:</label>
         <input
           // type="number"
@@ -190,6 +190,9 @@ export const CanvasSizeWidget: React.FC = () => {
           ? `Canvas: ${canvasSize} → Display: ${displaySize} (scaled to ${scalePercent}%)`
           : `Canvas: ${canvasSize} = Display: ${displaySize} (no scaling)`
         }
+        style={{
+          display: isScaled ? 'flex' : 'none',
+        }}
       >
         <svg
           xmlns="http://www.w3.org/2000/svg"
