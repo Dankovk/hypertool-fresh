@@ -564,7 +564,7 @@ export const PreviewPanel = memo(({ files, onDownload }: PreviewPanelProps)=> {
   }, [containerReady, files, queueSync]);
 
   return (
-    <div className="flex h-full w-full flex-col rounded-2xl border border-border bg-surface min-w-[700px] overflow-hidden">
+    <div className="flex h-full w-full flex-col rounded-2xl border border-border bg-surface overflow-hidden">
       <div ref={previewContainerRef} className="relative bg-black h-full">
         {previewUrl ? (
           <div className="hyper-frame-external-wrapper flex w-full h-full items-center justify-center">
