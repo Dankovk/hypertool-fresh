@@ -63,12 +63,8 @@ export function ChatPanel({
       <SettingsPanel
           model={settings.model}
           onModelChange={settings.setModel}
-          editMode={settings.editMode}
-          onEditModeChange={settings.setEditMode}
           apiKey={settings.apiKey}
           onApiKeyChange={settings.setApiKey}
-          systemPrompt={settings.systemPrompt}
-          onSystemPromptChange={settings.setSystemPrompt}
         />
 
       <ChatMessages messages={messages} loading={loading} streamingText={streamingText} />

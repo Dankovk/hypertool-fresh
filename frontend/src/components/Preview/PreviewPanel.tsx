@@ -13,6 +13,8 @@ import { Terminal } from "@xterm/xterm";
 import "@xterm/xterm/css/xterm.css";
 import { CssSyncManager } from "./CssSyncManager";
 import { BottomBar } from "./BottomBar";
+import { usePreviewStore } from "@/stores";
+import { toast } from "sonner";
 
 const TERMINAL_CONFIG = {
   cursorBlink: true,
@@ -107,6 +109,12 @@ export const PreviewPanel = memo(({ files, onDownload }: PreviewPanelProps)=> {
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [logs, setLogs] = useState<LogEntry[]>([]);
   const [containerReady, setContainerReady] = useState(false);
+
+  // Shell command execution from artifact mode
+  const shellCommands = usePreviewStore((state) => state.shellCommands);
+  const clearShellCommands = usePreviewStore((state) => state.clearShellCommands);
+  const setExecuting = usePreviewStore((state) => state.setExecuting);
+  const addExecutionLog = usePreviewStore((state) => state.addExecutionLog);
 
   const appendLog = useCallback((message: string) => {
     if (!isMountedRef.current) {
@@ -562,6 +570,99 @@ export const PreviewPanel = memo(({ files, onDownload }: PreviewPanelProps)=> {
     setStatus("Synchronizing project…");
     queueSync(files, { forceInstall: lastPackageJsonRef.current === null });
   }, [containerReady, files, queueSync]);
+
+  // ===== SHELL COMMAND EXECUTION =====
+
+  /**
+   * Execute a single shell command in WebContainer
+   */
+  const executeShellCommand = useCallback(async (
+    command: string
+  ): Promise<{ exitCode: number; output: string }> => {
+    const container = containerRef.current;
+    if (!container) {
+      throw new Error('WebContainer not ready');
+    }
+
+    appendLog(`[Shell] Executing: ${command}`);
+    setStatus(`Running: ${command}`);
+
+    let output = '';
+
+    try {
+      const process = await container.spawn('sh', ['-c', command]);
+
+      // Pipe output to terminal
+      await pipeProcessOutput(process.output, 'shell');
+
+      const exitCode = await process.exit;
+
+      if (exitCode === 0) {
+        appendLog(`[Shell] ✓ Command completed successfully`);
+      } else {
+        appendLog(`[Shell] ✗ Command failed with exit code ${exitCode}`);
+      }
+
+      return { exitCode, output };
+    } catch (err) {
+      const errMsg = err instanceof Error ? err.message : 'Unknown error';
+      appendLog(`[Shell] ✗ Error: ${errMsg}`);
+      throw err;
+    }
+  }, [appendLog, setStatus, pipeProcessOutput]);
+
+  /**
+   * Execute multiple shell commands sequentially
+   */
+  const executeShellCommands = useCallback(async (commands: string[]) => {
+    if (!containerRef.current || commands.length === 0) return;
+
+    setExecuting(true);
+    setStatus(`Executing ${commands.length} shell command(s)...`);
+    appendLog(`[Shell] Starting execution of ${commands.length} command(s)`);
+
+    try {
+      for (let i = 0; i < commands.length; i++) {
+        const cmd = commands[i];
+        appendLog(`[Shell] (${i + 1}/${commands.length}) ${cmd}`);
+
+        const result = await executeShellCommand(cmd);
+
+        // Stop if command failed
+        if (result.exitCode !== 0) {
+          setError(`Command failed: ${cmd}`);
+          toast.error(`Shell command failed: ${cmd}`, { duration: 10000 });
+          break;
+        }
+
+        // Small delay between commands
+        if (i < commands.length - 1) {
+          await new Promise(resolve => setTimeout(resolve, 200));
+        }
+      }
+
+      appendLog(`[Shell] ✓ All commands executed successfully`);
+      toast.success('All shell commands executed successfully!');
+      clearShellCommands();
+    } catch (err) {
+      const errMsg = err instanceof Error ? err.message : 'Unknown error';
+      setError(`Shell execution failed: ${errMsg}`);
+      toast.error(`Shell execution failed: ${errMsg}`, { duration: 10000 });
+    } finally {
+      setExecuting(false);
+      setStatus(previewUrl ? 'Ready' : 'Waiting for files...');
+    }
+  }, [executeShellCommand, clearShellCommands, appendLog, setExecuting, setStatus, setError, previewUrl]);
+
+  // Auto-execute shell commands when they arrive
+  useEffect(() => {
+    if (shellCommands.length > 0 && containerReady) {
+      // Execute commands after current sync completes
+      syncQueueRef.current = syncQueueRef.current.then(() =>
+        executeShellCommands(shellCommands)
+      );
+    }
+  }, [shellCommands, containerReady, executeShellCommands]);
 
   return (
     <div className="flex flex-col rounded-2xl border border-border bg-surface min-w-[700px] overflow-hidden">

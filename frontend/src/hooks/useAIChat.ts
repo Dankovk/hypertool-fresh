@@ -1,6 +1,6 @@
 import React, { useCallback, useState } from "react";
 import { toast } from "sonner";
-import { useChatStore, useFilesStore, useVersionsStore, useSettingsStore } from "@/stores";
+import { useChatStore, useFilesStore, useVersionsStore, useSettingsStore, usePreviewStore } from "@/stores";
 import { FileMapSchema } from "@/types/studio";
 import { toClientFiles, toRuntimeFileMap } from "@/lib/fileUtils";
 import { apiFetch, getApiUrl, API_ENDPOINTS } from "@/lib/api-client";
@@ -160,6 +160,14 @@ export function useAIChat() {
                       const normalized = toClientFiles(parsed.data);
                       addVersion(normalized, currentInput, model);
                       setFiles(normalized);
+
+                      // Handle shell commands from artifacts
+                      if (event.shellCommands && event.shellCommands.length > 0) {
+                        usePreviewStore.getState().setShellCommands(event.shellCommands);
+                        console.log('[AI] Received shell commands:', event.shellCommands);
+                        toast.info(`${event.shellCommands.length} shell command(s) ready to execute`);
+                      }
+
                       toast.success(`Files applied successfully! (${Object.keys(event.files).length} files)`);
                     } else {
                       updateLastMessage?.('❌ Failed to validate files.');

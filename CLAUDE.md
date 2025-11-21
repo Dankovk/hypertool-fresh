@@ -105,15 +105,38 @@ window.hyperFrame.createSandbox({
 
 ### AI Code Generation
 
-**Two Edit Modes**:
+**Three Interaction Modes**:
 
-1. **Patch Mode** (default, 90%+ token savings):
+1. **Artifact Mode** (NEW - HyperTool artifact system, recommended):
+   - Uses XML-based artifact/action structure for comprehensive project operations
+   - Supports multiple file operations + shell commands in one response
+   - Enables real npm package management via WebContainer
+   - Structure:
+     ```xml
+     <hypertlArtifact id="feature-name" title="Feature Title">
+       <hypertlAction type="file" filePath="/main.ts" contentType="text/typescript">
+         // File content
+       </hypertlAction>
+       <hypertlAction type="shell">npm install package</hypertlAction>
+     </hypertlArtifact>
+     ```
+   - **Action types**:
+     - `file` - Create/update project files
+     - `shell` - Execute commands in WebContainer (npm, build, etc.)
+     - `start` - Refresh preview (auto-triggered)
+   - **Prompt**: `getHyperFramePrompt()` in `backend/src/prompts/prompt.ts`
+   - **Parsing**: `parseArtifacts(text)` → `HypertlArtifact[]`
+   - **File extraction**: `artifactToFileMap(artifact)` → `Record<string, string>`
+   - **See**: `/docs/SYSTEM_ARCHITECTURE.md` for complete flow
+   - **See**: `/ARTIFACT_SYSTEM_CHANGES.md` for implementation guide
+
+2. **Patch Mode** (default, 90%+ token savings):
    - Uses search/replace blocks for precise edits
    - Context-aware fuzzy matching handles whitespace
    - Maintains edit history with undo/redo
    - Schema: `{ edits: [{ type: "search-replace", filePath, search, replace }], explanation }`
 
-2. **Full File Mode**:
+3. **Full File Mode**:
    - Complete file regeneration for major rewrites
    - Schema: `{ files: { "/path": "content" }, explanation }`
 
@@ -210,13 +233,28 @@ PORT=3001
 
 ## Key Files
 
-- `packages/shared-config/prompts.js` - AI system prompts for patch/full mode
-- `packages/shared-config/models.js` - Available AI models configuration
-- `backend/src/routes/ai-stream.ts` - Main AI streaming logic
-- `backend/src/lib/patches.ts` - Patch application with fuzzy matching
-- `backend/src/lib/history.ts` - Edit history management
+### Artifact System (NEW)
+- `backend/src/prompts/prompt.ts` - HyperTool artifact prompt + parsing (`getHyperFramePrompt`, `parseArtifacts`)
+- `frontend/src/stores/previewStore.ts` - Shell command execution state
+- `docs/SYSTEM_ARCHITECTURE.md` - Complete system architecture with runtime
+- `ARTIFACT_SYSTEM_CHANGES.md` - Implementation guide
+
+### Runtime Package
+- `packages/runtime/src/index.ts` - HyperFrame API + Controls (auto-injected to WebContainer)
+- `packages/runtime/src/frame/runtime.ts` - `window.hyperFrame.createSandbox()`
+- `packages/runtime/src/controls/HypertoolControls.ts` - Tweakpane wrapper
+
+### Core System
+- `backend/src/routes/ai-stream.ts` - Main AI streaming endpoint (handles artifacts)
+- `backend/src/lib/patches.ts` - Patch mode logic (legacy)
+- `frontend/src/components/Preview/PreviewPanel.tsx` - WebContainer + shell execution
+- `frontend/src/hooks/useAIChat.ts` - AI streaming hook
 - `convex/schema.ts` - Convex database schema
 - `frontend/src/middleware.ts` - Clerk auth middleware
+
+### Configuration
+- `packages/shared-config/prompts.js` - Legacy patch/full prompts
+- `packages/shared-config/models.js` - Available AI models
 
 ## Important Notes
 
@@ -228,6 +266,9 @@ PORT=3001
 6. **Runtime must build first**: Frontend and backend depend on built runtime artifacts
 7. **Patch validation**: Search strings must be non-empty and at least 10 characters
 8. **Provider detection**: Model name determines provider (contains 'gemini', 'claude', 'gpt', etc.)
+9. **Artifact naming**: Use `hypertlArtifact` and `hypertlAction` (not "bolt")
+10. **Runtime injection**: `@hypertool/runtime` auto-injected as `__hypertool__/` in WebContainer
+11. **Shell execution**: Commands run in WebContainer, output streams to terminal in real-time
 
 ## Testing Locally
 

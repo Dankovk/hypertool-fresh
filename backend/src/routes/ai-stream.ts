@@ -17,6 +17,7 @@ import { streamObject, streamText } from 'ai';
 import { z } from 'zod';
 import { applyEditsToFiles, createHistoryEntry } from '../lib/patches.js';
 import { getHistoryManager } from '../lib/history.js';
+import { getHyperFramePrompt, parseArtifacts, artifactToFileMap } from '../prompts/prompt.js';
 
 const app = new Hono();
 
@@ -120,18 +121,37 @@ app.post('/', async (c) => {
     const aiVisibleFiles = filterUserFacingFiles(userFiles);
 
     // Determine mode and model configuration
-    const usePatchMode = editMode === 'patch';
+    const mode = editMode || 'artifact'; // Default to artifact
+    const usePatchMode = mode === 'patch';
+    const useArtifactMode = mode === 'artifact';
     const useGemini = isGeminiModel(model);
     const provider = getProviderForModel(model, apiKey);
     const aiModel = provider.chat(model);
 
     // Select appropriate system prompt based on model and edit mode
-    const defaultPrompt = useGemini
-      ? (usePatchMode ? GEMINI_SYSTEM_PROMPT_PATCH : GEMINI_SYSTEM_PROMPT_FULL)
-      : (usePatchMode ? DEFAULT_SYSTEM_PROMPT_PATCH : DEFAULT_SYSTEM_PROMPT_FULL);
+    const defaultPrompt = useArtifactMode
+      ? getHyperFramePrompt()
+      : useGemini
+        ? (usePatchMode ? GEMINI_SYSTEM_PROMPT_PATCH : GEMINI_SYSTEM_PROMPT_FULL)
+        : (usePatchMode ? DEFAULT_SYSTEM_PROMPT_PATCH : DEFAULT_SYSTEM_PROMPT_FULL);
+
+    const finalSystemPrompt = systemPrompt?.trim() || defaultPrompt;
+
+    // Log request details
+    const userMessage = messages[messages.length - 1]?.content || '';
+    logger.info('AI request initiated', {
+      model,
+      mode,
+      provider: useGemini ? 'gemini' : 'claude',
+      userMessagePreview: userMessage.slice(0, 100) + (userMessage.length > 100 ? '...' : ''),
+      systemPromptPreview: finalSystemPrompt.slice(0, 200) + '...',
+      systemPromptLength: finalSystemPrompt.length,
+      filesCount: Object.keys(aiVisibleFiles).length,
+      messageCount: messages.length,
+    });
 
     const conversation = buildConversationPrompt({
-      systemPrompt: systemPrompt?.trim() || defaultPrompt,
+      systemPrompt: finalSystemPrompt,
       files: aiVisibleFiles,
       messages,
     });
@@ -144,8 +164,97 @@ app.post('/', async (c) => {
 
         let finalObject: any = {};
 
+        // ===== ARTIFACT MODE: Use streamText for XML-based artifacts =====
+        if (useArtifactMode) {
+          const result = await streamText({
+            model: aiModel,
+            prompt: conversation,
+            temperature: 0.7,
+          });
+
+          const startEvent = { type: 'start', provider: useGemini ? 'gemini' : 'claude', mode: 'artifact' };
+          await stream.write(`data: ${JSON.stringify(startEvent)}\n\n`);
+          console.log('[Stream] →', startEvent);
+
+          // Stream tokens to frontend
+          let fullText = '';
+          for await (const chunk of result.textStream) {
+            fullText += chunk;
+            const tokenEvent = { type: 'token', text: chunk, provider: useGemini ? 'gemini' : 'claude' };
+            await stream.write(`data: ${JSON.stringify(tokenEvent)}\n\n`);
+            process.stdout.write(chunk); // Output tokens as they arrive
+          }
+
+          // Parse artifacts from the response
+          const artifacts = parseArtifacts(fullText);
+
+          if (artifacts.length === 0) {
+            logger.error('No artifacts found in AI response', {
+              fullTextPreview: fullText.slice(0, 500) + '...',
+              fullTextLength: fullText.length
+            });
+            throw new Error('No artifacts found in AI response. AI must respond with <hypertlArtifact> tags in artifact mode.');
+          }
+
+          const artifact = artifacts[0]; // Use first artifact
+
+          // Extract files from artifact
+          const newFiles = artifactToFileMap(artifact);
+
+          // Extract shell commands from artifact
+          const shellCommands = artifact.actions
+            .filter(a => a.type === 'shell')
+            .map(a => a.content || '')
+            .filter(cmd => cmd.trim() !== '');
+
+          // Log artifact details
+          logger.info('Artifact parsed successfully', {
+            artifactId: artifact.id,
+            artifactTitle: artifact.title,
+            totalActions: artifact.actions.length,
+            fileActions: artifact.actions.filter(a => a.type === 'file').length,
+            shellActions: artifact.actions.filter(a => a.type === 'shell').length,
+            startActions: artifact.actions.filter(a => a.type === 'start').length,
+            filesList: Object.keys(newFiles),
+            shellCommands,
+          });
+
+          // Merge with system files
+          const mergedFiles = ensureSystemFiles(
+            mergeWithSystemFiles(systemFiles, newFiles)
+          );
+
+          // Extract explanation (text before first artifact tag)
+          const explanationMatch = fullText.match(/^(.*?)<hypertlArtifact/s);
+          const explanation = explanationMatch?.[1]?.trim() || artifact.title;
+
+          const completeEvent = {
+            type: 'complete',
+            mode: 'artifact',
+            files: normalizeFileMap(mergedFiles, { ensureLeadingSlash: true }),
+            shellCommands,
+            explanation,
+            artifact: {
+              id: artifact.id,
+              title: artifact.title,
+            },
+            provider: useGemini ? 'gemini' : 'claude',
+          };
+
+          await stream.write(`data: ${JSON.stringify(completeEvent)}\n\n`);
+          console.log('[Stream] → complete event (artifact mode) with', Object.keys(mergedFiles).length, 'files and', shellCommands.length, 'shell commands');
+
+          logger.info('Artifact mode response completed', {
+            totalFiles: Object.keys(mergedFiles).length,
+            userFiles: Object.keys(newFiles).length,
+            shellCommands: shellCommands.length,
+            explanationLength: explanation.length,
+          });
+
+          return; // Exit early - artifact mode is complete
+        }
         // ===== GEMINI: Use streamObject for structured output with Zod validation =====
-        if (useGemini) {
+        else if (useGemini) {
           const schema = usePatchMode ? PatchModeSchema : FullFileModeSchema;
           const schemaName = usePatchMode ? 'CodeEdits' : 'FileMap';
 
@@ -179,13 +288,36 @@ app.post('/', async (c) => {
           }
 
           console.log('[Stream] Gemini streaming completed, updates:', updateCount);
-          
+
           // Get final validated object
           finalObject = await result.object;
-          console.log('[Stream] Gemini object received:', {
-            hasEdits: !!(finalObject as any).edits,
-            hasFiles: !!(finalObject as any).files,
-          });
+
+          // Log detailed Gemini response info
+          const hasEdits = !!(finalObject as any).edits;
+          const hasFiles = !!(finalObject as any).files;
+          console.log('[Stream] Gemini object received:', { hasEdits, hasFiles });
+
+          if (hasEdits) {
+            const edits = (finalObject as any).edits || [];
+            logger.info('Gemini generated edits (patch mode)', {
+              editCount: edits.length,
+              editsPreview: edits.slice(0, 3).map((e: any) => ({
+                type: e.type,
+                filePath: e.filePath,
+                searchLength: e.search?.length,
+                replaceLength: e.replace?.length,
+              })),
+            });
+          }
+
+          if (hasFiles) {
+            const files = (finalObject as any).files || {};
+            logger.info('Gemini generated files (full mode)', {
+              fileCount: Object.keys(files).length,
+              filesList: Object.keys(files),
+              totalSize: Object.values(files).reduce((sum: number, content: any) => sum + (content?.length || 0), 0),
+            });
+          }
 
         }
         // ===== CLAUDE/OTHER: Use streamText and parse JSON from response =====
@@ -217,13 +349,46 @@ app.post('/', async (c) => {
           // Extract and parse JSON from response
           const jsonMatch = fullText.match(/\{[\s\S]*\}/);
           if (!jsonMatch) {
+            logger.error('No structured data in Claude/AI response', {
+              fullTextPreview: fullText.slice(0, 500) + '...',
+              fullTextLength: fullText.length
+            });
             throw new Error('No structured data in AI response');
           }
 
           try {
             finalObject = JSON.parse(jsonMatch[0]);
+
+            // Log what Claude generated
+            const hasEdits = !!(finalObject as any).edits;
+            const hasFiles = !!(finalObject as any).files;
+
+            if (hasEdits) {
+              const edits = (finalObject as any).edits || [];
+              logger.info('Claude generated edits (patch mode)', {
+                editCount: edits.length,
+                editsPreview: edits.slice(0, 3).map((e: any) => ({
+                  type: e.type,
+                  filePath: e.filePath,
+                  searchLength: e.search?.length,
+                  replaceLength: e.replace?.length,
+                })),
+              });
+            }
+
+            if (hasFiles) {
+              const files = (finalObject as any).files || {};
+              logger.info('Claude generated files (full mode)', {
+                fileCount: Object.keys(files).length,
+                filesList: Object.keys(files),
+                totalSize: Object.values(files).reduce((sum: number, content: any) => sum + (content?.length || 0), 0),
+              });
+            }
           } catch (err) {
-            logger.error('Failed to parse JSON from AI response', err);
+            logger.error('Failed to parse JSON from AI response', {
+              error: err,
+              jsonPreview: jsonMatch[0].slice(0, 500) + '...'
+            });
             throw new Error('Failed to parse AI response');
           }
         }
@@ -292,9 +457,29 @@ app.post('/', async (c) => {
 
           const successfulEdits = patchResult.results.filter(r => r.success).length;
           const failedEdits = patchResult.results.filter(r => !r.success).length;
+          const failedResults = patchResult.results.filter(r => !r.success);
+
+          // Log detailed patch results
+          logger.info('Patch application results', {
+            totalEdits: validEdits.length,
+            successful: successfulEdits,
+            failed: failedEdits,
+            invalidFiltered: invalidEdits.length,
+            failedEditsDetails: failedResults.map(r => ({
+              filePath: r.filePath,
+              error: r.error,
+            })),
+          });
 
           if (patchResult.success === false && successfulEdits === 0) {
-            logger.error('All patches failed to apply', { errors: patchResult.errors });
+            logger.error('All patches failed to apply', {
+              errors: patchResult.errors,
+              failedEdits: failedResults.map(r => ({
+                filePath: r.filePath,
+                error: r.error,
+                searchPreview: validEdits.find((e: any) => e.filePath === r.filePath)?.search?.slice(0, 100)
+              }))
+            });
             throw new Error(`Failed to apply all patches: ${patchResult.errors?.join(", ")}`);
           }
 
@@ -362,11 +547,26 @@ app.post('/', async (c) => {
         });
 
         } else {
+          // ===== FULL FILE MODE: Complete file regeneration =====
           const files = (finalObject as any).files;
 
           if (!files || Object.keys(files).length === 0) {
+            logger.error('No files generated in full file mode', {
+              finalObjectKeys: Object.keys(finalObject),
+            });
             throw new Error("No files generated");
           }
+
+          // Log full file mode results
+          logger.info('Full file mode generation completed', {
+            fileCount: Object.keys(files).length,
+            filesList: Object.keys(files),
+            fileSizes: Object.entries(files).map(([path, content]: [string, any]) => ({
+              path,
+              size: content?.length || 0,
+              lines: content?.split('\n').length || 0,
+            })),
+          });
 
           mergedFiles = ensureSystemFiles(
             mergeWithSystemFiles(systemFiles, files)
@@ -400,6 +600,16 @@ app.post('/', async (c) => {
           mode: usePatchMode ? 'patch' : 'full',
           provider: useGemini ? 'gemini' : 'claude',
         };
+
+        // Final comprehensive log
+        logger.info('Request completed successfully', {
+          mode: usePatchMode ? 'patch' : 'full',
+          provider: useGemini ? 'gemini' : 'claude',
+          totalFiles: Object.keys(completeEvent.files).length,
+          explanationLength: summary.length,
+          requestId,
+        });
+
         await stream.write(`data: ${JSON.stringify(completeEvent)}\n\n`);
         console.log('[Stream] → complete event with', Object.keys(completeEvent.files).length, 'files');
 

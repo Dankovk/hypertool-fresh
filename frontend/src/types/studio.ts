@@ -30,6 +30,24 @@ export const StudioSettingsSchema = z.object({
   model: z.string(),
   apiKey: z.string(),
   systemPrompt: z.string(),
-  editMode: z.enum(["full", "patch"]).optional(),
+  editMode: z.enum(["full", "patch", "artifact"]).optional(),
 });
 export type StudioSettings = z.infer<typeof StudioSettingsSchema>;
+
+// Streaming event types from AI responses
+export interface StreamEvent {
+  type: 'start' | 'token' | 'progress' | 'complete' | 'warning' | 'error';
+  text?: string;
+  files?: Record<string, string>;
+  shellCommands?: string[];
+  explanation?: string;
+  mode?: 'patch' | 'full' | 'artifact';
+  artifact?: {
+    id: string;
+    title: string;
+  };
+  error?: string;
+  message?: string;
+  details?: any;
+  provider?: string;
+}

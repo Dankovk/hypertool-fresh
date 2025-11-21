@@ -12,6 +12,17 @@ dist
 dist/*
 dist/
 .env
+.env.production
+.env.development
+.env.test
+.env.local
+.env.production.local
+.env.development.local
+.env.test.local
+.env.local.local
+.env.production.local.local
+.env.development.local.local
+.env.test.local.local
 
 
 

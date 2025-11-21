@@ -33,3 +33,5 @@ export type { UIState, UIActions, UIStore } from "./uiStore";
 
 export { useBoilerplateStore, selectPresets, selectPresetById } from "./boilerplateStore";
 export type { BoilerplateState, BoilerplateActions, BoilerplateStore } from "./boilerplateStore";
+
+export { usePreviewStore } from "./previewStore";

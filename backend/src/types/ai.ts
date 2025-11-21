@@ -17,7 +17,7 @@ export const AiRequestSchema = z.object({
   apiKey: z.string().optional(),
   systemPrompt: z.string().optional(),
   currentFiles: FileMapSchema.optional(),
-  editMode: z.enum(["full", "patch"]).default("full").optional(), // "full" for backward compatibility
+  editMode: z.enum(["full", "patch", "artifact"]).default("artifact").optional(), // Default to artifact mode
 });
 
 export type AiRequest = z.infer<typeof AiRequestSchema>;

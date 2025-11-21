@@ -1,21 +1,20 @@
 import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
 import { MODEL_OPTIONS } from "@hypertool/shared-config/models";
-import { DEFAULT_SYSTEM_PROMPT } from "../../../packages/shared-config/prompts";
 import { config } from "@/config";
 
 export interface SettingsState {
   model: string;
   apiKey: string;
   systemPrompt: string;
-  editMode: "full" | "patch";
+  editMode: "full" | "patch" | "artifact";
 }
 
 export interface SettingsActions {
   setModel: (model: string) => void;
   setApiKey: (apiKey: string) => void;
   setSystemPrompt: (systemPrompt: string) => void;
-  setEditMode: (editMode: "full" | "patch") => void;
+  setEditMode: (editMode: "full" | "patch" | "artifact") => void;
   resetSettings: () => void;
 }
 
@@ -24,9 +23,39 @@ export type SettingsStore = SettingsState & SettingsActions;
 const initialState: SettingsState = {
   model: MODEL_OPTIONS[0].value,
   apiKey: "",
-  systemPrompt: DEFAULT_SYSTEM_PROMPT,
-  editMode: "patch",
+  systemPrompt: "", // Empty - let backend choose the appropriate prompt based on mode
+  editMode: "artifact",
 };
+
+/**
+ * Migration: Update legacy "patch" mode to "artifact" mode
+ * This runs automatically when the store loads from localStorage
+ */
+function migrateSettings(persistedState: any): SettingsState {
+  let migrated = false;
+  const result = { ...persistedState };
+
+  // If stored editMode is "patch", migrate to "artifact"
+  if (persistedState?.editMode === "patch") {
+    console.log("[Settings Migration] Migrating from patch mode to artifact mode");
+    result.editMode = "artifact";
+    migrated = true;
+  }
+
+  // Clear custom system prompt to use the backend's HyperFrame prompt
+  // This ensures users get the new artifact-mode prompt automatically
+  if (persistedState?.systemPrompt && persistedState.systemPrompt.trim() !== "") {
+    console.log("[Settings Migration] Clearing custom system prompt to use backend default (HyperFrame prompt)");
+    result.systemPrompt = "";
+    migrated = true;
+  }
+
+  if (migrated) {
+    console.log("[Settings Migration] Migration complete");
+  }
+
+  return result;
+}
 
 /**
  * Optimized settings store with localStorage persistence.
@@ -57,6 +86,12 @@ export const useSettingsStore = create<SettingsStore>()(
         systemPrompt: state.systemPrompt,
         editMode: state.editMode,
       }),
+      // Run migration on load
+      migrate: (persistedState: any, version: number) => {
+        console.log("[Settings Store] Running migration, version:", version);
+        return migrateSettings(persistedState);
+      },
+      version: 2, // Incremented to force migration run
     }
   )
 );
