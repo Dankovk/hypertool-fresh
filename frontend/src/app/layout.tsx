@@ -18,7 +18,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: 'Fresh Breeze',
+  title: 'Hypertools',
   description: 'AI-powered code editor with live preview',
 };
 
